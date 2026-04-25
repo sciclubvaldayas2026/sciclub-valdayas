@@ -168,7 +168,7 @@
       <div class="login-title">Sci Club Val d'Ayas</div>
       <div class="login-sub">Stagione 2026/27</div>
     </div>
-    <div class="login-card">
+    <div class="login-card" id="login-card">
       <div class="role-tabs">
         <div class="role-tab active" onclick="selectRole('genitore',this)">Genitore / Atleta</div>
         <div class="role-tab" onclick="selectRole('allenatore',this)">Allenatore</div>
@@ -183,8 +183,63 @@
       </div>
       <div class="error-msg" id="login-error">Email o password non corretti.</div>
       <button class="btn-primary" onclick="doLogin()" id="btn-login">Accedi</button>
-      <div class="btn-link" id="register-link">Non hai un account? <span onclick="showRegister()">Registrati</span></div>
-      <div class="btn-link" style="display:none" id="back-login-link"><span onclick="showLogin()">← Torna al login</span></div>
+      <div class="btn-link" id="register-link">Non hai un account? <span onclick="showRegisterForm()">Registrati</span></div>
+    </div>
+
+    <!-- REGISTER FORM (separate card, hidden by default) -->
+    <div class="login-card" id="register-card" style="display:none; overflow-y:auto; max-height:75vh;">
+      <div style="font-size:16px;font-weight:600;color:var(--text);">Nuova registrazione</div>
+      <div>
+        <div class="field-label">Il tuo nome e cognome</div>
+        <input class="field-input" id="reg-parentname" type="text" placeholder="Mario Rossi" autocomplete="name">
+      </div>
+      <div>
+        <div class="field-label">Email</div>
+        <input class="field-input" id="reg-email" type="email" placeholder="mario.rossi@email.it" autocomplete="email">
+      </div>
+      <div>
+        <div class="field-label">Password (minimo 6 caratteri)</div>
+        <input class="field-input" id="reg-password" type="password" placeholder="••••••••">
+      </div>
+      <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-sec);">Atleta 1</div>
+      <div>
+        <div class="field-label">Nome e cognome atleta</div>
+        <input class="field-input" id="reg-athlete1" type="text" placeholder="Luca Rossi">
+      </div>
+      <div>
+        <div class="field-label">Categoria</div>
+        <select class="field-input" id="reg-cat1" style="cursor:pointer;">
+          <option value="">-- Seleziona --</option>
+          <option value="sbaby">S.Baby</option>
+          <option value="baby">Baby</option>
+          <option value="cuccioli">Cuccioli</option>
+          <option value="ragazzi">Ragazzi</option>
+          <option value="allievi">Allievi</option>
+          <option value="giovani">Giovani</option>
+        </select>
+      </div>
+      <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-sec);">Atleta 2 <span style="font-weight:400;font-size:11px;">(opzionale)</span></div>
+      <div>
+        <div class="field-label">Nome e cognome atleta</div>
+        <input class="field-input" id="reg-athlete2" type="text" placeholder="Sara Rossi (opzionale)">
+      </div>
+      <div>
+        <div class="field-label">Categoria</div>
+        <select class="field-input" id="reg-cat2" style="cursor:pointer;">
+          <option value="">-- Nessun secondo atleta --</option>
+          <option value="sbaby">S.Baby</option>
+          <option value="baby">Baby</option>
+          <option value="cuccioli">Cuccioli</option>
+          <option value="ragazzi">Ragazzi</option>
+          <option value="allievi">Allievi</option>
+          <option value="giovani">Giovani</option>
+        </select>
+      </div>
+      <div class="error-msg" id="reg-error"></div>
+      <button class="btn-primary" onclick="doRegister()" id="btn-register">Invia richiesta</button>
+      <div class="btn-link"><span onclick="showLoginForm()">← Torna al login</span></div>
     </div>
   </div>
 
@@ -396,39 +451,53 @@ window.doLogin = async () => {
   }
 };
 
-window.showRegister = () => {
-  document.getElementById('register-link').style.display = 'none';
-  document.getElementById('back-login-link').style.display = 'block';
-  document.getElementById('btn-login').textContent = 'Registrati';
-  document.getElementById('btn-login').onclick = doRegister;
+window.showRegisterForm = () => {
+  document.getElementById('login-card').style.display = 'none';
+  document.getElementById('register-card').style.display = 'flex';
+  document.getElementById('register-card').style.flexDirection = 'column';
+  document.getElementById('register-card').style.gap = '14px';
 };
 
-window.showLogin = () => {
-  document.getElementById('register-link').style.display = 'block';
-  document.getElementById('back-login-link').style.display = 'none';
-  document.getElementById('btn-login').textContent = 'Accedi';
-  document.getElementById('btn-login').onclick = doLogin;
+window.showLoginForm = () => {
+  document.getElementById('login-card').style.display = 'flex';
+  document.getElementById('register-card').style.display = 'none';
 };
 
 window.doRegister = async () => {
-  const email = document.getElementById('login-email').value.trim();
-  const pwd = document.getElementById('login-password').value;
-  const err = document.getElementById('login-error');
-  const btn = document.getElementById('btn-login');
-  if (!email || pwd.length < 6) { err.style.display='block'; err.textContent='Email valida e password di almeno 6 caratteri.'; return; }
+  const parentName = document.getElementById('reg-parentname').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pwd = document.getElementById('reg-password').value;
+  const athlete1 = document.getElementById('reg-athlete1').value.trim();
+  const cat1 = document.getElementById('reg-cat1').value;
+  const athlete2 = document.getElementById('reg-athlete2').value.trim();
+  const cat2 = document.getElementById('reg-cat2').value;
+  const err = document.getElementById('reg-error');
+  const btn = document.getElementById('btn-register');
   err.style.display = 'none';
-  btn.textContent = 'Registrazione...';
+  if (!parentName) { err.style.display='block'; err.textContent='Inserisci il tuo nome e cognome.'; return; }
+  if (!email) { err.style.display='block'; err.textContent='Inserisci una email valida.'; return; }
+  if (pwd.length < 6) { err.style.display='block'; err.textContent='La password deve avere almeno 6 caratteri.'; return; }
+  if (!athlete1) { err.style.display='block'; err.textContent='Inserisci il nome del primo atleta.'; return; }
+  if (!cat1) { err.style.display='block'; err.textContent='Seleziona la categoria del primo atleta.'; return; }
+  btn.textContent = 'Invio in corso...';
   btn.disabled = true;
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+    const athletes = [{ name: athlete1, category: cat1 }];
+    const categories = [cat1];
+    if (athlete2 && cat2) {
+      athletes.push({ name: athlete2, category: cat2 });
+      if (!categories.includes(cat2)) categories.push(cat2);
+    }
     await setDoc(doc(db, 'users', cred.user.uid), {
-      email, role: 'genitore', status: 'pending',
-      categories: [], athletes: [], createdAt: serverTimestamp()
+      email, displayName: parentName,
+      role: 'genitore', status: 'pending',
+      categories, athletes, createdAt: serverTimestamp()
     });
   } catch(e) {
     err.style.display = 'block';
-    err.textContent = e.code === 'auth/email-already-in-use' ? 'Email già registrata.' : 'Errore nella registrazione.';
-    btn.textContent = 'Registrati';
+    err.textContent = e.code === 'auth/email-already-in-use' ? 'Email già registrata.' : 'Errore nella registrazione. Riprova.';
+    btn.textContent = 'Invia richiesta';
     btn.disabled = false;
   }
 };
@@ -572,7 +641,10 @@ function renderProfile() {
       <div class="profile-row"><div class="profile-row-label">Ruolo</div><div class="profile-row-val">Genitore</div></div>
       <div class="profile-row">
         <div class="profile-row-label">Atleti</div>
-        <div>${cats.map(c => `<span class="athlete-pill">⛷️ ${CAT_LABELS[c]||c}</span>`).join('')}</div>
+        <div>${(userProfile?.athletes||[]).length > 0
+          ? (userProfile.athletes).map(a => `<span class="athlete-pill">⛷️ ${a.name} — ${CAT_LABELS[a.category]||a.category}</span>`).join('')
+          : cats.map(c => `<span class="athlete-pill">⛷️ ${CAT_LABELS[c]||c}</span>`).join('')
+        }</div>
       </div>
       <div class="profile-row">
         <div class="profile-row-label">Stato</div>
