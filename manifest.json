@@ -1,0 +1,14 @@
+{
+  "name": "Sci Club Val d'Ayas",
+  "short_name": "Sci Club",
+  "description": "App ufficiale Sci Club Val d'Ayas - Stagione 2026/27",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0C447C",
+  "theme_color": "#0C447C",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

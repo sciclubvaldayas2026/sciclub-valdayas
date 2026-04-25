@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0C447C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sci Club Val d'Ayas">
+<title>Sci Club Val d'Ayas</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --blue: #185FA5; --blue-light: #E6F1FB; --blue-mid: #378ADD; --blue-dark: #0C447C;
+    --red: #A32D2D; --red-light: #FCEBEB;
+    --teal: #0F6E56; --teal-light: #E1F5EE; --teal-mid: #1D9E75;
+    --amber: #854F0B; --amber-light: #FAEEDA; --amber-mid: #EF9F27;
+    --gray-50: #F4F3EE; --gray-100: #D3D1C7; --gray-400: #888780;
+    --gray-600: #5F5E5A; --gray-900: #2C2C2A;
+    --bg: #F4F3EE; --bg-card: #FFFFFF;
+    --border: rgba(0,0,0,0.08);
+    --text: #2C2C2A; --text-sec: #5F5E5A;
+    --radius: 12px; --radius-sm: 8px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--blue-dark); }
+  #app { height: 100%; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; background: var(--bg); position: relative; overflow: hidden; }
+
+  /* SCREENS */
+  .screen { display: none; flex-direction: column; height: 100%; }
+  .screen.active { display: flex; }
+
+  /* TOP BAR */
+  .topbar { background: var(--blue-dark); color: white; padding: 52px 16px 14px; display: flex; align-items: flex-end; justify-content: space-between; flex-shrink: 0; }
+  .topbar-title { font-size: 20px; font-weight: 600; }
+  .topbar-sub { font-size: 12px; opacity: 0.65; margin-top: 2px; }
+  .topbar-green { background: var(--teal); }
+  .avatar-btn { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; cursor: pointer; border: none; color: white; flex-shrink: 0; }
+
+  /* NAV BAR */
+  .navbar { display: flex; background: var(--bg-card); border-top: 0.5px solid var(--border); padding: 8px 0; padding-bottom: calc(8px + var(--safe-bottom)); flex-shrink: 0; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: var(--text-sec); cursor: pointer; padding: 4px 0; border: none; background: none; }
+  .nav-item.active { color: var(--blue-dark); }
+  .nav-item.active-green { color: var(--teal); }
+  .nav-icon { font-size: 20px; line-height: 1; }
+
+  /* SCROLLABLE CONTENT */
+  .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  /* LOGIN */
+  #screen-login { background: var(--blue-dark); justify-content: flex-end; }
+  .login-hero { padding: 60px 24px 32px; text-align: center; }
+  .login-logo { width: 72px; height: 72px; border-radius: 20px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 32px; }
+  .login-title { color: white; font-size: 22px; font-weight: 600; }
+  .login-sub { color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 4px; }
+  .login-card { background: var(--bg-card); border-radius: 24px 24px 0 0; padding: 28px 20px calc(28px + var(--safe-bottom)); display: flex; flex-direction: column; gap: 16px; }
+  .role-tabs { display: flex; gap: 8px; }
+  .role-tab { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; color: var(--text-sec); background: var(--bg); }
+  .role-tab.active { background: var(--blue-light); color: var(--blue-dark); border-color: var(--blue-mid); }
+  .field-label { font-size: 12px; color: var(--text-sec); margin-bottom: 5px; }
+  .field-input { width: 100%; padding: 12px 14px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); font-size: 15px; background: var(--bg); color: var(--text); outline: none; }
+  .field-input:focus { border-color: var(--blue-mid); background: white; }
+  .btn-primary { width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--blue-dark); color: white; font-size: 15px; font-weight: 600; border: none; cursor: pointer; }
+  .btn-primary:active { opacity: 0.85; }
+  .btn-link { text-align: center; font-size: 13px; color: var(--text-sec); cursor: pointer; }
+  .btn-link span { color: var(--blue-mid); font-weight: 500; }
+  .error-msg { background: var(--red-light); color: var(--red); font-size: 13px; padding: 10px 12px; border-radius: var(--radius-sm); display: none; }
+
+  /* SECTION HEADER */
+  .section-header { padding: 16px 14px 6px; font-size: 11px; font-weight: 600; color: var(--text-sec); letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* CATEGORY CHIPS */
+  .chips-row { display: flex; gap: 8px; padding: 12px 14px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
+  .chips-row::-webkit-scrollbar { display: none; }
+  .chip { padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; white-space: nowrap; border: 0.5px solid var(--border); cursor: pointer; background: var(--bg-card); color: var(--text-sec); }
+  .chip.active { background: var(--blue-dark); color: white; border-color: var(--blue-dark); }
+
+  /* EVENT CARD */
+  .event-card { margin: 0 12px 8px; background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .event-date { width: 42px; text-align: center; flex-shrink: 0; }
+  .event-day-num { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1; }
+  .event-day-name { font-size: 10px; color: var(--text-sec); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .event-bar { width: 3px; align-self: stretch; border-radius: 2px; flex-shrink: 0; }
+  .event-info { flex: 1; min-width: 0; }
+  .event-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .event-sub { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
+  .event-badge { font-size: 10px; padding: 3px 9px; border-radius: 10px; font-weight: 500; flex-shrink: 0; }
+  .month-label { padding: 14px 14px 4px; font-size: 13px; font-weight: 600; color: var(--text-sec); }
+
+  /* COLORS */
+  .c-ski { background: var(--blue-mid); }
+  .c-atletica { background: var(--teal-mid); }
+  .c-multi { background: var(--amber-mid); }
+  .c-viaggio { background: #D4537E; }
+  .c-acrobatica { background: #9C6DD8; }
+  .c-altro { background: var(--gray-400); }
+  .badge-all { background: var(--blue-light); color: var(--blue-dark); }
+  .badge-viaggio { background: #FBEAF0; color: #993556; }
+  .badge-acro { background: #F3EDFC; color: #6B3FB5; }
+  .badge-altro { background: var(--bg); color: var(--text-sec); border: 0.5px solid var(--border); }
+
+  /* COMM CARD */
+  .comm-card { margin: 0 12px 10px; background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 14px; cursor: pointer; }
+  .comm-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .comm-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .comm-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .comm-meta { font-size: 11px; color: var(--text-sec); margin-top: 1px; }
+  .comm-text { font-size: 14px; color: var(--text); line-height: 1.5; }
+  .comm-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .cat-pill { font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 500; }
+  .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue-mid); flex-shrink: 0; }
+
+  /* PROFILE */
+  .profile-section { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .profile-card { background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 16px; }
+  .profile-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--blue-light); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; color: var(--blue-dark); flex-shrink: 0; }
+  .profile-name { font-size: 17px; font-weight: 600; color: var(--text); }
+  .profile-email { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
+  .profile-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 0.5px solid var(--border); font-size: 14px; }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row-label { color: var(--text-sec); }
+  .profile-row-val { font-weight: 500; color: var(--text); }
+  .athlete-pill { display: inline-flex; align-items: center; gap: 5px; background: var(--blue-light); color: var(--blue-dark); border-radius: 10px; padding: 4px 10px; font-size: 12px; font-weight: 500; margin: 2px; }
+  .status-ok { display: flex; align-items: center; gap: 6px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* PENDING SCREEN */
+  .pending-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; gap: 12px; }
+  .pending-icon { font-size: 48px; }
+  .pending-title { font-size: 18px; font-weight: 600; color: var(--text); }
+  .pending-sub { font-size: 14px; color: var(--text-sec); line-height: 1.5; }
+
+  /* FAB */
+  .fab { position: absolute; bottom: calc(80px + var(--safe-bottom)); right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 26px; color: white; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(15,110,86,0.4); z-index: 10; }
+
+  /* COMPOSE MODAL */
+  .modal-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 20; }
+  .modal-overlay.open { display: block; }
+  .modal-sheet { position: absolute; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-radius: 20px 20px 0 0; padding: 20px; padding-bottom: calc(20px + var(--safe-bottom)); }
+  .modal-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
+  .modal-textarea { width: 100%; height: 110px; padding: 12px 14px; font-size: 14px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); resize: none; font-family: inherit; outline: none; }
+  .modal-textarea:focus { border-color: var(--teal-mid); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 12px; }
+  .btn-cancel { flex: 1; padding: 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); background: transparent; font-size: 14px; cursor: pointer; color: var(--text); }
+  .btn-send { flex: 1; padding: 12px; border-radius: var(--radius-sm); background: var(--teal); color: white; font-size: 14px; font-weight: 600; border: none; cursor: pointer; }
+
+  /* LOADING */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text-sec); font-size: 14px; }
+
+  /* NOTICE BANNER */
+  .notice-banner { margin: 10px 12px; background: var(--amber-light); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; gap: 10px; border: 0.5px solid #FAC775; }
+  .notice-text { font-size: 12px; color: var(--amber); flex: 1; line-height: 1.4; }
+  .notice-num { font-size: 18px; font-weight: 700; color: var(--amber); flex-shrink: 0; }
+
+  /* EMPTY STATE */
+  .empty-state { padding: 40px 24px; text-align: center; color: var(--text-sec); font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- LOGIN -->
+  <div class="screen active" id="screen-login">
+    <div class="login-hero">
+      <div class="login-logo" style="background:none;padding:0;overflow:hidden;"><img src="data:image/jpeg;base64,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" style="width:64px;height:64px;object-fit:cover;border-radius:14px;"></div>
+      <div class="login-title">Sci Club Val d'Ayas</div>
+      <div class="login-sub">Stagione 2026/27</div>
+    </div>
+    <div class="login-card">
+      <div class="role-tabs">
+        <div class="role-tab active" onclick="selectRole('genitore',this)">Genitore / Atleta</div>
+        <div class="role-tab" onclick="selectRole('allenatore',this)">Allenatore</div>
+      </div>
+      <div>
+        <div class="field-label">Email</div>
+        <input class="field-input" id="login-email" type="email" placeholder="mario.rossi@email.it" autocomplete="email">
+      </div>
+      <div>
+        <div class="field-label">Password</div>
+        <input class="field-input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="error-msg" id="login-error">Email o password non corretti.</div>
+      <button class="btn-primary" onclick="doLogin()" id="btn-login">Accedi</button>
+      <div class="btn-link" id="register-link">Non hai un account? <span onclick="showRegister()">Registrati</span></div>
+      <div class="btn-link" style="display:none" id="back-login-link"><span onclick="showLogin()">← Torna al login</span></div>
+    </div>
+  </div>
+
+  <!-- GENITORE: CALENDARIO -->
+  <div class="screen" id="screen-calendario">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Calendario</div>
+        <div class="topbar-sub">Stagione 2026/27</div>
+      </div>
+      <button class="avatar-btn" id="avatar-cal" onclick="showScreen('screen-profilo')"></button>
+    </div>
+    <div class="chips-row" id="cat-chips"></div>
+    <div class="content" id="cal-content"></div>
+    <div class="navbar">
+      <button class="nav-item active" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
+      <button class="nav-item" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+      <button class="nav-item" onclick="showScreen('screen-profilo')"><div class="nav-icon">👤</div><div>Profilo</div></button>
+    </div>
+  </div>
+
+  <!-- GENITORE: COMUNICAZIONI -->
+  <div class="screen" id="screen-comunicazioni">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Comunicazioni</div>
+        <div class="topbar-sub" id="comm-sub">Le tue categorie</div>
+      </div>
+      <button class="avatar-btn" id="avatar-comm" onclick="showScreen('screen-profilo')"></button>
+    </div>
+    <div class="chips-row" id="comm-chips"></div>
+    <div class="content" id="comm-content"></div>
+    <div class="navbar">
+      <button class="nav-item" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
+      <button class="nav-item active" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+      <button class="nav-item" onclick="showScreen('screen-profilo')"><div class="nav-icon">👤</div><div>Profilo</div></button>
+    </div>
+  </div>
+
+  <!-- PROFILO -->
+  <div class="screen" id="screen-profilo">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Profilo</div>
+        <div class="topbar-sub">Sci Club Val d'Ayas</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="profile-section" id="profile-content"></div>
+    </div>
+    <div class="navbar">
+      <button class="nav-item" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
+      <button class="nav-item" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+      <button class="nav-item active"><div class="nav-icon">👤</div><div>Profilo</div></button>
+    </div>
+  </div>
+
+  <!-- PENDING APPROVAL -->
+  <div class="screen" id="screen-pending">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">In attesa</div>
+        <div class="topbar-sub">Sci Club Val d'Ayas</div>
+      </div>
+    </div>
+    <div class="pending-screen">
+      <div class="pending-icon">⏳</div>
+      <div class="pending-title">Registrazione in attesa</div>
+      <div class="pending-sub">La tua richiesta è stata inviata. Un amministratore verificherà i tuoi dati e attiverà il tuo account. Riceverai una email di conferma.</div>
+    </div>
+    <div style="padding: 0 16px calc(16px + var(--safe-bottom));">
+      <button class="btn-primary" style="background: var(--gray-600);" onclick="doLogout()">Esci</button>
+    </div>
+  </div>
+
+  <!-- ALLENATORE -->
+  <div class="screen" id="screen-allenatore">
+    <div class="topbar topbar-green">
+      <div>
+        <div class="topbar-title">Comunicazioni</div>
+        <div class="topbar-sub" id="coach-sub">Allenatore</div>
+      </div>
+      <button class="avatar-btn" id="avatar-coach" onclick="doLogout()">↩</button>
+    </div>
+    <div class="content" id="coach-content"></div>
+    <button class="fab" onclick="openCompose()">+</button>
+    <div class="navbar">
+      <button class="nav-item active-green"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+      <button class="nav-item" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
+      <button class="nav-item" onclick="doLogout()"><div class="nav-icon">↩</div><div>Esci</div></button>
+    </div>
+  </div>
+
+  <!-- COMPOSE MODAL -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeCompose()">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-title" id="modal-title">Nuova comunicazione</div>
+      <textarea class="modal-textarea" id="compose-text" placeholder="Scrivi un messaggio per i genitori della categoria..."></textarea>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeCompose()">Annulla</button>
+        <button class="btn-send" onclick="sendComm()">Invia</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, query, where, orderBy, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAb7GSGVmfDEgoRlv6-sx5JHZv3GNfsToU",
+  authDomain: "sciclub-valdayas.firebaseapp.com",
+  projectId: "sciclub-valdayas",
+  storageBucket: "sciclub-valdayas.firebasestorage.app",
+  messagingSenderId: "402983337756",
+  appId: "1:402983337756:web:bbe2e6a4b0b7a17431c4d9"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ─── CALENDAR DATA (from Excel) ───────────────────────────────────────────────
+const CALENDAR_DATA = {"sbaby":[{"month":"Aprile","day":19,"dow":"D","location":"FINE STAGIONE INVERNALE"},{"month":"Giugno","day":10,"dow":"M","location":"FINE SCUOLE"},{"month":"Luglio","day":7,"dow":"M","location":"VIAGGIO"},{"month":"Luglio","day":8,"dow":"M","location":"LIGNANO"},{"month":"Luglio","day":9,"dow":"G","location":"LIGNANO"},{"month":"Luglio","day":10,"dow":"V","location":"LIGNANO"},{"month":"Luglio","day":11,"dow":"S","location":"LIGNANO"},{"month":"Luglio","day":20,"dow":"L","location":"MULTISPORT"},{"month":"Luglio","day":21,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":22,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":23,"dow":"G","location":"MULTISPORT"},{"month":"Luglio","day":27,"dow":"L","location":"MULTISPORT"},{"month":"Luglio","day":28,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":29,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":30,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":3,"dow":"L","location":"MULTISPORT"},{"month":"Agosto","day":4,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":5,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":6,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":17,"dow":"L","location":"MULTISPORT"},{"month":"Agosto","day":18,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":19,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":20,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":24,"dow":"L","location":"MULTISPORT"},{"month":"Agosto","day":25,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":26,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":27,"dow":"G","location":"MULTISPORT"},{"month":"Settembre","day":7,"dow":"L","location":"MULTISPORT"},{"month":"Settembre","day":8,"dow":"M","location":"MULTISPORT"},{"month":"Settembre","day":9,"dow":"M","location":"MULTISPORT"},{"month":"Settembre","day":10,"dow":"G","location":"MULTISPORT"},{"month":"Settembre","day":14,"dow":"L","location":"INIZIO SCUOLE"},{"month":"Ottobre","day":3,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":7,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":10,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":14,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":17,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":21,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":24,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":28,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":31,"dow":"S","location":"ACROBATICA"}],"baby":[{"month":"Aprile","day":26,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":1,"dow":"V","location":"CERVINIA"},{"month":"Maggio","day":3,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":9,"dow":"S","location":"CERVINIA"},{"month":"Maggio","day":17,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":23,"dow":"S","location":"CERVINIA"},{"month":"Maggio","day":31,"dow":"D","location":"CERVINIA"},{"month":"Giugno","day":1,"dow":"L","location":"CERVINIA"},{"month":"Giugno","day":16,"dow":"M","location":"VIAGGIO"},{"month":"Giugno","day":17,"dow":"M","location":"DEUX ALPES"},{"month":"Giugno","day":18,"dow":"G","location":"DEUX ALPES"},{"month":"Giugno","day":19,"dow":"V","location":"DEUX ALPES"},{"month":"Giugno","day":20,"dow":"S","location":"DEUX ALPES"},{"month":"Giugno","day":26,"dow":"V","location":"VIAGGIO"},{"month":"Giugno","day":27,"dow":"S","location":"DEUX ALPES"},{"month":"Giugno","day":28,"dow":"D","location":"DEUX ALPES"},{"month":"Giugno","day":29,"dow":"L","location":"DEUX ALPES"},{"month":"Giugno","day":30,"dow":"M","location":"DEUX ALPES"},{"month":"Luglio","day":7,"dow":"M","location":"VIAGGIO"},{"month":"Luglio","day":8,"dow":"M","location":"LIGNANO"},{"month":"Luglio","day":9,"dow":"G","location":"LIGNANO"},{"month":"Luglio","day":10,"dow":"V","location":"LIGNANO"},{"month":"Luglio","day":11,"dow":"S","location":"LIGNANO"},{"month":"Luglio","day":20,"dow":"L","location":"MULTISPORT"},{"month":"Luglio","day":21,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":22,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":23,"dow":"G","location":"MULTISPORT"},{"month":"Luglio","day":27,"dow":"L","location":"MULTISPORT"},{"month":"Luglio","day":28,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":29,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":30,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":3,"dow":"L","location":"MULTISPORT"},{"month":"Agosto","day":4,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":5,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":6,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":17,"dow":"L","location":"MULTISPORT"},{"month":"Agosto","day":18,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":19,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":20,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":24,"dow":"L","location":"MULTISPORT"},{"month":"Agosto","day":25,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":26,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":27,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":31,"dow":"L","location":"CERVINIA"},{"month":"Settembre","day":1,"dow":"M","location":"CERVINIA"},{"month":"Settembre","day":2,"dow":"M","location":"CERVINIA"},{"month":"Settembre","day":3,"dow":"G","location":"CERVINIA"},{"month":"Settembre","day":7,"dow":"L","location":"MULTISPORT"},{"month":"Settembre","day":8,"dow":"M","location":"MULTISPORT"},{"month":"Settembre","day":9,"dow":"M","location":"MULTISPORT"},{"month":"Settembre","day":10,"dow":"G","location":"MULTISPORT"},{"month":"Ottobre","day":3,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":7,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":10,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":14,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":17,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":21,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":24,"dow":"S","location":"VIAGGIO"},{"month":"Ottobre","day":25,"dow":"D","location":"SNOWHALL"},{"month":"Ottobre","day":26,"dow":"L","location":"SNOWHALL"},{"month":"Ottobre","day":27,"dow":"M","location":"SNOWHALL"},{"month":"Ottobre","day":28,"dow":"M","location":"SNOWHALL"},{"month":"Ottobre","day":31,"dow":"S","location":"ACROBATICA"}],"cuccioli":[{"month":"Aprile","day":26,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":1,"dow":"V","location":"CERVINIA"},{"month":"Maggio","day":3,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":9,"dow":"S","location":"CERVINIA"},{"month":"Maggio","day":17,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":23,"dow":"S","location":"CERVINIA"},{"month":"Maggio","day":31,"dow":"D","location":"CERVINIA"},{"month":"Giugno","day":1,"dow":"L","location":"CERVINIA"},{"month":"Giugno","day":16,"dow":"M","location":"VIAGGIO"},{"month":"Giugno","day":17,"dow":"M","location":"DEUX ALPES"},{"month":"Giugno","day":18,"dow":"G","location":"DEUX ALPES"},{"month":"Giugno","day":19,"dow":"V","location":"DEUX ALPES"},{"month":"Giugno","day":20,"dow":"S","location":"DEUX ALPES"},{"month":"Giugno","day":26,"dow":"V","location":"VIAGGIO"},{"month":"Giugno","day":27,"dow":"S","location":"DEUX ALPES"},{"month":"Giugno","day":28,"dow":"D","location":"DEUX ALPES"},{"month":"Giugno","day":29,"dow":"L","location":"DEUX ALPES"},{"month":"Giugno","day":30,"dow":"M","location":"DEUX ALPES"},{"month":"Luglio","day":7,"dow":"M","location":"VIAGGIO"},{"month":"Luglio","day":8,"dow":"M","location":"LIGNANO"},{"month":"Luglio","day":9,"dow":"G","location":"LIGNANO"},{"month":"Luglio","day":10,"dow":"V","location":"LIGNANO"},{"month":"Luglio","day":11,"dow":"S","location":"LIGNANO"},{"month":"Luglio","day":20,"dow":"L","location":"MULTISPORT"},{"month":"Luglio","day":21,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":22,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":23,"dow":"G","location":"MULTISPORT"},{"month":"Luglio","day":27,"dow":"L","location":"MULTISPORT"},{"month":"Luglio","day":28,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":29,"dow":"M","location":"MULTISPORT"},{"month":"Luglio","day":30,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":3,"dow":"L","location":"MULTISPORT"},{"month":"Agosto","day":4,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":5,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":6,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":17,"dow":"L","location":"MULTISPORT"},{"month":"Agosto","day":18,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":19,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":20,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":24,"dow":"L","location":"MULTISPORT"},{"month":"Agosto","day":25,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":26,"dow":"M","location":"MULTISPORT"},{"month":"Agosto","day":27,"dow":"G","location":"MULTISPORT"},{"month":"Agosto","day":31,"dow":"L","location":"CERVINIA"},{"month":"Settembre","day":1,"dow":"M","location":"CERVINIA"},{"month":"Settembre","day":2,"dow":"M","location":"CERVINIA"},{"month":"Settembre","day":3,"dow":"G","location":"CERVINIA"},{"month":"Settembre","day":7,"dow":"L","location":"MULTISPORT"},{"month":"Settembre","day":8,"dow":"M","location":"MULTISPORT"},{"month":"Settembre","day":9,"dow":"M","location":"MULTISPORT"},{"month":"Settembre","day":10,"dow":"G","location":"MULTISPORT"},{"month":"Ottobre","day":3,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":7,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":10,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":14,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":17,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":21,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":24,"dow":"S","location":"VIAGGIO"},{"month":"Ottobre","day":25,"dow":"D","location":"SNOWHALL"},{"month":"Ottobre","day":26,"dow":"L","location":"SNOWHALL"},{"month":"Ottobre","day":27,"dow":"M","location":"SNOWHALL"},{"month":"Ottobre","day":28,"dow":"M","location":"SNOWHALL"},{"month":"Ottobre","day":31,"dow":"S","location":"ACROBATICA"}],"ragazzi":[{"month":"Aprile","day":25,"dow":"S","location":"CERVINIA"},{"month":"Aprile","day":30,"dow":"G","location":"CERVINIA"},{"month":"Maggio","day":2,"dow":"S","location":"CERVINIA"},{"month":"Maggio","day":10,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":16,"dow":"S","location":"CERVINIA"},{"month":"Maggio","day":24,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":30,"dow":"S","location":"CERVINIA"},{"month":"Giugno","day":2,"dow":"M","location":"CERVINIA"},{"month":"Giugno","day":11,"dow":"G","location":"VIAGGIO"},{"month":"Giugno","day":12,"dow":"V","location":"ISERAN"},{"month":"Giugno","day":13,"dow":"S","location":"ISERAN"},{"month":"Giugno","day":14,"dow":"D","location":"ISERAN"},{"month":"Giugno","day":15,"dow":"L","location":"ISERAN"},{"month":"Giugno","day":18,"dow":"G","location":"ATLETICA"},{"month":"Giugno","day":19,"dow":"V","location":"ATLETICA"},{"month":"Giugno","day":21,"dow":"D","location":"VIAGGIO"},{"month":"Giugno","day":22,"dow":"L","location":"ISERAN"},{"month":"Giugno","day":23,"dow":"M","location":"ISERAN"},{"month":"Giugno","day":24,"dow":"M","location":"ISERAN"},{"month":"Giugno","day":25,"dow":"G","location":"ISERAN"},{"month":"Giugno","day":28,"dow":"D","location":"ATLETICA"},{"month":"Giugno","day":29,"dow":"L","location":"ATLETICA"},{"month":"Luglio","day":1,"dow":"M","location":"VIAGGIO"},{"month":"Luglio","day":2,"dow":"G","location":"ISERAN"},{"month":"Luglio","day":3,"dow":"V","location":"ISERAN"},{"month":"Luglio","day":4,"dow":"S","location":"ISERAN"},{"month":"Luglio","day":5,"dow":"D","location":"ISERAN"},{"month":"Luglio","day":8,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":9,"dow":"G","location":"ATLETICA"},{"month":"Luglio","day":10,"dow":"V","location":"ATLETICA"},{"month":"Luglio","day":13,"dow":"L","location":"CERVINIA"},{"month":"Luglio","day":14,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":15,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":16,"dow":"G","location":"ATLETICA"},{"month":"Luglio","day":20,"dow":"L","location":"CERVINIA"},{"month":"Luglio","day":21,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":22,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":23,"dow":"G","location":"ATLETICA"},{"month":"Luglio","day":27,"dow":"L","location":"CERVINIA"},{"month":"Luglio","day":28,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":29,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":30,"dow":"G","location":"ATLETICA"},{"month":"Agosto","day":3,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":4,"dow":"M","location":"CERVINIA"},{"month":"Agosto","day":5,"dow":"M","location":"CERVINIA"},{"month":"Agosto","day":10,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":11,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":12,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":13,"dow":"G","location":"ATLETICA"},{"month":"Agosto","day":17,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":18,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":19,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":20,"dow":"G","location":"ATLETICA"},{"month":"Agosto","day":24,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":25,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":26,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":27,"dow":"G","location":"ATLETICA"},{"month":"Settembre","day":1,"dow":"M","location":"CERVINIA"},{"month":"Settembre","day":2,"dow":"M","location":"ATLETICA"},{"month":"Settembre","day":3,"dow":"G","location":"ATLETICA"},{"month":"Settembre","day":4,"dow":"V","location":"ATLETICA"},{"month":"Settembre","day":7,"dow":"L","location":"VIAGGIO"},{"month":"Settembre","day":8,"dow":"M","location":"SNOWHALL"},{"month":"Settembre","day":9,"dow":"M","location":"SNOWHALL"},{"month":"Settembre","day":10,"dow":"G","location":"SNOWHALL"},{"month":"Settembre","day":11,"dow":"V","location":"SNOWHALL"},{"month":"Settembre","day":30,"dow":"M","location":"VIAGGIO"},{"month":"Ottobre","day":1,"dow":"G","location":"SCI"},{"month":"Ottobre","day":2,"dow":"V","location":"SCI"},{"month":"Ottobre","day":3,"dow":"S","location":"SCI"},{"month":"Ottobre","day":4,"dow":"D","location":"SCI"},{"month":"Ottobre","day":7,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":10,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":14,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":17,"dow":"S","location":"VIAGGIO"},{"month":"Ottobre","day":18,"dow":"D","location":"SCI"},{"month":"Ottobre","day":19,"dow":"L","location":"SCI"},{"month":"Ottobre","day":20,"dow":"M","location":"SCI"},{"month":"Ottobre","day":21,"dow":"M","location":"SCI"},{"month":"Ottobre","day":24,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":28,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":31,"dow":"S","location":"VIAGGIO"}],"allievi":[{"month":"Aprile","day":25,"dow":"S","location":"CERVINIA"},{"month":"Aprile","day":30,"dow":"G","location":"CERVINIA"},{"month":"Maggio","day":2,"dow":"S","location":"CERVINIA"},{"month":"Maggio","day":10,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":16,"dow":"S","location":"CERVINIA"},{"month":"Maggio","day":24,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":30,"dow":"S","location":"CERVINIA"},{"month":"Giugno","day":2,"dow":"M","location":"CERVINIA"},{"month":"Giugno","day":11,"dow":"G","location":"VIAGGIO"},{"month":"Giugno","day":12,"dow":"V","location":"ISERAN"},{"month":"Giugno","day":13,"dow":"S","location":"ISERAN"},{"month":"Giugno","day":14,"dow":"D","location":"ISERAN"},{"month":"Giugno","day":15,"dow":"L","location":"ISERAN"},{"month":"Giugno","day":18,"dow":"G","location":"ATLETICA"},{"month":"Giugno","day":19,"dow":"V","location":"ATLETICA"},{"month":"Giugno","day":21,"dow":"D","location":"VIAGGIO"},{"month":"Giugno","day":22,"dow":"L","location":"ISERAN"},{"month":"Giugno","day":23,"dow":"M","location":"ISERAN"},{"month":"Giugno","day":24,"dow":"M","location":"ISERAN"},{"month":"Giugno","day":25,"dow":"G","location":"ISERAN"},{"month":"Giugno","day":28,"dow":"D","location":"ATLETICA"},{"month":"Giugno","day":29,"dow":"L","location":"ATLETICA"},{"month":"Luglio","day":1,"dow":"M","location":"VIAGGIO"},{"month":"Luglio","day":2,"dow":"G","location":"ISERAN"},{"month":"Luglio","day":3,"dow":"V","location":"ISERAN"},{"month":"Luglio","day":4,"dow":"S","location":"ISERAN"},{"month":"Luglio","day":5,"dow":"D","location":"ISERAN"},{"month":"Luglio","day":8,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":9,"dow":"G","location":"ATLETICA"},{"month":"Luglio","day":10,"dow":"V","location":"ATLETICA"},{"month":"Luglio","day":13,"dow":"L","location":"CERVINIA"},{"month":"Luglio","day":14,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":15,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":16,"dow":"G","location":"ATLETICA"},{"month":"Luglio","day":20,"dow":"L","location":"CERVINIA"},{"month":"Luglio","day":21,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":22,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":23,"dow":"G","location":"ATLETICA"},{"month":"Luglio","day":27,"dow":"L","location":"CERVINIA"},{"month":"Luglio","day":28,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":29,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":30,"dow":"G","location":"ATLETICA"},{"month":"Agosto","day":3,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":4,"dow":"M","location":"CERVINIA"},{"month":"Agosto","day":5,"dow":"M","location":"CERVINIA"},{"month":"Agosto","day":10,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":11,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":12,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":13,"dow":"G","location":"ATLETICA"},{"month":"Agosto","day":17,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":18,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":19,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":20,"dow":"G","location":"ATLETICA"},{"month":"Agosto","day":24,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":25,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":26,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":27,"dow":"G","location":"ATLETICA"},{"month":"Settembre","day":1,"dow":"M","location":"CERVINIA"},{"month":"Settembre","day":2,"dow":"M","location":"ATLETICA"},{"month":"Settembre","day":3,"dow":"G","location":"ATLETICA"},{"month":"Settembre","day":4,"dow":"V","location":"ATLETICA"},{"month":"Settembre","day":7,"dow":"L","location":"VIAGGIO"},{"month":"Settembre","day":8,"dow":"M","location":"SNOWHALL"},{"month":"Settembre","day":9,"dow":"M","location":"SNOWHALL"},{"month":"Settembre","day":10,"dow":"G","location":"SNOWHALL"},{"month":"Settembre","day":11,"dow":"V","location":"SNOWHALL"},{"month":"Settembre","day":30,"dow":"M","location":"VIAGGIO"},{"month":"Ottobre","day":1,"dow":"G","location":"SCI"},{"month":"Ottobre","day":2,"dow":"V","location":"SCI"},{"month":"Ottobre","day":3,"dow":"S","location":"SCI"},{"month":"Ottobre","day":4,"dow":"D","location":"SCI"},{"month":"Ottobre","day":7,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":10,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":14,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":17,"dow":"S","location":"VIAGGIO"},{"month":"Ottobre","day":18,"dow":"D","location":"SCI"},{"month":"Ottobre","day":19,"dow":"L","location":"SCI"},{"month":"Ottobre","day":20,"dow":"M","location":"SCI"},{"month":"Ottobre","day":21,"dow":"M","location":"SCI"},{"month":"Ottobre","day":24,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":28,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":31,"dow":"S","location":"VIAGGIO"}],"giovani":[{"month":"Aprile","day":25,"dow":"S","location":"CERVINIA"},{"month":"Aprile","day":30,"dow":"G","location":"CERVINIA"},{"month":"Maggio","day":2,"dow":"S","location":"CERVINIA"},{"month":"Maggio","day":10,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":16,"dow":"S","location":"CERVINIA"},{"month":"Maggio","day":24,"dow":"D","location":"CERVINIA"},{"month":"Maggio","day":30,"dow":"S","location":"CERVINIA"},{"month":"Giugno","day":2,"dow":"M","location":"CERVINIA"},{"month":"Giugno","day":11,"dow":"G","location":"VIAGGIO"},{"month":"Giugno","day":12,"dow":"V","location":"ISERAN"},{"month":"Giugno","day":13,"dow":"S","location":"ISERAN"},{"month":"Giugno","day":14,"dow":"D","location":"ISERAN"},{"month":"Giugno","day":15,"dow":"L","location":"ISERAN"},{"month":"Giugno","day":18,"dow":"G","location":"ATLETICA"},{"month":"Giugno","day":19,"dow":"V","location":"ATLETICA"},{"month":"Giugno","day":21,"dow":"D","location":"VIAGGIO"},{"month":"Giugno","day":22,"dow":"L","location":"ISERAN"},{"month":"Giugno","day":23,"dow":"M","location":"ISERAN"},{"month":"Giugno","day":24,"dow":"M","location":"ISERAN"},{"month":"Giugno","day":25,"dow":"G","location":"ISERAN"},{"month":"Giugno","day":28,"dow":"D","location":"ATLETICA"},{"month":"Giugno","day":29,"dow":"L","location":"ATLETICA"},{"month":"Luglio","day":1,"dow":"M","location":"VIAGGIO"},{"month":"Luglio","day":2,"dow":"G","location":"ISERAN"},{"month":"Luglio","day":3,"dow":"V","location":"ISERAN"},{"month":"Luglio","day":4,"dow":"S","location":"ISERAN"},{"month":"Luglio","day":5,"dow":"D","location":"ISERAN"},{"month":"Luglio","day":8,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":9,"dow":"G","location":"ATLETICA"},{"month":"Luglio","day":10,"dow":"V","location":"ATLETICA"},{"month":"Luglio","day":13,"dow":"L","location":"CERVINIA"},{"month":"Luglio","day":14,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":15,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":16,"dow":"G","location":"ATLETICA"},{"month":"Luglio","day":20,"dow":"L","location":"CERVINIA"},{"month":"Luglio","day":21,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":22,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":23,"dow":"G","location":"ATLETICA"},{"month":"Luglio","day":27,"dow":"L","location":"CERVINIA"},{"month":"Luglio","day":28,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":29,"dow":"M","location":"ATLETICA"},{"month":"Luglio","day":30,"dow":"G","location":"ATLETICA"},{"month":"Agosto","day":3,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":4,"dow":"M","location":"CERVINIA"},{"month":"Agosto","day":5,"dow":"M","location":"CERVINIA"},{"month":"Agosto","day":10,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":11,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":12,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":13,"dow":"G","location":"ATLETICA"},{"month":"Agosto","day":17,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":18,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":19,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":20,"dow":"G","location":"ATLETICA"},{"month":"Agosto","day":24,"dow":"L","location":"CERVINIA"},{"month":"Agosto","day":25,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":26,"dow":"M","location":"ATLETICA"},{"month":"Agosto","day":27,"dow":"G","location":"ATLETICA"},{"month":"Settembre","day":1,"dow":"M","location":"CERVINIA"},{"month":"Settembre","day":2,"dow":"M","location":"ATLETICA"},{"month":"Settembre","day":3,"dow":"G","location":"ATLETICA"},{"month":"Settembre","day":4,"dow":"V","location":"ATLETICA"},{"month":"Settembre","day":7,"dow":"L","location":"VIAGGIO"},{"month":"Settembre","day":8,"dow":"M","location":"SNOWHALL"},{"month":"Settembre","day":9,"dow":"M","location":"SNOWHALL"},{"month":"Settembre","day":10,"dow":"G","location":"SNOWHALL"},{"month":"Settembre","day":11,"dow":"V","location":"SNOWHALL"},{"month":"Settembre","day":30,"dow":"M","location":"VIAGGIO"},{"month":"Ottobre","day":1,"dow":"G","location":"SCI"},{"month":"Ottobre","day":2,"dow":"V","location":"SCI"},{"month":"Ottobre","day":3,"dow":"S","location":"SCI"},{"month":"Ottobre","day":4,"dow":"D","location":"SCI"},{"month":"Ottobre","day":7,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":10,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":14,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":17,"dow":"S","location":"VIAGGIO"},{"month":"Ottobre","day":18,"dow":"D","location":"SCI"},{"month":"Ottobre","day":19,"dow":"L","location":"SCI"},{"month":"Ottobre","day":20,"dow":"M","location":"SCI"},{"month":"Ottobre","day":21,"dow":"M","location":"SCI"},{"month":"Ottobre","day":24,"dow":"S","location":"ACROBATICA"},{"month":"Ottobre","day":28,"dow":"M","location":"ACROBATICA"},{"month":"Ottobre","day":31,"dow":"S","location":"VIAGGIO"}]};
+
+const CAT_LABELS = { sbaby:'S.Baby', baby:'Baby', cuccioli:'Cuccioli', ragazzi:'Ragazzi', allievi:'Allievi', giovani:'Giovani' };
+const CAT_COLORS = { allenatore: {bg:'#E1F5EE', text:'#085041'}, genitore: {bg:'#E6F1FB', text:'#0C447C'} };
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let currentUser = null;
+let userProfile = null;
+let currentRole = 'genitore';
+let selectedCalCat = null;
+let selectedCommCat = 'Tutti';
+let commUnsub = null;
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function initials(name) {
+  if (!name) return '?';
+  return name.split(' ').map(p => p[0]).join('').toUpperCase().slice(0,2);
+}
+
+function getEventColor(loc) {
+  const l = loc.toUpperCase();
+  if (l.includes('VIAGGIO')) return 'c-viaggio';
+  if (l.includes('ATLETICA')) return 'c-atletica';
+  if (l.includes('MULTISPORT')) return 'c-multi';
+  if (l.includes('ACROBATICA')) return 'c-acrobatica';
+  if (['CERVINIA','ISERAN','DEUX ALPES','SNOWHALL','LIGNANO','SCI'].some(k=>l.includes(k))) return 'c-ski';
+  return 'c-altro';
+}
+
+function getEventBadge(loc) {
+  const l = loc.toUpperCase();
+  if (l.includes('VIAGGIO')) return {cls:'badge-viaggio', label:'Viaggio'};
+  if (l.includes('ATLETICA') || l.includes('MULTISPORT') || l.includes('ACROBATICA')) return {cls:'badge-acro', label:'Atletica'};
+  if (l.includes('FINE') || l.includes('INIZIO')) return {cls:'badge-altro', label:'Info'};
+  return {cls:'badge-all', label:'Sci'};
+}
+
+function dowFull(d) {
+  const map = {L:'Lun',M:'Mar',Me:'Mer',G:'Gio',V:'Ven',S:'Sab',D:'Dom'};
+  return map[d] || d;
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const now = Date.now();
+  const t = ts.toDate ? ts.toDate().getTime() : ts;
+  const diff = Math.floor((now - t) / 60000);
+  if (diff < 1) return 'Adesso';
+  if (diff < 60) return `${diff} min fa`;
+  if (diff < 1440) return `${Math.floor(diff/60)} ore fa`;
+  return `${Math.floor(diff/1440)} giorni fa`;
+}
+
+// ─── LOGIN ───────────────────────────────────────────────────────────────────
+window.selectRole = (role, el) => {
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('register-link').style.display = role === 'genitore' ? 'block' : 'none';
+};
+
+window.doLogin = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  const btn = document.getElementById('btn-login');
+  err.style.display = 'none';
+  btn.textContent = 'Accesso in corso...';
+  btn.disabled = true;
+  try {
+    await signInWithEmailAndPassword(auth, email, pwd);
+  } catch(e) {
+    err.style.display = 'block';
+    err.textContent = 'Email o password non corretti.';
+    btn.textContent = 'Accedi';
+    btn.disabled = false;
+  }
+};
+
+window.showRegister = () => {
+  document.getElementById('register-link').style.display = 'none';
+  document.getElementById('back-login-link').style.display = 'block';
+  document.getElementById('btn-login').textContent = 'Registrati';
+  document.getElementById('btn-login').onclick = doRegister;
+};
+
+window.showLogin = () => {
+  document.getElementById('register-link').style.display = 'block';
+  document.getElementById('back-login-link').style.display = 'none';
+  document.getElementById('btn-login').textContent = 'Accedi';
+  document.getElementById('btn-login').onclick = doLogin;
+};
+
+window.doRegister = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  const btn = document.getElementById('btn-login');
+  if (!email || pwd.length < 6) { err.style.display='block'; err.textContent='Email valida e password di almeno 6 caratteri.'; return; }
+  err.style.display = 'none';
+  btn.textContent = 'Registrazione...';
+  btn.disabled = true;
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      email, role: 'genitore', status: 'pending',
+      categories: [], athletes: [], createdAt: serverTimestamp()
+    });
+  } catch(e) {
+    err.style.display = 'block';
+    err.textContent = e.code === 'auth/email-already-in-use' ? 'Email già registrata.' : 'Errore nella registrazione.';
+    btn.textContent = 'Registrati';
+    btn.disabled = false;
+  }
+};
+
+window.doLogout = async () => {
+  if (commUnsub) commUnsub();
+  await signOut(auth);
+};
+
+// ─── AUTH STATE ──────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  document.getElementById('btn-login').textContent = 'Accedi';
+  document.getElementById('btn-login').disabled = false;
+  document.getElementById('btn-login').onclick = doLogin;
+  if (!user) { showScreen('screen-login'); currentUser = null; userProfile = null; return; }
+  currentUser = user;
+  const snap = await getDoc(doc(db, 'users', user.uid));
+  if (!snap.exists()) { showScreen('screen-login'); return; }
+  userProfile = snap.data();
+
+  if (userProfile.role === 'allenatore') {
+    setupAllenatore();
+  } else if (userProfile.status === 'pending') {
+    showScreen('screen-pending');
+  } else {
+    setupGenitore();
+  }
+});
+
+// ─── GENITORE ────────────────────────────────────────────────────────────────
+function setupGenitore() {
+  const cats = userProfile.categories || [];
+  selectedCalCat = cats[0] || null;
+  selectedCommCat = 'Tutti';
+  const ini = initials(userProfile.displayName || userProfile.email);
+  document.getElementById('avatar-cal').textContent = ini;
+  document.getElementById('avatar-comm').textContent = ini;
+  renderCatChips(cats);
+  renderCalendar();
+  setupCommListener(cats);
+  renderProfile();
+  showScreen('screen-calendario');
+}
+
+function renderCatChips(cats) {
+  const el = document.getElementById('cat-chips');
+  el.innerHTML = cats.map(c =>
+    `<div class="chip ${c===selectedCalCat?'active':''}" onclick="window.selectCalCat('${c}')">${CAT_LABELS[c]||c}</div>`
+  ).join('');
+}
+
+window.selectCalCat = (cat) => {
+  selectedCalCat = cat;
+  renderCatChips(userProfile.categories || []);
+  renderCalendar();
+};
+
+function renderCalendar() {
+  const el = document.getElementById('cal-content');
+  const events = selectedCalCat ? (CALENDAR_DATA[selectedCalCat] || []) : [];
+  if (!events.length) { el.innerHTML = '<div class="empty-state">Nessun evento in programma.</div>'; return; }
+  const byMonth = {};
+  events.forEach(e => { if (!byMonth[e.month]) byMonth[e.month]=[]; byMonth[e.month].push(e); });
+  el.innerHTML = '<div style="height:8px"></div>' + Object.entries(byMonth).map(([month, evs]) =>
+    `<div class="month-label">${month}</div>` +
+    evs.map(e => {
+      const badge = getEventBadge(e.location);
+      return `<div class="event-card">
+        <div class="event-date"><div class="event-day-num">${e.day}</div><div class="event-day-name">${dowFull(e.dow)}</div></div>
+        <div class="event-bar ${getEventColor(e.location)}"></div>
+        <div class="event-info"><div class="event-title">${e.location}</div><div class="event-sub">${CAT_LABELS[selectedCalCat]||''}</div></div>
+        <div class="event-badge ${badge.cls}">${badge.label}</div>
+      </div>`;
+    }).join('')
+  ).join('') + '<div style="height:16px"></div>';
+}
+
+window.switchTab = (tab) => {
+  if (tab === 'calendario') { showScreen('screen-calendario'); renderCatChips(userProfile?.categories||[]); renderCalendar(); }
+  else { showScreen('screen-comunicazioni'); renderCommChips(); }
+};
+
+function renderCommChips() {
+  const cats = userProfile?.categories || [];
+  const el = document.getElementById('comm-chips');
+  const all = ['Tutti', ...cats];
+  el.innerHTML = all.map(c => {
+    const label = c === 'Tutti' ? 'Tutti' : (CAT_LABELS[c]||c);
+    return `<div class="chip ${c===selectedCommCat?'active':''}" onclick="window.selectCommCat('${c}')">${label}</div>`;
+  }).join('');
+}
+
+window.selectCommCat = (cat) => { selectedCommCat = cat; renderCommChips(); };
+
+function setupCommListener(cats) {
+  if (commUnsub) commUnsub();
+  if (!cats.length) return;
+  const q = query(collection(db,'communications'), where('category','in',cats), orderBy('createdAt','desc'));
+  commUnsub = onSnapshot(q, snap => {
+    const comms = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderComms(comms);
+  });
+}
+
+function renderComms(comms) {
+  const el = document.getElementById('comm-content');
+  const filtered = selectedCommCat === 'Tutti' ? comms : comms.filter(c => c.category === selectedCommCat);
+  if (!filtered.length) { el.innerHTML = '<div class="empty-state">Nessuna comunicazione.</div>'; return; }
+  el.innerHTML = '<div style="height:8px"></div>' + filtered.map(c => {
+    const catLabel = CAT_LABELS[c.category] || c.category;
+    return `<div class="comm-card">
+      <div class="comm-header">
+        <div class="comm-avatar" style="background:#E1F5EE;color:#085041;">${initials(c.coachName||'?')}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="comm-name">${c.coachName||'Allenatore'}</div>
+          <div class="comm-meta">${timeAgo(c.createdAt)}</div>
+        </div>
+        <div class="unread-dot"></div>
+      </div>
+      <div class="comm-text">${c.text}</div>
+      <div class="comm-footer">
+        <div class="cat-pill" style="background:#E1F5EE;color:#085041;">${catLabel}</div>
+      </div>
+    </div>`;
+  }).join('') + '<div style="height:16px"></div>';
+}
+
+function renderProfile() {
+  const cats = userProfile?.categories || [];
+  const athletes = userProfile?.athletes || [];
+  const el = document.getElementById('profile-content');
+  el.innerHTML = `
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar">${initials(userProfile?.displayName||userProfile?.email||'')}</div>
+        <div>
+          <div class="profile-name">${userProfile?.displayName || 'Genitore'}</div>
+          <div class="profile-email">${userProfile?.email || ''}</div>
+        </div>
+      </div>
+      <div class="profile-row"><div class="profile-row-label">Ruolo</div><div class="profile-row-val">Genitore</div></div>
+      <div class="profile-row">
+        <div class="profile-row-label">Atleti</div>
+        <div>${cats.map(c => `<span class="athlete-pill">⛷️ ${CAT_LABELS[c]||c}</span>`).join('')}</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-row-label">Stato</div>
+        <div class="status-ok"><div class="status-dot" style="background:#1D9E75;"></div><div class="profile-row-val" style="color:#0F6E56;">Approvato</div></div>
+      </div>
+    </div>
+    <div style="text-align:center;padding:16px;">
+      <div style="font-size:14px;color:var(--text-sec);cursor:pointer;" onclick="doLogout()">← Esci dall'account</div>
+    </div>`;
+}
+
+// ─── ALLENATORE ──────────────────────────────────────────────────────────────
+function setupAllenatore() {
+  const cat = userProfile.category || '';
+  const catLabel = CAT_LABELS[cat] || cat;
+  document.getElementById('coach-sub').textContent = `${catLabel} · ${userProfile.displayName||''}`;
+  document.getElementById('avatar-coach').textContent = initials(userProfile.displayName||userProfile.email||'');
+  document.getElementById('modal-title').textContent = `Nuova comunicazione — ${catLabel}`;
+
+  const q = query(collection(db,'communications'), where('category','==',cat), orderBy('createdAt','desc'));
+  commUnsub = onSnapshot(q, snap => {
+    const comms = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderCoachComms(comms);
+  });
+  showScreen('screen-allenatore');
+}
+
+function renderCoachComms(comms) {
+  const el = document.getElementById('coach-content');
+  if (!comms.length) { el.innerHTML = '<div class="empty-state">Nessuna comunicazione inviata.<br>Premi + per iniziare.</div>'; return; }
+  el.innerHTML = '<div style="height:8px"></div>' + comms.map(c => `
+    <div class="comm-card">
+      <div class="comm-header">
+        <div class="comm-avatar" style="background:#E1F5EE;color:#085041;">${initials(c.coachName||'?')}</div>
+        <div style="flex:1;">
+          <div class="comm-name">${c.coachName||'Tu'}</div>
+          <div class="comm-meta">${timeAgo(c.createdAt)}</div>
+        </div>
+      </div>
+      <div class="comm-text">${c.text}</div>
+    </div>
+  `).join('') + '<div style="height:80px"></div>';
+}
+
+window.openCompose = () => {
+  document.getElementById('compose-text').value = '';
+  document.getElementById('modal-overlay').classList.add('open');
+};
+
+window.closeCompose = () => document.getElementById('modal-overlay').classList.remove('open');
+
+window.sendComm = async () => {
+  const text = document.getElementById('compose-text').value.trim();
+  if (!text) return;
+  const btn = document.querySelector('.btn-send');
+  btn.textContent = 'Invio...'; btn.disabled = true;
+  try {
+    await addDoc(collection(db, 'communications'), {
+      text, category: userProfile.category,
+      coachName: userProfile.displayName || userProfile.email,
+      coachId: currentUser.uid,
+      createdAt: serverTimestamp()
+    });
+    closeCompose();
+  } catch(e) { alert('Errore nell\'invio.'); }
+  btn.textContent = 'Invia'; btn.disabled = false;
+};
+
+</script>
+</body>
+</html>
