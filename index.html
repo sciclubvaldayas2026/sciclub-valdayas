@@ -257,7 +257,7 @@
     <div class="navbar">
       <button class="nav-item active" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
       <button class="nav-item" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-      <button class="nav-item" onclick="showScreen('screen-profilo')"><div class="nav-icon">👤</div><div>Profilo</div></button>
+      <button class="nav-item" onclick="showScreen('screen-profilo');renderProfile()"><div class="nav-icon">👤</div><div>Profilo</div></button>
     </div>
   </div>
 
@@ -275,7 +275,7 @@
     <div class="navbar">
       <button class="nav-item" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
       <button class="nav-item active" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-      <button class="nav-item" onclick="showScreen('screen-profilo')"><div class="nav-icon">👤</div><div>Profilo</div></button>
+      <button class="nav-item" onclick="showScreen('screen-profilo');renderProfile()"><div class="nav-icon">👤</div><div>Profilo</div></button>
     </div>
   </div>
 
@@ -286,6 +286,7 @@
         <div class="topbar-title">Profilo</div>
         <div class="topbar-sub">Sci Club Val d'Ayas</div>
       </div>
+      <button class="avatar-btn" onclick="doLogout()" title="Esci">↩</button>
     </div>
     <div class="content">
       <div class="profile-section" id="profile-content"></div>
@@ -626,34 +627,45 @@ function renderComms(comms) {
 }
 
 function renderProfile() {
-  const cats = userProfile?.categories || [];
-  const athletes = userProfile?.athletes || [];
-  const el = document.getElementById('profile-content');
-  el.innerHTML = `
-    <div class="profile-card">
-      <div class="profile-header">
-        <div class="profile-avatar">${initials(userProfile?.displayName||userProfile?.email||'')}</div>
-        <div>
-          <div class="profile-name">${userProfile?.displayName || 'Genitore'}</div>
-          <div class="profile-email">${userProfile?.email || ''}</div>
+  try {
+    const cats = userProfile?.categories || [];
+    const athletes = userProfile?.athletes || [];
+    const displayName = userProfile?.displayName || '';
+    const email = userProfile?.email || currentUser?.email || '';
+    const el = document.getElementById('profile-content');
+    if (!el) return;
+    const athleteHtml = athletes.length > 0
+      ? athletes.map(a => `<span class="athlete-pill">⛷️ ${a.name||''} — ${CAT_LABELS[a.category]||a.category||''}</span>`).join('')
+      : cats.length > 0
+        ? cats.map(c => `<span class="athlete-pill">⛷️ ${CAT_LABELS[c]||c}</span>`).join('')
+        : '<span style="font-size:13px;color:var(--text-sec);">Nessun atleta associato</span>';
+    el.innerHTML = `
+      <div class="profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar">${initials(displayName||email)}</div>
+          <div>
+            <div class="profile-name">${displayName || 'Genitore'}</div>
+            <div class="profile-email">${email}</div>
+          </div>
+        </div>
+        <div class="profile-row"><div class="profile-row-label">Ruolo</div><div class="profile-row-val">Genitore</div></div>
+        <div class="profile-row">
+          <div class="profile-row-label">Atleti</div>
+          <div>${athleteHtml}</div>
+        </div>
+        <div class="profile-row">
+          <div class="profile-row-label">Stato</div>
+          <div class="status-ok"><div class="status-dot" style="background:#1D9E75;"></div><div class="profile-row-val" style="color:#0F6E56;">Approvato</div></div>
         </div>
       </div>
-      <div class="profile-row"><div class="profile-row-label">Ruolo</div><div class="profile-row-val">Genitore</div></div>
-      <div class="profile-row">
-        <div class="profile-row-label">Atleti</div>
-        <div>${(userProfile?.athletes||[]).length > 0
-          ? (userProfile.athletes).map(a => `<span class="athlete-pill">⛷️ ${a.name} — ${CAT_LABELS[a.category]||a.category}</span>`).join('')
-          : cats.map(c => `<span class="athlete-pill">⛷️ ${CAT_LABELS[c]||c}</span>`).join('')
-        }</div>
-      </div>
-      <div class="profile-row">
-        <div class="profile-row-label">Stato</div>
-        <div class="status-ok"><div class="status-dot" style="background:#1D9E75;"></div><div class="profile-row-val" style="color:#0F6E56;">Approvato</div></div>
-      </div>
-    </div>
-    <div style="text-align:center;padding:16px;">
-      <div style="font-size:14px;color:var(--text-sec);cursor:pointer;" onclick="doLogout()">← Esci dall'account</div>
-    </div>`;
+      <div style="padding: 12px;">
+        <button onclick="doLogout()" style="width:100%;padding:13px;border-radius:var(--radius-sm);border:0.5px solid var(--border);background:var(--bg-card);font-size:14px;font-weight:500;color:var(--red);cursor:pointer;">
+          Esci dall'account
+        </button>
+      </div>`;
+  } catch(e) {
+    console.error('renderProfile error:', e);
+  }
 }
 
 // ─── ALLENATORE ──────────────────────────────────────────────────────────────
