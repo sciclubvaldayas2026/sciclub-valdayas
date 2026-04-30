@@ -205,8 +205,8 @@
     </div>
     <div class="login-card" id="login-card">
       <div class="role-tabs">
-        <div class="role-tab active" onclick="selectRole('genitore',this)">Genitore / Atleta</div>
-        <div class="role-tab" onclick="selectRole('allenatore',this)">Allenatore</div>
+        <div class="role-tab active" id="role-genitore">Genitore / Atleta</div>
+        <div class="role-tab" id="role-allenatore">Allenatore</div>
       </div>
       <div>
         <div class="field-label">Email</div>
@@ -217,8 +217,8 @@
         <input class="field-input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password">
       </div>
       <div class="error-msg" id="login-error">Email o password non corretti.</div>
-      <button class="btn-primary" onclick="doLogin()" id="btn-login">Accedi</button>
-      <div class="btn-link" id="register-link">Non hai un account? <span onclick="showRegisterForm()">Registrati</span></div>
+      <button class="btn-primary" id="btn-login">Accedi</button>
+      <div class="btn-link" id="register-link">Non hai un account? <span id="link-register">Registrati</span></div>
     </div>
 
     <!-- REGISTER FORM (separate card, hidden by default) -->
@@ -273,8 +273,8 @@
         </select>
       </div>
       <div class="error-msg" id="reg-error"></div>
-      <button class="btn-primary" onclick="doRegister()" id="btn-register">Invia richiesta</button>
-      <div class="btn-link"><span onclick="showLoginForm()">← Torna al login</span></div>
+      <button class="btn-primary" id="btn-register">Invia richiesta</button>
+      <div class="btn-link"><span id="link-back-login">← Torna al login</span></div>
     </div>
   </div>
 
@@ -285,14 +285,14 @@
         <div class="topbar-title">Calendario</div>
         <div class="topbar-sub">Stagione 2026/27</div>
       </div>
-      <button class="avatar-btn" id="avatar-cal" onclick="showScreen('screen-profilo')"></button>
+      <button class="avatar-btn" id="avatar-cal" data-screen="screen-profilo"></button>
     </div>
     <div class="chips-row" id="cat-chips"></div>
     <div class="content" id="cal-content"></div>
     <div class="navbar">
-      <button class="nav-item active" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
-      <button class="nav-item" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-      <button class="nav-item" onclick="showScreen('screen-profilo');renderProfile()"><div class="nav-icon">👤</div><div>Profilo</div></button>
+      <button class="nav-item active" data-tab="calendario"><div class="nav-icon">📅</div><div>Calendario</div></button>
+      <button class="nav-item" data-tab="comunicazioni"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+      <button class="nav-item" data-screen="screen-profilo"><div class="nav-icon">👤</div><div>Profilo</div></button>
     </div>
   </div>
 
@@ -303,14 +303,14 @@
         <div class="topbar-title">Comunicazioni</div>
         <div class="topbar-sub" id="comm-sub">Le tue categorie</div>
       </div>
-      <button class="avatar-btn" id="avatar-comm" onclick="showScreen('screen-profilo')"></button>
+      <button class="avatar-btn" id="avatar-comm" data-screen="screen-profilo"></button>
     </div>
     <div class="chips-row" id="comm-chips"></div>
     <div class="content" id="comm-content"></div>
     <div class="navbar">
-      <button class="nav-item" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
-      <button class="nav-item active" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-      <button class="nav-item" onclick="showScreen('screen-profilo');renderProfile()"><div class="nav-icon">👤</div><div>Profilo</div></button>
+      <button class="nav-item" data-tab="calendario"><div class="nav-icon">📅</div><div>Calendario</div></button>
+      <button class="nav-item active" data-tab="comunicazioni"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+      <button class="nav-item" data-screen="screen-profilo"><div class="nav-icon">👤</div><div>Profilo</div></button>
     </div>
   </div>
 
@@ -321,14 +321,14 @@
         <div class="topbar-title">Profilo</div>
         <div class="topbar-sub">Sci Club Val d'Ayas</div>
       </div>
-      <button class="avatar-btn" onclick="doLogout()" title="Esci">↩</button>
+      <button class="avatar-btn" id="btn-logout-topbar" title="Esci">↩</button>
     </div>
     <div class="content">
       <div class="profile-section" id="profile-content"></div>
     </div>
     <div class="navbar">
-      <button class="nav-item" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
-      <button class="nav-item" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+      <button class="nav-item" data-tab="calendario"><div class="nav-icon">📅</div><div>Calendario</div></button>
+      <button class="nav-item" data-tab="comunicazioni"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
       <button class="nav-item active"><div class="nav-icon">👤</div><div>Profilo</div></button>
     </div>
   </div>
@@ -347,7 +347,7 @@
       <div class="pending-sub">La tua richiesta è stata inviata. Un amministratore verificherà i tuoi dati e attiverà il tuo account. Riceverai una email di conferma.</div>
     </div>
     <div style="padding: 0 16px calc(16px + var(--safe-bottom));">
-      <button class="btn-primary" style="background: var(--gray-600);" onclick="doLogout()">Esci</button>
+      <button class="btn-primary" style="background: var(--gray-600);" class="btn-logout">Esci</button>
     </div>
   </div>
 
@@ -358,31 +358,31 @@
         <div class="topbar-title">Comunicazioni</div>
         <div class="topbar-sub" id="coach-sub">Allenatore</div>
       </div>
-      <button class="avatar-btn" id="avatar-coach" onclick="doLogout()">↩</button>
+      <button class="avatar-btn" id="avatar-coach" class="btn-logout">↩</button>
     </div>
     <div class="content" id="coach-content"></div>
-    <button class="fab" onclick="openCompose()">+</button>
+    <button class="fab" id="fab-compose">+</button>
     <div class="navbar">
       <button class="nav-item active-green"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-      <button class="nav-item" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
-      <button class="nav-item" onclick="doLogout()"><div class="nav-icon">↩</div><div>Esci</div></button>
+      <button class="nav-item" data-tab="calendario"><div class="nav-icon">📅</div><div>Calendario</div></button>
+      <button class="nav-item" class="btn-logout"><div class="nav-icon">↩</div><div>Esci</div></button>
     </div>
   </div>
 
   <!-- COMPOSE MODAL -->
-  <div class="modal-overlay" id="modal-overlay" onclick="closeCompose()">
+  <div class="modal-overlay" id="modal-overlay" id="btn-close-compose">
     <div class="modal-sheet" onclick="event.stopPropagation()">
       <div class="modal-title" id="modal-title">Nuova comunicazione</div>
       <textarea class="modal-textarea" id="compose-text" placeholder="Scrivi un messaggio per i genitori della categoria..."></textarea>
       <div class="modal-actions">
-        <button class="btn-cancel" onclick="closeCompose()">Annulla</button>
-        <button class="btn-send" onclick="sendComm()">Invia</button>
+        <button class="btn-cancel" id="btn-close-compose">Annulla</button>
+        <button class="btn-send" id="btn-send-comm">Invia</button>
       </div>
     </div>
   </div>
 
   <!-- EVENT DETAIL MODAL -->
-  <div class="modal-overlay" id="event-modal" onclick="closeEventModal()">
+  <div class="modal-overlay" id="event-modal" class="btn-close-event-modal">
     <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:80vh;overflow-y:auto;">
       <div id="event-modal-content"></div>
       <div id="event-note-form" style="display:none;margin-top:12px;display:flex;flex-direction:column;gap:8px;">
@@ -391,11 +391,11 @@
         <input class="field-input" id="event-time" placeholder="Orario (es. 07:30 partenza)">
         <textarea class="modal-textarea" id="event-notes" placeholder="Note per i genitori..." style="height:80px;"></textarea>
         <div class="modal-actions">
-          <button class="btn-cancel" onclick="document.getElementById('event-note-form').style.display='none'">Annulla</button>
+          <button class="btn-cancel" id="btn-cancel-note">Annulla</button>
           <button class="btn-send" onclick="saveEventNote()">Salva</button>
         </div>
       </div>
-      <button class="btn-cancel" onclick="closeEventModal()" style="width:100%;margin-top:10px;">Chiudi</button>
+      <button class="btn-cancel" class="btn-close-event-modal" style="width:100%;margin-top:10px;">Chiudi</button>
     </div>
   </div>
 
@@ -406,13 +406,13 @@
         <div class="topbar-title">Pannello Admin</div>
         <div class="topbar-sub">Sci Club Val d'Ayas</div>
       </div>
-      <button class="avatar-btn" onclick="doLogout()" title="Esci">↩</button>
+      <button class="avatar-btn" id="btn-logout-topbar" title="Esci">↩</button>
     </div>
     <div style="display:flex;background:#1a1a18;flex-shrink:0;">
-      <button class="admin-tab active" id="atab-pending" onclick="switchAdminTab('pending')">Richieste</button>
-      <button class="admin-tab" id="atab-coaches" onclick="switchAdminTab('coaches')">Allenatori</button>
-      <button class="admin-tab" id="atab-medical" onclick="switchAdminTab('medical')">Visite</button>
-      <button class="admin-tab" id="atab-users" onclick="switchAdminTab('users')">Utenti</button>
+      <button class="admin-tab active" id="atab-pending" data-admintab="pending">Richieste</button>
+      <button class="admin-tab" id="atab-coaches" data-admintab="coaches">Allenatori</button>
+      <button class="admin-tab" id="atab-medical" data-admintab="medical">Visite</button>
+      <button class="admin-tab" id="atab-users" data-admintab="users">Utenti</button>
     </div>
     <div class="content" id="admin-content"></div>
   </div>
@@ -739,7 +739,7 @@ function renderProfile() {
         </div>
       </div>
       <div style="padding: 12px;">
-        <button onclick="doLogout()" style="width:100%;padding:13px;border-radius:var(--radius-sm);border:0.5px solid var(--border);background:var(--bg-card);font-size:14px;font-weight:500;color:var(--red);cursor:pointer;">
+        <button class="btn-logout" style="width:100%;padding:13px;border-radius:var(--radius-sm);border:0.5px solid var(--border);background:var(--bg-card);font-size:14px;font-weight:500;color:var(--red);cursor:pointer;">
           Esci dall'account
         </button>
       </div>`;
@@ -1070,7 +1070,7 @@ function renderProfileFull() {
         '<div class="status-ok"><div class="status-dot" style="background:#1D9E75;"></div><div class="profile-row-val" style="color:#0F6E56;">Approvato</div></div>'+
       '</div></div>'+
       '<div style="padding:12px;">'+
-        '<button onclick="doLogout()" style="width:100%;padding:13px;border-radius:var(--radius-sm);border:0.5px solid var(--border);background:var(--bg-card);font-size:14px;font-weight:500;color:var(--red);cursor:pointer;">Esci dall'account</button>'+
+        '<button class="btn-logout" style="width:100%;padding:13px;border-radius:var(--radius-sm);border:0.5px solid var(--border);background:var(--bg-card);font-size:14px;font-weight:500;color:var(--red);cursor:pointer;">Esci dall'account</button>'+
       '</div>';
   } catch(e) { console.error('renderProfile error:', e); }
 }
@@ -1088,6 +1088,59 @@ window._setupUser = async (user) => {
   else if (userProfile.status === 'pending') { showScreen('screen-pending'); }
   else { setupGenitoreFull(); }
 };
+
+// ─── EVENT LISTENERS (replaces all inline onclick) ───────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Role tabs
+  const roleG = document.getElementById('role-genitore');
+  const roleA = document.getElementById('role-allenatore');
+  if (roleG) roleG.addEventListener('click', () => { currentRole='genitore'; document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active')); roleG.classList.add('active'); document.getElementById('register-link')&&(document.getElementById('register-link').style.display='block'); });
+  if (roleA) roleA.addEventListener('click', () => { currentRole='allenatore'; document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active')); roleA.classList.add('active'); document.getElementById('register-link')&&(document.getElementById('register-link').style.display='none'); });
+
+  // Login
+  const btnLogin = document.getElementById('btn-login');
+  if (btnLogin) btnLogin.addEventListener('click', doLogin);
+
+  // Register links
+  const linkReg = document.getElementById('link-register');
+  if (linkReg) linkReg.addEventListener('click', showRegisterForm);
+  const linkBack = document.getElementById('link-back-login');
+  if (linkBack) linkBack.addEventListener('click', showLoginForm);
+  const btnReg = document.getElementById('btn-register');
+  if (btnReg) btnReg.addEventListener('click', doRegister);
+
+  // Nav tabs - use event delegation
+  document.addEventListener('click', (e) => {
+    const tab = e.target.closest('[data-tab]');
+    if (tab) { switchTab(tab.dataset.tab); return; }
+    const screen = e.target.closest('[data-screen]');
+    if (screen) { showScreen(screen.dataset.screen); if(screen.dataset.screen==='screen-profilo') renderProfile(); return; }
+    const adminTab = e.target.closest('[data-admintab]');
+    if (adminTab) { switchAdminTab(adminTab.dataset.admintab); return; }
+  });
+
+  // Logout buttons
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.btn-logout') || e.target.id === 'btn-logout-topbar') { doLogout(); }
+  });
+
+  // Compose FAB
+  const fab = document.getElementById('fab-compose');
+  if (fab) fab.addEventListener('click', openCompose);
+  const closeComp = document.getElementById('btn-close-compose');
+  if (closeComp) closeComp.addEventListener('click', closeCompose);
+  const sendComp = document.getElementById('btn-send-comm');
+  if (sendComp) sendComp.addEventListener('click', sendComm);
+
+  // Event modal close
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.btn-close-event-modal')) closeEventModal();
+  });
+
+  // Cancel note form
+  const cancelNote = document.getElementById('btn-cancel-note');
+  if (cancelNote) cancelNote.addEventListener('click', () => { document.getElementById('event-note-form').style.display='none'; });
+});
 
 </body>
 </html>
