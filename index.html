@@ -587,7 +587,6 @@ window.doLogout = async () => {
 onAuthStateChanged(auth, async (user) => {
   document.getElementById('btn-login').textContent = 'Accedi';
   document.getElementById('btn-login').disabled = false;
-  document.getElementById('btn-login').onclick = doLogin;
   if (!user) { showScreen('screen-login'); currentUser = null; userProfile = null; return; }
   currentUser = user;
   const snap = await getDoc(doc(db, 'users', user.uid));
