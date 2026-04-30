@@ -78,6 +78,12 @@
 
   /* EVENT CARD */
   .event-card { margin: 0 12px 8px; background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .event-card.group-start { border-radius: var(--radius) var(--radius) 0 0; margin-bottom: 0; border-bottom: none; }
+  .event-card.group-mid { border-radius: 0; margin: 0 12px; border-top: 0.5px solid var(--gray-100); border-bottom: none; }
+  .event-card.group-end { border-radius: 0 0 var(--radius) var(--radius); margin-bottom: 8px; border-top: 0.5px solid var(--gray-100); }
+  .event-card.group-start, .event-card.group-mid, .event-card.group-end { background: var(--bg-card); }
+  .group-label { margin: 0 12px 0; background: var(--bg-card); border-radius: var(--radius) var(--radius) 0 0; padding: 7px 14px 0; border: 0.5px solid var(--border); border-bottom: none; }
+  .group-label-text { font-size: 10px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; display: inline-block; }
   .event-date { width: 42px; text-align: center; flex-shrink: 0; }
   .event-day-num { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1; }
   .event-day-name { font-size: 10px; color: var(--text-sec); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
@@ -89,16 +95,16 @@
   .month-label { padding: 14px 14px 4px; font-size: 13px; font-weight: 600; color: var(--text-sec); }
 
   /* COLORS */
-  .c-ski { background: var(--blue-mid); }
+  .c-sci { background: #E6B800; }
   .c-atletica { background: var(--teal-mid); }
-  .c-multi { background: var(--amber-mid); }
-  .c-viaggio { background: #D4537E; }
-  .c-acrobatica { background: #9C6DD8; }
-  .c-altro { background: var(--gray-400); }
-  .badge-all { background: var(--blue-light); color: var(--blue-dark); }
-  .badge-viaggio { background: #FBEAF0; color: #993556; }
-  .badge-acro { background: #F3EDFC; color: #6B3FB5; }
-  .badge-altro { background: var(--bg); color: var(--text-sec); border: 0.5px solid var(--border); }
+  .c-multi { background: #E8760A; }
+  .c-campus { background: #4AAED9; }
+  .c-info { background: var(--gray-400); }
+  .badge-sci { background: #FFF8CC; color: #7A5500; }
+  .badge-atletica { background: var(--teal-light); color: var(--teal); }
+  .badge-multi { background: #FFF0E0; color: #8A3D00; }
+  .badge-campus { background: #E0F4FF; color: #1A6A99; }
+  .badge-info { background: var(--bg); color: var(--text-sec); border: 0.5px solid var(--border); }
 
   /* COMM CARD */
   .comm-card { margin: 0 12px 10px; background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 14px; cursor: pointer; }
@@ -156,6 +162,35 @@
 
   /* EMPTY STATE */
   .empty-state { padding: 40px 24px; text-align: center; color: var(--text-sec); font-size: 14px; }
+
+  /* ADMIN TABS */
+  .admin-tab { flex: 1; padding: 10px 8px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.5); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .admin-tab.active { color: white; border-bottom-color: white; }
+  .admin-section { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .admin-card { background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 14px; }
+  .admin-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+  .request-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .request-row:last-child { border-bottom: none; }
+  .request-info { flex: 1; }
+  .request-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .request-detail { font-size: 11px; color: var(--text-sec); margin-top: 2px; line-height: 1.4; }
+  .request-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-approve { padding: 6px 12px; border-radius: 6px; background: var(--teal-light); color: var(--teal); font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
+  .btn-reject { padding: 6px 12px; border-radius: 6px; background: var(--red-light); color: var(--red); font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
+  .vm-status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 10px; }
+  .vm-ok { background: var(--teal-light); color: var(--teal); }
+  .vm-warn { background: var(--amber-light); color: var(--amber); }
+  .vm-scad { background: var(--red-light); color: var(--red); }
+  .vm-none { background: var(--bg); color: var(--text-sec); border: 0.5px solid var(--border); }
+  /* EVENT MODAL */
+  .event-modal-title { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .event-modal-date { font-size: 13px; color: var(--text-sec); margin-bottom: 14px; }
+  .event-detail-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 14px; }
+  .event-detail-row:last-child { border-bottom: none; }
+  .event-detail-icon { font-size: 16px; flex-shrink: 0; width: 24px; text-align: center; }
+  .event-detail-text { color: var(--text); flex: 1; }
+  .btn-add-note { width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 0.5px dashed var(--teal-mid); background: var(--teal-light); color: var(--teal); font-size: 13px; font-weight: 500; cursor: pointer; margin-top: 10px; }
+
 </style>
 </head>
 <body>
@@ -346,6 +381,42 @@
     </div>
   </div>
 
+  <!-- EVENT DETAIL MODAL -->
+  <div class="modal-overlay" id="event-modal" onclick="closeEventModal()">
+    <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:80vh;overflow-y:auto;">
+      <div id="event-modal-content"></div>
+      <div id="event-note-form" style="display:none;margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:14px;font-weight:600;color:var(--text);">Aggiungi dettagli</div>
+        <input class="field-input" id="event-place" placeholder="Luogo (es. Cervinia, Pista Ventina)">
+        <input class="field-input" id="event-time" placeholder="Orario (es. 07:30 partenza)">
+        <textarea class="modal-textarea" id="event-notes" placeholder="Note per i genitori..." style="height:80px;"></textarea>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="document.getElementById('event-note-form').style.display='none'">Annulla</button>
+          <button class="btn-send" onclick="saveEventNote()">Salva</button>
+        </div>
+      </div>
+      <button class="btn-cancel" onclick="closeEventModal()" style="width:100%;margin-top:10px;">Chiudi</button>
+    </div>
+  </div>
+
+  <!-- ADMIN SCREEN -->
+  <div class="screen" id="screen-admin">
+    <div class="topbar" style="background:#2C2C2A;">
+      <div>
+        <div class="topbar-title">Pannello Admin</div>
+        <div class="topbar-sub">Sci Club Val d'Ayas</div>
+      </div>
+      <button class="avatar-btn" onclick="doLogout()" title="Esci">↩</button>
+    </div>
+    <div style="display:flex;background:#1a1a18;flex-shrink:0;">
+      <button class="admin-tab active" id="atab-pending" onclick="switchAdminTab('pending')">Richieste</button>
+      <button class="admin-tab" id="atab-coaches" onclick="switchAdminTab('coaches')">Allenatori</button>
+      <button class="admin-tab" id="atab-medical" onclick="switchAdminTab('medical')">Visite</button>
+      <button class="admin-tab" id="atab-users" onclick="switchAdminTab('users')">Utenti</button>
+    </div>
+    <div class="content" id="admin-content"></div>
+  </div>
+
 </div>
 
 <!-- Firebase -->
@@ -395,20 +466,23 @@ function initials(name) {
 
 function getEventColor(loc) {
   const l = loc.toUpperCase();
-  if (l.includes('VIAGGIO')) return 'c-viaggio';
-  if (l.includes('ATLETICA')) return 'c-atletica';
-  if (l.includes('MULTISPORT')) return 'c-multi';
-  if (l.includes('ACROBATICA')) return 'c-acrobatica';
-  if (['CERVINIA','ISERAN','DEUX ALPES','SNOWHALL','LIGNANO','SCI'].some(k=>l.includes(k))) return 'c-ski';
-  return 'c-altro';
+  if (['ATLETICA'].some(k=>l.includes(k))) return 'c-atletica';
+  if (['MULTISPORT'].some(k=>l.includes(k))) return 'c-multi';
+  if (['ACROBATICA','LIGNANO','VIAGGIO'].some(k=>l.includes(k))) return 'c-campus';
+  if (['FINE','INIZIO'].some(k=>l.includes(k))) return 'c-info';
+  if (['CERVINIA','ISERAN','DEUX ALPES','SNOWHALL','SCI'].some(k=>l.includes(k))) return 'c-sci';
+  return 'c-info';
 }
 
 function getEventBadge(loc) {
   const l = loc.toUpperCase();
-  if (l.includes('VIAGGIO')) return {cls:'badge-viaggio', label:'Viaggio'};
-  if (l.includes('ATLETICA') || l.includes('MULTISPORT') || l.includes('ACROBATICA')) return {cls:'badge-acro', label:'Atletica'};
-  if (l.includes('FINE') || l.includes('INIZIO')) return {cls:'badge-altro', label:'Info'};
-  return {cls:'badge-all', label:'Sci'};
+  if (l.includes('ATLETICA')) return {cls:'badge-atletica', label:'Atletica'};
+  if (l.includes('MULTISPORT')) return {cls:'badge-multi', label:'Multisport'};
+  if (l.includes('ACROBATICA')) return {cls:'badge-campus', label:'Acrobatica'};
+  if (l.includes('LIGNANO') || l.includes('VIAGGIO')) return {cls:'badge-campus', label:'Viaggio'};
+  if (l.includes('FINE') || l.includes('INIZIO')) return {cls:'badge-info', label:'Info'};
+  if (['CERVINIA','ISERAN','DEUX ALPES','SNOWHALL','SCI'].some(k=>l.includes(k))) return {cls:'badge-sci', label:'Sci'};
+  return {cls:'badge-info', label:'Info'};
 }
 
 function dowFull(d) {
@@ -520,10 +594,14 @@ onAuthStateChanged(auth, async (user) => {
   if (!snap.exists()) { showScreen('screen-login'); return; }
   userProfile = snap.data();
 
-  if (userProfile.role === 'allenatore') {
+  if (userProfile.role === 'admin') {
+    setupAdmin();
+  } else if (userProfile.role === 'allenatore') {
     setupAllenatore();
   } else if (userProfile.status === 'pending') {
     showScreen('screen-pending');
+  } else if (typeof setupGenitoreFull === 'function') {
+    setupGenitoreFull();
   } else {
     setupGenitore();
   }
@@ -712,23 +790,304 @@ window.openCompose = () => {
 
 window.closeCompose = () => document.getElementById('modal-overlay').classList.remove('open');
 
-window.sendComm = async () => {
-  const text = document.getElementById('compose-text').value.trim();
-  if (!text) return;
-  const btn = document.querySelector('.btn-send');
-  btn.textContent = 'Invio...'; btn.disabled = true;
+// ─── EVENT NOTES ─────────────────────────────────────────────────────────────
+let currentEventKey = null;
+let eventNotesCache = {};
+
+async function loadEventNotes(category) {
   try {
-    await addDoc(collection(db, 'communications'), {
-      text, category: userProfile.category,
-      coachName: userProfile.displayName || userProfile.email,
-      coachId: currentUser.uid,
-      createdAt: serverTimestamp()
-    });
-    closeCompose();
-  } catch(e) { alert('Errore nell\'invio.'); }
-  btn.textContent = 'Invia'; btn.disabled = false;
+    const snap = await getDocs(query(collection(db,'eventNotes'), where('category','==',category)));
+    snap.docs.forEach(d => { eventNotesCache[d.id] = d.data(); });
+  } catch(e) { console.log('loadEventNotes:', e); }
+}
+
+function getEventKey(cat, month, day) { return cat+'_'+month+'_'+day; }
+
+window.openEventModal = async (cat, month, day, location, dow) => {
+  currentEventKey = getEventKey(cat, month, day);
+  const note = eventNotesCache[currentEventKey];
+  const isCoach = userProfile && userProfile.role === 'allenatore' && (userProfile.categories||[userProfile.category]).includes(cat);
+  const el = document.getElementById('event-modal-content');
+  const noteHtml = note ? (
+    '<div class="event-detail-row"><div class="event-detail-icon">📍</div><div class="event-detail-text">'+(note.place||'—')+'</div></div>'+
+    '<div class="event-detail-row"><div class="event-detail-icon">🕐</div><div class="event-detail-text">'+(note.time||'—')+'</div></div>'+
+    '<div class="event-detail-row"><div class="event-detail-icon">📝</div><div class="event-detail-text">'+(note.notes||'—')+'</div></div>'
+  ) : '<div style="font-size:13px;color:var(--text-sec);padding:8px 0;">Nessun dettaglio aggiunto dagli allenatori.</div>';
+  const editBtn = isCoach ? '<button class="btn-add-note" onclick="showEventNoteForm()">✏️ '+(note?'Modifica dettagli':'Aggiungi dettagli')+'</button>' : '';
+  el.innerHTML = '<div class="event-modal-title">'+location+'</div><div class="event-modal-date">'+dow+' '+day+' '+month+' · '+(CAT_LABELS[cat]||cat)+'</div>'+noteHtml+editBtn;
+  document.getElementById('event-note-form').style.display = 'none';
+  document.getElementById('event-place').value = note&&note.place||'';
+  document.getElementById('event-time').value = note&&note.time||'';
+  document.getElementById('event-notes').value = note&&note.notes||'';
+  document.getElementById('event-modal').classList.add('open');
 };
 
-</script>
+window.showEventNoteForm = () => {
+  const f = document.getElementById('event-note-form');
+  f.style.display = 'flex'; f.style.flexDirection = 'column'; f.style.gap = '8px';
+};
+
+window.saveEventNote = async () => {
+  const place = document.getElementById('event-place').value.trim();
+  const time = document.getElementById('event-time').value.trim();
+  const notes = document.getElementById('event-notes').value.trim();
+  try {
+    await setDoc(doc(db,'eventNotes', currentEventKey), {
+      place, time, notes, category: userProfile.category,
+      updatedBy: userProfile.displayName || userProfile.email, updatedAt: serverTimestamp()
+    });
+    eventNotesCache[currentEventKey] = {place, time, notes};
+    renderCalendar();
+    closeEventModal();
+  } catch(e) { alert('Errore: '+e.message); }
+};
+
+window.closeEventModal = () => document.getElementById('event-modal').classList.remove('open');
+
+// ─── MEDICAL ─────────────────────────────────────────────────────────────────
+function vmStatus(dateStr) {
+  if (!dateStr) return {cls:'vm-none', label:'Non inserita', dot:'⚪'};
+  const exp = new Date(dateStr); const now = new Date();
+  const days = Math.floor((exp - now) / 86400000);
+  if (days < 0) return {cls:'vm-scad', label:'Scaduta', dot:'🔴'};
+  if (days <= 30) return {cls:'vm-warn', label:'Scade in '+days+'gg', dot:'🟡'};
+  return {cls:'vm-ok', label:'Valida fino al '+exp.toLocaleDateString('it-IT'), dot:'🟢'};
+}
+
+// ─── CALENDAR updated (clickable + note pin) ──────────────────────────────────
+function getGroupType(loc) {
+  // Returns a string key for grouping same-type consecutive events
+  const l = loc.toUpperCase();
+  if (l.includes('ATLETICA')) return 'atletica';
+  if (l.includes('MULTISPORT')) return 'multisport';
+  if (l.includes('ACROBATICA')) return 'acrobatica';
+  if (l.includes('LIGNANO')) return 'lignano';
+  if (l.includes('CERVINIA')) return 'cervinia';
+  if (l.includes('ISERAN')) return 'iseran';
+  if (l.includes('DEUX ALPES') || l.includes('DEUX')) return 'deuxalpes';
+  if (l.includes('SNOWHALL')) return 'snowhall';
+  if (l.includes('VIAGGIO')) return 'viaggio';
+  return loc.toUpperCase().replace(/\s/g,'_');
+}
+
+function renderCalendar() {
+  const el = document.getElementById('cal-content');
+  if (!el) return;
+  const events = selectedCalCat ? (CALENDAR_DATA[selectedCalCat] || []) : [];
+  if (!events.length) { el.innerHTML = '<div class="empty-state">Nessun evento in programma.</div>'; return; }
+  const byMonth = {};
+  events.forEach(e => { if (!byMonth[e.month]) byMonth[e.month]=[]; byMonth[e.month].push(e); });
+
+  let html = '<div style="height:8px"></div>';
+  Object.entries(byMonth).forEach(([month, evs]) => {
+    html += '<div class="month-label">'+month+'</div>';
+    // Tag each event with group position
+    for (let i = 0; i < evs.length; i++) {
+      const e = evs[i];
+      const gt = getGroupType(e.location);
+      const prevGt = i > 0 ? getGroupType(evs[i-1].location) : null;
+      const nextGt = i < evs.length-1 ? getGroupType(evs[i+1].location) : null;
+      const isStart = gt !== prevGt && gt === nextGt;
+      const isMid = gt === prevGt && gt === nextGt;
+      const isEnd = gt === prevGt && gt !== nextGt;
+      const isSingle = gt !== prevGt && gt !== nextGt;
+      let groupCls = '';
+      if (isStart) groupCls = 'group-start';
+      else if (isMid) groupCls = 'group-mid';
+      else if (isEnd) groupCls = 'group-end';
+      const badge = getEventBadge(e.location);
+      const color = getEventColor(e.location);
+      const key = getEventKey(selectedCalCat, e.month, e.day);
+      const hasNote = !!eventNotesCache[key];
+      // Show group label only on first of group
+      if (isStart) {
+        const badgeInfo = getEventBadge(e.location);
+        html += '<div class="group-label"><span class="group-label-text badge-'+badgeInfo.cls.replace('badge-','')+'" style="opacity:0.8;">📅 '+badgeInfo.label+' · '+month+'</span></div>';
+      }
+      html += '<div class="event-card '+groupCls+'" onclick="openEventModal(''+selectedCalCat+'',''+e.month+'','+e.day+',''+e.location+'',''+dowFull(e.dow)+'')" style="cursor:pointer;">'+
+        '<div class="event-date"><div class="event-day-num">'+e.day+'</div><div class="event-day-name">'+dowFull(e.dow)+'</div></div>'+
+        '<div class="event-bar '+color+'"></div>'+
+        '<div class="event-info"><div class="event-title">'+e.location+(hasNote?' 📌':'')+'</div><div class="event-sub">'+(CAT_LABELS[selectedCalCat]||'')+'</div></div>'+
+        (isSingle||isStart||isEnd||isMid ? '<div class="event-badge '+badge.cls+'">'+badge.label+'</div>' : '')+
+      '</div>';
+    }
+  });
+  html += '<div style="height:16px"></div>';
+  el.innerHTML = html;
+}
+window.renderCalendar = renderCalendar;
+
+// ─── ADMIN ───────────────────────────────────────────────────────────────────
+let currentAdminTab = 'pending';
+
+function setupAdmin() { showScreen('screen-admin'); switchAdminTab('pending'); }
+window.setupAdmin = setupAdmin;
+
+window.switchAdminTab = async (tab) => {
+  currentAdminTab = tab;
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  const tabEl = document.getElementById('atab-'+tab);
+  if (tabEl) tabEl.classList.add('active');
+  const el = document.getElementById('admin-content');
+  el.innerHTML = '<div class="loading">Caricamento...</div>';
+  if (tab === 'pending') await renderPending(el);
+  else if (tab === 'coaches') renderCoachForm(el);
+  else if (tab === 'medical') await renderMedical(el);
+  else if (tab === 'users') await renderUsers(el);
+};
+
+async function renderPending(el) {
+  const snap = await getDocs(query(collection(db,'users'), where('status','==','pending')));
+  const pending = snap.docs.map(d => ({id:d.id,...d.data()}));
+  if (!pending.length) { el.innerHTML = '<div class="empty-state">Nessuna richiesta pendente 🎉</div>'; return; }
+  el.innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Richieste in attesa ('+pending.length+')</div>'+
+    pending.map(u => {
+      const athletes = (u.athletes||[]).map(a=>a.name+' · '+(CAT_LABELS[a.category]||a.category)).join(', ') || (u.categories||[]).join(', ') || '—';
+      return '<div class="request-row"><div class="request-info"><div class="request-name">'+(u.displayName||u.email)+'</div><div class="request-detail">'+u.email+'</div><div class="request-detail">🎿 '+athletes+'</div></div>'+
+        '<div class="request-actions"><button class="btn-approve" onclick="approveUser(''+u.id+'')">✓ Approva</button><button class="btn-reject" onclick="rejectUser(''+u.id+'')">✕</button></div></div>';
+    }).join('')+'</div></div>';
+}
+
+window.approveUser = async (uid) => {
+  await setDoc(doc(db,'users',uid), {status:'approved'}, {merge:true});
+  switchAdminTab('pending');
+};
+window.rejectUser = async (uid) => {
+  if (!confirm('Eliminare questa richiesta?')) return;
+  await setDoc(doc(db,'users',uid), {status:'rejected'}, {merge:true});
+  switchAdminTab('pending');
+};
+
+function renderCoachForm(el) {
+  el.innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Crea account allenatore</div>'+
+    '<div class="field-label" style="margin-bottom:5px;">Nome e cognome</div><input class="field-input" id="coach-name" placeholder="Giovanni Bianchi" style="margin-bottom:10px;">'+
+    '<div class="field-label" style="margin-bottom:5px;">Email</div><input class="field-input" id="coach-email" type="email" placeholder="email@esempio.it" style="margin-bottom:10px;">'+
+    '<div class="field-label" style="margin-bottom:5px;">Password temporanea</div><input class="field-input" id="coach-pwd" type="text" placeholder="min. 6 caratteri" style="margin-bottom:10px;">'+
+    '<div class="field-label" style="margin-bottom:5px;">Categoria</div>'+
+    '<select class="field-input" id="coach-cat" style="margin-bottom:14px;cursor:pointer;"><option value="">-- Seleziona --</option>'+
+    '<option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>'+
+    '<option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option></select>'+
+    '<div class="error-msg" id="coach-error"></div>'+
+    '<button class="btn-primary" style="background:var(--teal);" onclick="createCoach()">Crea account allenatore</button></div></div>';
+}
+
+window.createCoach = async () => {
+  const name = document.getElementById('coach-name').value.trim();
+  const email = document.getElementById('coach-email').value.trim();
+  const pwd = document.getElementById('coach-pwd').value;
+  const cat = document.getElementById('coach-cat').value;
+  const err = document.getElementById('coach-error');
+  err.style.display = 'none';
+  if (!name||!email||pwd.length<6||!cat) { err.style.display='block'; err.textContent='Compila tutti i campi (password min. 6 caratteri).'; return; }
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+    await setDoc(doc(db,'users',cred.user.uid), {
+      email, displayName:name, role:'allenatore', status:'approved',
+      category:cat, categories:[cat], createdAt: serverTimestamp()
+    });
+    alert('Account creato per '+name+'. Categoria: '+(CAT_LABELS[cat]||cat)+'. Comunica le credenziali.');
+    renderCoachForm(document.getElementById('admin-content'));
+  } catch(e) {
+    const e2 = document.getElementById('coach-error');
+    if(e2){e2.style.display='block'; e2.textContent=e.code==='auth/email-already-in-use'?'Email già registrata.':'Errore: '+e.message;}
+  }
+};
+
+async function renderMedical(el) {
+  const snap = await getDocs(collection(db,'users'));
+  const users = snap.docs.map(d=>({id:d.id,...d.data()})).filter(u=>u.role==='genitore'&&u.status==='approved');
+  let rows = '';
+  users.forEach(u => {
+    (u.athletes||[]).forEach(a => {
+      const vmDate = (u.medicalVisits||{})[a.category]||'';
+      const st = vmStatus(vmDate);
+      rows += '<div class="request-row"><div class="request-info"><div class="request-name">'+(a.name||u.displayName||u.email)+'</div>'+
+        '<div class="request-detail">'+(CAT_LABELS[a.category]||a.category||'')+'</div></div>'+
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">'+
+        '<span class="vm-status '+st.cls+'">'+st.dot+' '+st.label+'</span>'+
+        '<input type="date" value="'+vmDate+'" onchange="updateMedical(''+u.id+'',''+a.category+'',this.value)" '+
+        'style="font-size:11px;border:0.5px solid var(--border);border-radius:6px;padding:3px 6px;background:var(--bg);color:var(--text);"></div></div>';
+    });
+  });
+  el.innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Visite mediche atleti</div>'+(rows||'<div style="font-size:13px;color:var(--text-sec);">Nessun atleta trovato.</div>')+'</div></div>';
+}
+
+window.updateMedical = async (uid, cat, dateVal) => {
+  await setDoc(doc(db,'users',uid), {medicalVisits:{[cat]:dateVal}}, {merge:true});
+};
+
+async function renderUsers(el) {
+  const snap = await getDocs(collection(db,'users'));
+  const users = snap.docs.map(d=>({id:d.id,...d.data()})).filter(u=>u.status==='approved');
+  el.innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Utenti attivi ('+users.length+')</div>'+
+    users.map(u=>'<div class="request-row"><div class="request-info"><div class="request-name">'+(u.displayName||u.email)+'</div>'+
+      '<div class="request-detail">'+u.email+' · '+(u.role==='admin'?'Admin':u.role==='allenatore'?'Allenatore':'Genitore')+'</div>'+
+      '<div class="request-detail">'+(u.categories||[]).map(c=>CAT_LABELS[c]||c).join(', ')+'</div></div></div>').join('')+
+    '</div></div>';
+}
+
+// Patch setupGenitore to load event notes
+function setupGenitoreFull() {
+  const cats = userProfile.categories || [];
+  selectedCalCat = cats[0] || null;
+  selectedCommCat = 'Tutti';
+  const ini = initials(userProfile.displayName || userProfile.email);
+  document.getElementById('avatar-cal').textContent = ini;
+  document.getElementById('avatar-comm').textContent = ini;
+  renderCatChips(cats);
+  Promise.all(cats.map(c => loadEventNotes(c))).then(() => renderCalendar());
+  setupCommListener(cats);
+  renderProfile();
+  showScreen('screen-calendario');
+}
+
+// Patch renderProfile to show medical status
+function renderProfileFull() {
+  try {
+    const cats = userProfile?.categories || [];
+    const athletes = userProfile?.athletes || [];
+    const displayName = userProfile?.displayName || '';
+    const email = userProfile?.email || currentUser?.email || '';
+    const el = document.getElementById('profile-content');
+    if (!el) return;
+    const medicalVisits = userProfile?.medicalVisits || {};
+    const athleteHtml = athletes.length > 0
+      ? athletes.map(a => {
+          const st = vmStatus(medicalVisits[a.category]||'');
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);">'+
+            '<span class="athlete-pill">⛷️ '+(a.name||'')+' — '+(CAT_LABELS[a.category]||a.category||'')+'</span>'+
+            '<span class="vm-status '+st.cls+'" style="font-size:11px;">'+st.dot+' '+st.label+'</span></div>';
+        }).join('')
+      : cats.map(c => '<span class="athlete-pill">⛷️ '+(CAT_LABELS[c]||c)+'</span>').join('');
+    el.innerHTML =
+      '<div class="profile-card"><div class="profile-header">'+
+        '<div class="profile-avatar">'+initials(displayName||email)+'</div>'+
+        '<div><div class="profile-name">'+(displayName||'Genitore')+'</div><div class="profile-email">'+email+'</div></div>'+
+      '</div>'+
+      '<div class="profile-row"><div class="profile-row-label">Ruolo</div><div class="profile-row-val">Genitore</div></div>'+
+      '<div class="profile-row" style="flex-direction:column;align-items:flex-start;gap:6px;"><div class="profile-row-label">Atleti e visite mediche</div>'+athleteHtml+'</div>'+
+      '<div class="profile-row"><div class="profile-row-label">Stato</div>'+
+        '<div class="status-ok"><div class="status-dot" style="background:#1D9E75;"></div><div class="profile-row-val" style="color:#0F6E56;">Approvato</div></div>'+
+      '</div></div>'+
+      '<div style="padding:12px;">'+
+        '<button onclick="doLogout()" style="width:100%;padding:13px;border-radius:var(--radius-sm);border:0.5px solid var(--border);background:var(--bg-card);font-size:14px;font-weight:500;color:var(--red);cursor:pointer;">Esci dall'account</button>'+
+      '</div>';
+  } catch(e) { console.error('renderProfile error:', e); }
+}
+window.renderProfile = renderProfileFull;
+
+// Patch auth handler
+const origAuthHandler = window._authHandler;
+window._setupUser = async (user) => {
+  currentUser = user;
+  const snap = await getDoc(doc(db, 'users', user.uid));
+  if (!snap.exists()) { showScreen('screen-login'); return; }
+  userProfile = snap.data();
+  if (userProfile.role === 'admin') { setupAdmin(); }
+  else if (userProfile.role === 'allenatore') { setupAllenatore(); }
+  else if (userProfile.status === 'pending') { showScreen('screen-pending'); }
+  else { setupGenitoreFull(); }
+};
+
 </body>
 </html>
