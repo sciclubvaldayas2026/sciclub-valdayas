@@ -1152,8 +1152,13 @@ function registerListeners() {
   });
 }
 
-// Execute immediately - module is already loaded at this point
-registerListeners();
+// Defer until DOM is fully painted
+function tryRegister(attempts) {
+  const btn = document.getElementById("btn-login");
+  if (btn) { registerListeners(); }
+  else if (attempts > 0) { requestAnimationFrame(() => tryRegister(attempts - 1)); }
+}
+requestAnimationFrame(() => tryRegister(20));
 
 </body>
 </html>
