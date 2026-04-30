@@ -386,6 +386,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
+window.showScreen = showScreen;
 
 function initials(name) {
   if (!name) return '?';
@@ -596,9 +597,10 @@ window.selectCommCat = (cat) => { selectedCommCat = cat; renderCommChips(); };
 function setupCommListener(cats) {
   if (commUnsub) commUnsub();
   if (!cats.length) return;
-  const q = query(collection(db,'communications'), where('category','in',cats), orderBy('createdAt','desc'));
+  const q = query(collection(db,'communications'), where('category','in',cats));
   commUnsub = onSnapshot(q, snap => {
-    const comms = snap.docs.map(d => ({id:d.id,...d.data()}));
+    const comms = snap.docs.map(d => ({id:d.id,...d.data()}))
+      .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
     renderComms(comms);
   });
 }
@@ -667,6 +669,7 @@ function renderProfile() {
     console.error('renderProfile error:', e);
   }
 }
+window.renderProfile = renderProfile;
 
 // ─── ALLENATORE ──────────────────────────────────────────────────────────────
 function setupAllenatore() {
@@ -676,9 +679,10 @@ function setupAllenatore() {
   document.getElementById('avatar-coach').textContent = initials(userProfile.displayName||userProfile.email||'');
   document.getElementById('modal-title').textContent = `Nuova comunicazione — ${catLabel}`;
 
-  const q = query(collection(db,'communications'), where('category','==',cat), orderBy('createdAt','desc'));
+  const q = query(collection(db,'communications'), where('category','==',cat));
   commUnsub = onSnapshot(q, snap => {
-    const comms = snap.docs.map(d => ({id:d.id,...d.data()}));
+    const comms = snap.docs.map(d => ({id:d.id,...d.data()}))
+      .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
     renderCoachComms(comms);
   });
   showScreen('screen-allenatore');
