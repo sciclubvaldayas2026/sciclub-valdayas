@@ -1088,19 +1088,31 @@ window._setupUser = async (user) => {
   else { setupGenitoreFull(); }
 };
 
-// ─── EVENT LISTENERS (replaces all inline onclick) ───────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+
+// ─── EVENT LISTENERS ─────────────────────────────────────────────────────────
+// Register after module loads - DO NOT use DOMContentLoaded (fires before module)
+function registerListeners() {
   // Role tabs
   const roleG = document.getElementById('role-genitore');
   const roleA = document.getElementById('role-allenatore');
-  if (roleG) roleG.addEventListener('click', () => { currentRole='genitore'; document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active')); roleG.classList.add('active'); document.getElementById('register-link')&&(document.getElementById('register-link').style.display='block'); });
-  if (roleA) roleA.addEventListener('click', () => { currentRole='allenatore'; document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active')); roleA.classList.add('active'); document.getElementById('register-link')&&(document.getElementById('register-link').style.display='none'); });
+  if (roleG) roleG.addEventListener('click', () => {
+    currentRole = 'genitore';
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    roleG.classList.add('active');
+    const rl = document.getElementById('register-link');
+    if (rl) rl.style.display = 'block';
+  });
+  if (roleA) roleA.addEventListener('click', () => {
+    currentRole = 'allenatore';
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    roleA.classList.add('active');
+    const rl = document.getElementById('register-link');
+    if (rl) rl.style.display = 'none';
+  });
 
-  // Login
+  // Login / Register
   const btnLogin = document.getElementById('btn-login');
   if (btnLogin) btnLogin.addEventListener('click', doLogin);
-
-  // Register links
   const linkReg = document.getElementById('link-register');
   if (linkReg) linkReg.addEventListener('click', showRegisterForm);
   const linkBack = document.getElementById('link-back-login');
@@ -1108,22 +1120,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnReg = document.getElementById('btn-register');
   if (btnReg) btnReg.addEventListener('click', doRegister);
 
-  // Nav tabs - use event delegation
+  // Global click delegation
   document.addEventListener('click', (e) => {
+    // Nav tabs
     const tab = e.target.closest('[data-tab]');
     if (tab) { switchTab(tab.dataset.tab); return; }
-    const screen = e.target.closest('[data-screen]');
-    if (screen) { showScreen(screen.dataset.screen); if(screen.dataset.screen==='screen-profilo') renderProfile(); return; }
-    const adminTab = e.target.closest('[data-admintab]');
-    if (adminTab) { switchAdminTab(adminTab.dataset.admintab); return; }
+    // Screen links
+    const scr = e.target.closest('[data-screen]');
+    if (scr) { showScreen(scr.dataset.screen); if (scr.dataset.screen === 'screen-profilo') renderProfile(); return; }
+    // Admin tabs
+    const atab = e.target.closest('[data-admintab]');
+    if (atab) { switchAdminTab(atab.dataset.admintab); return; }
+    // Logout
+    if (e.target.closest('.btn-logout') || e.target.id === 'btn-logout-topbar') { doLogout(); return; }
+    // Close modals
+    if (e.target.closest('.btn-close-event-modal')) { closeEventModal(); return; }
   });
 
-  // Logout buttons
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('.btn-logout') || e.target.id === 'btn-logout-topbar') { doLogout(); }
-  });
-
-  // Compose FAB
+  // Compose
   const fab = document.getElementById('fab-compose');
   if (fab) fab.addEventListener('click', openCompose);
   const closeComp = document.getElementById('btn-close-compose');
@@ -1131,15 +1145,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const sendComp = document.getElementById('btn-send-comm');
   if (sendComp) sendComp.addEventListener('click', sendComm);
 
-  // Event modal close
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('.btn-close-event-modal')) closeEventModal();
-  });
-
   // Cancel note form
   const cancelNote = document.getElementById('btn-cancel-note');
-  if (cancelNote) cancelNote.addEventListener('click', () => { document.getElementById('event-note-form').style.display='none'; });
-});
+  if (cancelNote) cancelNote.addEventListener('click', () => {
+    document.getElementById('event-note-form').style.display = 'none';
+  });
+}
+
+// Execute immediately - module is already loaded at this point
+registerListeners();
 
 </body>
 </html>
