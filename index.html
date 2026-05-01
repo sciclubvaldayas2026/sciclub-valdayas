@@ -530,12 +530,12 @@ function setupGenitore() {
 function renderCatChips(cats) {
   var el = document.getElementById('cat-chips');
   el.innerHTML = cats.map(function(c) {
-    return '<div class="chip'+(c===selectedCalCat?' active':'')+'" onclick="selectCalCat(''+c+'')">'+( CAT_LABELS[c]||c)+'</div>';
+    html += '<div class="chip'+active+'" data-cat="'+c+'" onclick="selectCalCat(this)">'+(CAT_LABELS[c]||c)+'</div>';
   }).join('');
 }
 
-function selectCalCat(cat) {
-  selectedCalCat = cat;
+function selectCalCat(el) {
+  selectedCalCat = el.dataset ? el.dataset.cat : el;
   renderCatChips(userProfile.categories || []);
   renderCalendar();
 }
@@ -573,7 +573,7 @@ function renderCalendar() {
       var badge = getEventBadge(e.location);
       var key = getEventKey(selectedCalCat, e.month, e.day);
       var hasNote = !!eventNotesCache[key];
-      html += '<div class="event-card '+groupCls+'" onclick="openEventModal(''+selectedCalCat+'',''+e.month+'','+e.day+',''+e.location.replace(/'/g,"\'")+ '',''+dowFull(e.dow)+'')">'+
+      html += '<div class="event-card '+groupCls+'" data-cat="'+selectedCalCat+'" data-month="'+e.month+'" data-day="'+e.day+'" data-loc="'+encodeURIComponent(e.location)+'" data-dow="'+dowFull(e.dow)+'" onclick="handleEventClick(this)">'+
         '<div class="event-date"><div class="event-day-num">'+e.day+'</div><div class="event-day-name">'+dowFull(e.dow)+'</div></div>'+
         '<div class="event-bar '+getEventColor(e.location)+'"></div>'+
         '<div class="event-info"><div class="event-title">'+e.location+(hasNote?' 📌':'')+'</div><div class="event-sub">'+(CAT_LABELS[selectedCalCat]||'')+'</div></div>'+
@@ -601,11 +601,11 @@ function renderCommChips() {
   var el = document.getElementById('comm-chips');
   el.innerHTML = all.map(function(c) {
     var label = c==='Tutti' ? 'Tutti' : (CAT_LABELS[c]||c);
-    return '<div class="chip'+(c===selectedCommCat?' active':'')+'" onclick="selectCommCat(''+c+'')">'+label+'</div>';
+    html += '<div class="chip'+active+'" data-cat="'+c+'" onclick="selectCommCat(this)">'+label+'</div>';
   }).join('');
 }
 
-function selectCommCat(cat) { selectedCommCat = cat; renderCommChips(); }
+function selectCommCat(el) { selectedCommCat = el.dataset ? el.dataset.cat : el; renderCommChips(); }
 
 function setupCommListener(cats) {
   if (commUnsub) { commUnsub(); commUnsub = null; }
@@ -662,12 +662,22 @@ function renderProfile() {
           '<div style="display:flex;align-items:center;gap:6px"><div style="width:8px;height:8px;border-radius:50%;background:#1D9E75"></div><div class="profile-row-val" style="color:#0F6E56">Approvato</div></div>'+
         '</div></div>'+
       '<div style="padding:12px">'+
-        '<button onclick="doLogout()" style="width:100%;padding:13px;border-radius:var(--radius-sm);border:.5px solid var(--border);background:var(--bg-card);font-size:14px;font-weight:500;color:var(--red);cursor:pointer">Esci dall'account</button>'+
+        '<button onclick="doLogout()" style="width:100%;padding:13px;border-radius:var(--radius-sm);border:.5px solid var(--border);background:var(--bg-card);font-size:14px;font-weight:500;color:var(--red);cursor:pointer">Esci dall’account</button>'+
       '</div>';
   } catch(e) { console.error('renderProfile:', e); }
 }
 
 // ─── EVENT NOTES ──────────────────────────────────────────────────────────────
+
+function handleEventClick(el) {
+  var cat = el.dataset.cat;
+  var month = el.dataset.month;
+  var day = parseInt(el.dataset.day);
+  var loc = decodeURIComponent(el.dataset.loc);
+  var dow = el.dataset.dow;
+  openEventModal(cat, month, day, loc, dow);
+}
+
 function openEventModal(cat, month, day, location, dow) {
   currentEventKey = getEventKey(cat, month, day);
   var note = eventNotesCache[currentEventKey];
@@ -782,7 +792,7 @@ function renderPending(el) {
       pending.map(function(u) {
         var athletes = (u.athletes||[]).map(function(a){ return a.name+' · '+(CAT_LABELS[a.category]||a.category); }).join(', ') || (u.categories||[]).join(', ') || '—';
         return '<div class="request-row"><div class="request-info"><div class="request-name">'+(u.displayName||u.email)+'</div><div class="request-detail">'+u.email+'</div><div class="request-detail">🎿 '+athletes+'</div></div>'+
-          '<div class="request-actions"><button class="btn-approve" onclick="approveUser(''+u.id+'')">✓ Approva</button><button class="btn-reject" onclick="rejectUser(''+u.id+'')">✕</button></div></div>';
+        '<div class="request-actions"><button class="btn-approve" data-uid="'+u.id+'" onclick="approveUser(this.dataset.uid)">✓ Approva</button><button class="btn-reject" data-uid="'+u.id+'" onclick="rejectUser(this.dataset.uid)">✕</button></div></div>';
       }).join('')+'</div></div>';
   });
 }
@@ -846,7 +856,7 @@ function renderMedical(el) {
         rows += '<div class="request-row"><div class="request-info"><div class="request-name">'+(a.name||u.displayName||u.email)+'</div><div class="request-detail">'+(CAT_LABELS[a.category]||a.category||'')+'</div></div>'+
           '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">'+
           '<span class="vm-status '+st.cls+'">'+st.dot+' '+st.label+'</span>'+
-          '<input type="date" value="'+vmDate+'" onchange="updateMedical(''+u.id+'',''+a.category+'',this.value)" style="font-size:11px;border:.5px solid var(--border);border-radius:6px;padding:3px 6px;background:var(--bg);color:var(--text)">'+
+        '<input type="date" value="'+vmDate+'" data-uid="'+u.id+'" data-cat="'+a.category+'" onchange="updateMedical(this.dataset.uid,this.dataset.cat,this.value)" style="font-size:11px;border:.5px solid var(--border);border-radius:6px;padding:3px 6px;background:var(--bg);color:var(--text)">'+
           '</div></div>';
       });
     });
