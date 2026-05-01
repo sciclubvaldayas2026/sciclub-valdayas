@@ -123,6 +123,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .btn-cancel{flex:1;padding:12px;border-radius:var(--radius-sm);border:.5px solid var(--border);background:transparent;font-size:14px;cursor:pointer;color:var(--text)}
 .btn-send{flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--teal);color:white;font-size:14px;font-weight:600;border:none;cursor:pointer}
 .btn-send-blue{flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--blue-dark);color:white;font-size:14px;font-weight:600;border:none;cursor:pointer}
+.role-switcher{display:none;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:none;border-radius:20px;padding:5px 10px;color:white;font-size:12px;font-weight:500;cursor:pointer}
+.role-switcher.visible{display:flex}
 .loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text-sec);font-size:14px}
 .empty-state{padding:40px 24px;text-align:center;color:var(--text-sec);font-size:14px}
 /* EVENT MODAL */
@@ -184,19 +186,50 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     <div><div class="field-label">Password (min. 6 caratteri)</div><input class="field-input" id="reg-password" type="password" placeholder="••••••••"></div>
     <div class="section-divider"></div>
     <div class="section-small-title">Atleta 1</div>
-    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete1" type="text" placeholder="Luca Rossi"></div>
+    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete1" type="text" placeholder="Nome Cognome"></div>
     <div><div class="field-label">Categoria</div>
       <select class="field-input" id="reg-cat1">
         <option value="">-- Seleziona --</option>
         <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
         <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
-      </select></div>
-    <div class="section-divider"></div>
+      </select></div>    <div class="section-divider"></div>
     <div class="section-small-title">Atleta 2 <span style="font-weight:400;font-size:11px">(opzionale)</span></div>
-    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete2" type="text" placeholder="Sara Rossi (opzionale)"></div>
+    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete2" type="text" placeholder="opzionale"></div>
     <div><div class="field-label">Categoria</div>
       <select class="field-input" id="reg-cat2">
-        <option value="">-- Nessun secondo atleta --</option>
+        <option value="">-- Nessun atleta --</option>
+        <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
+        <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
+      </select></div>    <div class="section-divider"></div>
+    <div class="section-small-title">Atleta 3 <span style="font-weight:400;font-size:11px">(opzionale)</span></div>
+    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete3" type="text" placeholder="opzionale"></div>
+    <div><div class="field-label">Categoria</div>
+      <select class="field-input" id="reg-cat3">
+        <option value="">-- Nessun atleta --</option>
+        <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
+        <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
+      </select></div>    <div class="section-divider"></div>
+    <div class="section-small-title">Atleta 4 <span style="font-weight:400;font-size:11px">(opzionale)</span></div>
+    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete4" type="text" placeholder="opzionale"></div>
+    <div><div class="field-label">Categoria</div>
+      <select class="field-input" id="reg-cat4">
+        <option value="">-- Nessun atleta --</option>
+        <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
+        <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
+      </select></div>    <div class="section-divider"></div>
+    <div class="section-small-title">Atleta 5 <span style="font-weight:400;font-size:11px">(opzionale)</span></div>
+    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete5" type="text" placeholder="opzionale"></div>
+    <div><div class="field-label">Categoria</div>
+      <select class="field-input" id="reg-cat5">
+        <option value="">-- Nessun atleta --</option>
+        <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
+        <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
+      </select></div>    <div class="section-divider"></div>
+    <div class="section-small-title">Atleta 6 <span style="font-weight:400;font-size:11px">(opzionale)</span></div>
+    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete6" type="text" placeholder="opzionale"></div>
+    <div><div class="field-label">Categoria</div>
+      <select class="field-input" id="reg-cat6">
+        <option value="">-- Nessun atleta --</option>
         <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
         <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
       </select></div>
@@ -210,7 +243,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 <div class="screen" id="screen-calendario">
   <div class="topbar">
     <div><div class="topbar-title">Calendario</div><div class="topbar-sub">Stagione 2026/27</div></div>
-    <button class="avatar-btn" id="avatar-cal" onclick="showScreen('screen-profilo');renderProfile()"></button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="role-switcher" id="btn-switch-to-allenatore" onclick="switchToAllenatore()">🎿 Allenatore</button>
+      <button class="avatar-btn" id="avatar-cal" onclick="showScreen('screen-profilo');renderProfile()"></button>
+    </div>
   </div>
   <div class="chips-row" id="cat-chips"></div>
   <div class="content" id="cal-content"></div>
@@ -267,7 +303,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 <div class="screen" id="screen-allenatore">
   <div class="topbar topbar-green">
     <div><div class="topbar-title" id="coach-topbar-title">Comunicazioni</div><div class="topbar-sub" id="coach-sub">Allenatore</div></div>
-    <button class="avatar-btn" onclick="doLogout()">↩</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="role-switcher" id="btn-switch-to-genitore" onclick="switchToGenitore()">👨‍👧 Genitore</button>
+      <button class="avatar-btn" onclick="doLogout()">↩</button>
+    </div>
   </div>
   <div class="chips-row" id="coach-cat-chips" style="display:none"></div>
   <div class="content" id="coach-content"></div>
@@ -464,21 +503,26 @@ function doRegister() {
   var parentName = document.getElementById('reg-parentname').value.trim();
   var email = document.getElementById('reg-email').value.trim();
   var pwd = document.getElementById('reg-password').value;
-  var athlete1 = document.getElementById('reg-athlete1').value.trim();
-  var cat1 = document.getElementById('reg-cat1').value;
-  var athlete2 = document.getElementById('reg-athlete2').value.trim();
-  var cat2 = document.getElementById('reg-cat2').value;
   var err = document.getElementById('reg-error');
   err.style.display = 'none';
   if (!parentName) { err.style.display='block'; err.textContent='Inserisci il tuo nome e cognome.'; return; }
   if (!email) { err.style.display='block'; err.textContent='Inserisci una email valida.'; return; }
   if (pwd.length < 6) { err.style.display='block'; err.textContent='La password deve avere almeno 6 caratteri.'; return; }
+  var athlete1 = document.getElementById('reg-athlete1').value.trim();
+  var cat1 = document.getElementById('reg-cat1').value;
   if (!athlete1) { err.style.display='block'; err.textContent='Inserisci il nome del primo atleta.'; return; }
   if (!cat1) { err.style.display='block'; err.textContent='Seleziona la categoria del primo atleta.'; return; }
   auth.createUserWithEmailAndPassword(email, pwd).then(function(cred) {
-    var athletes = [{name:athlete1,category:cat1}];
-    var categories = [cat1];
-    if (athlete2 && cat2) { athletes.push({name:athlete2,category:cat2}); if (categories.indexOf(cat2)<0) categories.push(cat2); }
+    var athletes = [];
+    var categories = [];
+    for (var i = 1; i <= 6; i++) {
+      var aName = document.getElementById('reg-athlete'+i);
+      var aCat = document.getElementById('reg-cat'+i);
+      if (aName && aCat && aName.value.trim() && aCat.value) {
+        athletes.push({name:aName.value.trim(), category:aCat.value});
+        if (categories.indexOf(aCat.value) < 0) categories.push(aCat.value);
+      }
+    }
     return db.collection('users').doc(cred.user.uid).set({
       email:email, displayName:parentName, role:'genitore', status:'pending',
       categories:categories, athletes:athletes, createdAt:firebase.firestore.FieldValue.serverTimestamp()
@@ -508,7 +552,13 @@ auth.onAuthStateChanged(function(user) {
     if (!snap.exists) { showScreen('screen-login'); return; }
     userProfile = snap.data();
     if (userProfile.role === 'admin') setupAdmin();
-    else if (userProfile.role === 'allenatore') setupAllenatore();
+    else if (userProfile.role === 'allenatore') {
+      // Check if also a parent (has athletes)
+      if (userProfile.athletes && userProfile.athletes.length > 0) {
+        userProfile._isAlsoGenitore = true;
+      }
+      setupAllenatore();
+    }
     else if (userProfile.status === 'pending') showScreen('screen-pending');
     else setupGenitore();
   });
@@ -526,6 +576,9 @@ function setupGenitore() {
   loadEventNotesForCats(cats, function(){ renderCalendar(); });
   setupCommListener(cats);
   renderProfile();
+  // Show switcher if also a coach
+  var switcher = document.getElementById('btn-switch-to-allenatore');
+  if (switcher) switcher.className = userProfile._isAlsoAllenatore ? 'role-switcher visible' : 'role-switcher';
   showScreen('screen-calendario');
 }
 
@@ -736,6 +789,21 @@ function saveEventNote() {
 function closeEventModal() { document.getElementById('modal-event').classList.remove('open'); }
 
 // ─── ALLENATORE ───────────────────────────────────────────────────────────────
+
+function switchToAllenatore() {
+  userProfile._isAlsoAllenatore = true;
+  setupAllenatore();
+}
+
+function switchToGenitore() {
+  userProfile._isAlsoAllenatore = true;
+  // Temporarily set role to genitore view
+  var savedRole = userProfile.role;
+  userProfile.role = 'genitore';
+  setupGenitore();
+  userProfile.role = savedRole;
+}
+
 var coachCurrentTab = 'comunicazioni';
 var coachSelectedCat = null;
 
@@ -763,6 +831,9 @@ function setupAllenatore() {
   // Show category chips if multiple cats
   renderCoachCatChips(cats);
   updateComposeTitle();
+  // Show switcher if also a parent
+  var switcher = document.getElementById('btn-switch-to-genitore');
+  if (switcher) switcher.className = userProfile._isAlsoGenitore ? 'role-switcher visible' : 'role-switcher';
   showScreen('screen-allenatore');
   switchCoachTab('comunicazioni');
 }
