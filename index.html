@@ -249,6 +249,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     </div>
   </div>
   <div class="chips-row" id="cat-chips"></div>
+  <div style="padding:0 14px 10px;display:flex;gap:8px;flex-shrink:0">
+    <button id="filter-all" onclick="setCalFilter('all')" style="flex:1;padding:7px;border-radius:var(--radius-sm);border:.5px solid var(--border);font-size:12px;font-weight:500;background:var(--blue-dark);color:white;cursor:pointer">Tutto</button>
+    <button id="filter-upcoming" onclick="setCalFilter('upcoming')" style="flex:1;padding:7px;border-radius:var(--radius-sm);border:.5px solid var(--border);font-size:12px;font-weight:500;background:var(--bg-card);color:var(--text-sec);cursor:pointer">Prossime</button>
+  </div>
   <div class="content" id="cal-content"></div>
   <div class="navbar">
     <button class="nav-item active" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
@@ -391,6 +395,7 @@ var selectedCalCat = null;
 var selectedCommCat = 'Tutti';
 var commUnsub = null;
 var currentEventKey = null;
+var calFilter = "all";
 var eventNotesCache = {};
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -608,11 +613,32 @@ function loadEventNotesForCats(cats, cb) {
   Promise.all(promises).then(cb).catch(cb);
 }
 
+function setCalFilter(f) {
+  calFilter = f;
+  var ba = document.getElementById("filter-all");
+  var bu = document.getElementById("filter-upcoming");
+  if (ba) { ba.style.background = f==="all" ? "var(--blue-dark)" : "var(--bg-card)"; ba.style.color = f==="all" ? "white" : "var(--text-sec)"; }
+  if (bu) { bu.style.background = f==="upcoming" ? "var(--blue-dark)" : "var(--bg-card)"; bu.style.color = f==="upcoming" ? "white" : "var(--text-sec)"; }
+  renderCalendar();
+}
+
+function filterEvents(events) {
+  if (calFilter !== "upcoming") return events;
+  var mo = {Aprile:4,Maggio:5,Giugno:6,Luglio:7,Agosto:8,Settembre:9,Ottobre:10};
+  var now = new Date(); var tm = now.getMonth()+1; var td = now.getDate();
+  return events.filter(function(e) {
+    var m = mo[e.month]||0;
+    if (m < tm) return false;
+    if (m === tm && e.day < td) return false;
+    return true;
+  });
+}
+
 function renderCalendar() {
   var el = document.getElementById('cal-content');
   if (!el) return;
-  var events = selectedCalCat ? (CALENDAR_DATA[selectedCalCat] || []) : [];
-  if (!events.length) { el.innerHTML = '<div class="empty-state">Nessun evento in programma.</div>'; return; }
+  var events = filterEvents(selectedCalCat ? (CALENDAR_DATA[selectedCalCat] || []) : []);
+  if (!events.length) { el.innerHTML = '<div class="empty-state">Nessun evento trovato.</div>'; return; }
   var byMonth = {};
   events.forEach(function(e){ if (!byMonth[e.month]) byMonth[e.month]=[]; byMonth[e.month].push(e); });
   var html = '<div style="height:8px"></div>';
@@ -886,8 +912,8 @@ function renderCoachCalendar() {
   var el = document.getElementById('coach-content');
   if (!el) return;
   var cat = coachSelectedCat;
-  var events = cat ? (CALENDAR_DATA[cat] || []) : [];
-  if (!events.length) { el.innerHTML = '<div class="empty-state">Nessun evento in programma.</div>'; return; }
+  var events = filterEvents(cat ? (CALENDAR_DATA[cat] || []) : []);
+  if (!events.length) { el.innerHTML = '<div class="empty-state">Nessun evento trovato.</div>'; return; }
   var byMonth = {};
   events.forEach(function(e){ if (!byMonth[e.month]) byMonth[e.month]=[]; byMonth[e.month].push(e); });
   var html = '<div style="height:8px"></div>';
