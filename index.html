@@ -529,9 +529,12 @@ function setupGenitore() {
 
 function renderCatChips(cats) {
   var el = document.getElementById('cat-chips');
-  el.innerHTML = cats.map(function(c) {
+  var html = '';
+  cats.forEach(function(c) {
+    var active = c===selectedCalCat ? ' active' : '';
     html += '<div class="chip'+active+'" data-cat="'+c+'" onclick="selectCalCat(this)">'+(CAT_LABELS[c]||c)+'</div>';
-  }).join('');
+  });
+  el.innerHTML = html;
 }
 
 function selectCalCat(el) {
@@ -599,10 +602,13 @@ function renderCommChips() {
   var cats = userProfile ? (userProfile.categories || []) : [];
   var all = ['Tutti'].concat(cats);
   var el = document.getElementById('comm-chips');
-  el.innerHTML = all.map(function(c) {
+  var html = '';
+  all.forEach(function(c) {
     var label = c==='Tutti' ? 'Tutti' : (CAT_LABELS[c]||c);
+    var active = c===selectedCommCat ? ' active' : '';
     html += '<div class="chip'+active+'" data-cat="'+c+'" onclick="selectCommCat(this)">'+label+'</div>';
-  }).join('');
+  });
+  el.innerHTML = html;
 }
 
 function selectCommCat(el) { selectedCommCat = el.dataset ? el.dataset.cat : el; renderCommChips(); }
