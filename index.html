@@ -266,13 +266,15 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 <!-- ALLENATORE -->
 <div class="screen" id="screen-allenatore">
   <div class="topbar topbar-green">
-    <div><div class="topbar-title">Comunicazioni</div><div class="topbar-sub" id="coach-sub">Allenatore</div></div>
+    <div><div class="topbar-title" id="coach-topbar-title">Comunicazioni</div><div class="topbar-sub" id="coach-sub">Allenatore</div></div>
     <button class="avatar-btn" onclick="doLogout()">↩</button>
   </div>
+  <div class="chips-row" id="coach-cat-chips" style="display:none"></div>
   <div class="content" id="coach-content"></div>
-  <button class="fab" onclick="openCompose()">+</button>
+  <button class="fab" id="coach-fab" onclick="openCompose()">+</button>
   <div class="navbar">
-    <button class="nav-item active" style="color:var(--teal)"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+    <button class="nav-item active" id="coach-tab-comm" onclick="switchCoachTab('comunicazioni')" style="color:var(--teal)"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+    <button class="nav-item" id="coach-tab-cal" onclick="switchCoachTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
     <button class="nav-item" onclick="doLogout()"><div class="nav-icon">↩</div><div>Esci</div></button>
   </div>
 </div>
@@ -734,17 +736,114 @@ function saveEventNote() {
 function closeEventModal() { document.getElementById('modal-event').classList.remove('open'); }
 
 // ─── ALLENATORE ───────────────────────────────────────────────────────────────
+var coachCurrentTab = 'comunicazioni';
+var coachSelectedCat = null;
+
 function setupAllenatore() {
-  var cat = userProfile.category || '';
-  document.getElementById('coach-sub').textContent = (CAT_LABELS[cat]||cat) + ' · ' + (userProfile.displayName||'');
-  loadEventNotesForCats([cat], function(){});
-  commUnsub = db.collection('communications').where('category','==',cat).onSnapshot(function(snap) {
-    var comms = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-    comms.sort(function(a,b){ return (b.createdAt&&b.createdAt.seconds||0)-(a.createdAt&&a.createdAt.seconds||0); });
-    renderCoachComms(comms);
-  });
-  document.getElementById('modal-compose-title').textContent = 'Nuova comunicazione — '+(CAT_LABELS[cat]||cat);
+  // Support both single category and multiple categories
+  var cats = userProfile.categories && userProfile.categories.length ? userProfile.categories : (userProfile.category ? [userProfile.category] : []);
+  coachSelectedCat = cats[0] || '';
+  var catsLabel = cats.map(function(c){ return CAT_LABELS[c]||c; }).join(', ');
+  document.getElementById('coach-sub').textContent = catsLabel + ' · ' + (userProfile.displayName||'');
+  loadEventNotesForCats(cats, function(){});
+  // Listen to communications for all coach categories
+  if (cats.length === 1) {
+    commUnsub = db.collection('communications').where('category','==',cats[0]).onSnapshot(function(snap) {
+      var comms = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+      comms.sort(function(a,b){ return (b.createdAt&&b.createdAt.seconds||0)-(a.createdAt&&a.createdAt.seconds||0); });
+      renderCoachComms(comms);
+    });
+  } else if (cats.length > 1) {
+    commUnsub = db.collection('communications').where('category','in',cats).onSnapshot(function(snap) {
+      var comms = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+      comms.sort(function(a,b){ return (b.createdAt&&b.createdAt.seconds||0)-(a.createdAt&&a.createdAt.seconds||0); });
+      renderCoachComms(comms);
+    });
+  }
+  // Show category chips if multiple cats
+  renderCoachCatChips(cats);
+  updateComposeTitle();
   showScreen('screen-allenatore');
+  switchCoachTab('comunicazioni');
+}
+
+function renderCoachCatChips(cats) {
+  var el = document.getElementById('coach-cat-chips');
+  if (cats.length <= 1) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  var html = '';
+  cats.forEach(function(c) {
+    var active = c===coachSelectedCat ? ' active' : '';
+    html += '<div class="chip'+active+'" data-cat="'+c+'" onclick="selectCoachCat(this)">'+(CAT_LABELS[c]||c)+'</div>';
+  });
+  el.innerHTML = html;
+}
+
+function selectCoachCat(el) {
+  coachSelectedCat = el.dataset.cat;
+  var cats = userProfile.categories && userProfile.categories.length ? userProfile.categories : [userProfile.category];
+  renderCoachCatChips(cats);
+  if (coachCurrentTab === 'calendario') renderCoachCalendar();
+  updateComposeTitle();
+}
+
+function updateComposeTitle() {
+  var el = document.getElementById('modal-compose-title');
+  if (el) el.textContent = 'Nuova comunicazione — '+(CAT_LABELS[coachSelectedCat]||coachSelectedCat);
+}
+
+function switchCoachTab(tab) {
+  coachCurrentTab = tab;
+  var cats = userProfile.categories && userProfile.categories.length ? userProfile.categories : [userProfile.category];
+  document.getElementById('coach-tab-comm').classList.toggle('active', tab==='comunicazioni');
+  document.getElementById('coach-tab-comm').style.color = tab==='comunicazioni' ? 'var(--teal)' : '';
+  document.getElementById('coach-tab-cal').classList.toggle('active', tab==='calendario');
+  document.getElementById('coach-tab-cal').style.color = tab==='calendario' ? 'var(--teal)' : '';
+  var fab = document.getElementById('coach-fab');
+  if (fab) fab.style.display = tab==='comunicazioni' ? 'flex' : 'none';
+  // Show/hide cat chips
+  renderCoachCatChips(cats);
+  if (tab === 'calendario') {
+    document.getElementById('coach-topbar-title').textContent = 'Calendario';
+    renderCoachCalendar();
+  } else {
+    document.getElementById('coach-topbar-title').textContent = 'Comunicazioni';
+  }
+}
+
+function renderCoachCalendar() {
+  var el = document.getElementById('coach-content');
+  if (!el) return;
+  var cat = coachSelectedCat;
+  var events = cat ? (CALENDAR_DATA[cat] || []) : [];
+  if (!events.length) { el.innerHTML = '<div class="empty-state">Nessun evento in programma.</div>'; return; }
+  var byMonth = {};
+  events.forEach(function(e){ if (!byMonth[e.month]) byMonth[e.month]=[]; byMonth[e.month].push(e); });
+  var html = '<div style="height:8px"></div>';
+  Object.keys(byMonth).forEach(function(month) {
+    var evs = byMonth[month];
+    html += '<div class="month-label">'+month+'</div>';
+    for (var i=0; i<evs.length; i++) {
+      var e = evs[i];
+      var gt = getGroupType(e.location);
+      var prevGt = i>0 ? getGroupType(evs[i-1].location) : null;
+      var nextGt = i<evs.length-1 ? getGroupType(evs[i+1].location) : null;
+      var isStart = gt!==prevGt && gt===nextGt;
+      var isMid   = gt===prevGt && gt===nextGt;
+      var isEnd   = gt===prevGt && gt!==nextGt;
+      var groupCls = isStart?'group-start':isMid?'group-mid':isEnd?'group-end':'';
+      var badge = getEventBadge(e.location);
+      var key = getEventKey(cat, e.month, e.day);
+      var hasNote = !!eventNotesCache[key];
+      html += '<div class="event-card '+groupCls+'" data-cat="'+cat+'" data-month="'+e.month+'" data-day="'+e.day+'" data-loc="'+encodeURIComponent(e.location)+'" data-dow="'+dowFull(e.dow)+'" onclick="handleEventClick(this)">'+
+        '<div class="event-date"><div class="event-day-num">'+e.day+'</div><div class="event-day-name">'+dowFull(e.dow)+'</div></div>'+
+        '<div class="event-bar '+getEventColor(e.location)+'"></div>'+
+        '<div class="event-info"><div class="event-title">'+e.location+(hasNote?' 📌':'')+'</div><div class="event-sub">'+(CAT_LABELS[cat]||cat)+'</div></div>'+
+        '<div class="event-badge '+badge.cls+'">'+badge.label+'</div></div>';
+    }
+  });
+  html += '<div style="height:16px"></div>';
+  el.innerHTML = html;
 }
 
 function renderCoachComms(comms) {
@@ -769,7 +868,7 @@ function sendComm() {
   var text = document.getElementById('compose-text').value.trim();
   if (!text) return;
   db.collection('communications').add({
-    text:text, category:userProfile.category,
+    text:text, category:coachSelectedCat||userProfile.category||'',
     coachName:userProfile.displayName||userProfile.email,
     coachId:currentUser.uid,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
