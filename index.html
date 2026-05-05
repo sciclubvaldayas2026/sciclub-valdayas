@@ -1222,7 +1222,7 @@ function closeProfile() {
   document.getElementById('profile-modal').classList.remove('active');
 }
 
-// ============ INIT ============
+// ============ INIT ============ 
 window.addEventListener('load', function() {
   // Carica config da Firestore
   db.collection('config').doc('athletes').get().then(function(snap) {
