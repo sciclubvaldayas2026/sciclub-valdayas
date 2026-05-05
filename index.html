@@ -8,13 +8,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sci Club Val d'Ayas">
 <meta name="theme-color" content="#0C447C">
-<title>Sci Club Val d'Ayas</title>
+<title>Sci Club Val d'Ayas v2</title>
 <link rel="manifest" href="manifest.json">
 
-<!-- Firebase SDKs (compat version - NO ES modules, works with normal scripts) -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- SheetJS for xlsx parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -44,6 +47,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .nav-item.active{color:var(--blue-dark)}
 .nav-icon{font-size:20px;line-height:1}
 .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
 /* LOGIN */
 #screen-login{background:var(--blue-dark);justify-content:flex-end}
 .login-hero{padding:60px 24px 32px;text-align:center}
@@ -62,11 +66,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .btn-link{text-align:center;font-size:13px;color:var(--text-sec);cursor:pointer}
 .btn-link span{color:var(--blue-mid);font-weight:500;cursor:pointer}
 .error-msg{background:var(--red-light);color:var(--red);font-size:13px;padding:10px 12px;border-radius:var(--radius-sm);display:none}
+
 /* CHIPS */
 .chips-row{display:flex;gap:8px;padding:12px 14px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .chips-row::-webkit-scrollbar{display:none}
 .chip{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;white-space:nowrap;border:.5px solid var(--border);cursor:pointer;background:var(--bg-card);color:var(--text-sec)}
 .chip.active{background:var(--blue-dark);color:white;border-color:var(--blue-dark)}
+
 /* EVENTS */
 .month-label{padding:14px 14px 4px;font-size:13px;font-weight:600;color:var(--text-sec)}
 .event-card{margin:0 12px 8px;background:var(--bg-card);border-radius:var(--radius);border:.5px solid var(--border);padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer}
@@ -81,9 +87,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .event-title{font-size:15px;font-weight:500;color:var(--text)}
 .event-sub{font-size:12px;color:var(--text-sec);margin-top:2px}
 .event-badge{font-size:10px;padding:3px 9px;border-radius:10px;font-weight:500;flex-shrink:0}
-/* Colors */
 .c-sci{background:#E6B800}.c-atletica{background:var(--teal-mid)}.c-multi{background:#E8760A}.c-campus{background:#4AAED9}.c-info{background:var(--gray-400)}
 .badge-sci{background:#FFF8CC;color:#7A5500}.badge-atletica{background:var(--teal-light);color:var(--teal)}.badge-multi{background:#FFF0E0;color:#8A3D00}.badge-campus{background:#E0F4FF;color:#1A6A99}.badge-info{background:var(--bg);color:var(--text-sec);border:.5px solid var(--border)}
+
 /* COMM */
 .comm-card{margin:0 12px 10px;background:var(--bg-card);border-radius:var(--radius);border:.5px solid var(--border);padding:14px}
 .comm-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -94,6 +100,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .comm-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
 .cat-pill{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:500}
 .unread-dot{width:8px;height:8px;border-radius:50%;background:var(--blue-mid);flex-shrink:0}
+
 /* PROFILE */
 .profile-section{padding:12px;display:flex;flex-direction:column;gap:10px}
 .profile-card{background:var(--bg-card);border-radius:var(--radius);border:.5px solid var(--border);padding:16px}
@@ -106,1247 +113,1126 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .profile-row-label{color:var(--text-sec)}
 .profile-row-val{font-weight:500;color:var(--text)}
 .athlete-pill{display:inline-flex;align-items:center;gap:5px;background:var(--blue-light);color:var(--blue-dark);border-radius:10px;padding:4px 10px;font-size:12px;font-weight:500;margin:2px}
-/* PENDING */
-.pending-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;gap:12px}
-.pending-icon{font-size:48px}
-.pending-title{font-size:18px;font-weight:600;color:var(--text)}
-.pending-sub{font-size:14px;color:var(--text-sec);line-height:1.5}
-/* FAB */
-.fab{position:absolute;bottom:calc(80px + var(--safe-bottom));right:16px;width:52px;height:52px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:26px;color:white;cursor:pointer;border:none;z-index:10}
-/* MODAL */
-.modal-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:20}
-.modal-overlay.open{display:block}
-.modal-sheet{position:absolute;bottom:0;left:0;right:0;background:var(--bg-card);border-radius:20px 20px 0 0;padding:20px;padding-bottom:calc(20px + var(--safe-bottom));max-height:85vh;overflow-y:auto}
-.modal-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:14px}
-.modal-textarea{width:100%;height:110px;padding:12px 14px;font-size:14px;border:.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);resize:none;font-family:inherit;outline:none}
-.modal-actions{display:flex;gap:10px;margin-top:12px}
-.btn-cancel{flex:1;padding:12px;border-radius:var(--radius-sm);border:.5px solid var(--border);background:transparent;font-size:14px;cursor:pointer;color:var(--text)}
-.btn-send{flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--teal);color:white;font-size:14px;font-weight:600;border:none;cursor:pointer}
-.btn-send-blue{flex:1;padding:12px;border-radius:var(--radius-sm);background:var(--blue-dark);color:white;font-size:14px;font-weight:600;border:none;cursor:pointer}
-.role-switcher{display:none;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:none;border-radius:20px;padding:5px 10px;color:white;font-size:12px;font-weight:500;cursor:pointer}
-.role-switcher.visible{display:flex}
-.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text-sec);font-size:14px}
-.empty-state{padding:40px 24px;text-align:center;color:var(--text-sec);font-size:14px}
-/* EVENT MODAL */
-.event-modal-title{font-size:17px;font-weight:600;color:var(--text);margin-bottom:4px}
-.event-modal-date{font-size:13px;color:var(--text-sec);margin-bottom:14px}
-.event-detail-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border);font-size:14px}
-.event-detail-row:last-child{border-bottom:none}
-.event-detail-icon{font-size:16px;flex-shrink:0;width:24px;text-align:center}
-.event-detail-text{color:var(--text);flex:1}
-.btn-add-note{width:100%;padding:10px;border-radius:var(--radius-sm);border:.5px dashed var(--teal-mid);background:var(--teal-light);color:var(--teal);font-size:13px;font-weight:500;cursor:pointer;margin-top:10px}
-/* ADMIN */
-.admin-tabs{display:flex;background:#1a1a18;flex-shrink:0}
-.admin-tab{flex:1;padding:10px 8px;font-size:12px;font-weight:500;color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
-.admin-tab.active{color:white;border-bottom-color:white}
-.admin-section{padding:12px;display:flex;flex-direction:column;gap:10px}
+
+/* ADMIN STYLES */
+.admin-topbar{display:flex;gap:8px;padding:14px;overflow-x:auto;scrollbar-width:none}
+.admin-topbar::-webkit-scrollbar{display:none}
+.admin-tab{padding:8px 16px;border-radius:8px;background:var(--bg);color:var(--text-sec);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;border:.5px solid var(--border)}
+.admin-tab.active{background:var(--blue-dark);color:white;border-color:var(--blue-dark)}
+.admin-section{padding:12px;display:flex;flex-direction:column;gap:12px}
 .admin-card{background:var(--bg-card);border-radius:var(--radius);border:.5px solid var(--border);padding:14px}
-.admin-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px}
-.request-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border)}
+.admin-card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px}
+.request-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:.5px solid var(--border)}
 .request-row:last-child{border-bottom:none}
 .request-info{flex:1}
-.request-name{font-size:13px;font-weight:600;color:var(--text)}
-.request-detail{font-size:11px;color:var(--text-sec);margin-top:2px;line-height:1.4}
-.request-actions{display:flex;gap:6px;flex-shrink:0}
-.btn-approve{padding:6px 12px;border-radius:6px;background:var(--teal-light);color:var(--teal);font-size:12px;font-weight:600;border:none;cursor:pointer}
-.btn-reject{padding:6px 12px;border-radius:6px;background:var(--red-light);color:var(--red);font-size:12px;font-weight:600;border:none;cursor:pointer}
-.vm-status{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:3px 10px;border-radius:10px}
-.vm-ok{background:var(--teal-light);color:var(--teal)}.vm-warn{background:var(--amber-light);color:var(--amber)}.vm-scad{background:var(--red-light);color:var(--red)}.vm-none{background:var(--bg);color:var(--text-sec);border:.5px solid var(--border)}
-/* REGISTER */
-#register-card{display:none;flex-direction:column;gap:14px}
-.section-divider{height:1px;background:var(--border);margin:4px 0}
-.section-small-title{font-size:13px;font-weight:600;color:var(--text-sec)}
-
-.admin-input{flex:1;padding:7px 10px;border-radius:8px;border:.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);font-family:inherit;width:100%;box-sizing:border-box}
-.admin-select{flex:1;padding:7px 10px;border-radius:8px;border:.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);width:100%}
-.btn-sm{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:500;border:none;cursor:pointer;flex-shrink:0}
-.btn-sm-blue{background:var(--blue-light);color:var(--blue-dark)}
-.btn-sm-red{background:var(--red-light);color:var(--red)}
+.request-name{font-size:14px;font-weight:500;color:var(--text)}
+.request-detail{font-size:12px;color:var(--text-sec);margin-top:2px}
+.btn-sm{padding:8px 12px;border-radius:6px;border:none;font-size:12px;font-weight:500;cursor:pointer}
 .btn-sm-green{background:var(--teal-light);color:var(--teal)}
-.athlete-admin-row{display:flex;align-items:flex-start;gap:6px;padding:8px 0;border-bottom:.5px solid var(--border)}
-.athlete-admin-row:last-child{border-bottom:none}
+.btn-sm-red{background:var(--red-light);color:var(--red)}
+
+/* DROP ZONE */
+.dropzone{border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;background:var(--bg);cursor:pointer;transition:all 0.2s}
+.dropzone.active{border-color:var(--blue-mid);background:var(--blue-light)}
+.dropzone-text{font-size:13px;color:var(--text-sec);margin-bottom:8px}
+.dropzone-file{font-size:12px;color:var(--blue-mid);font-weight:500}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:flex-end}
+.modal-overlay.active{display:flex}
+.modal-content{background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;padding:24px 20px;padding-bottom:calc(24px + var(--safe-bottom))}
+.modal-header{font-size:18px;font-weight:600;color:var(--text);margin-bottom:16px}
+.modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;background:var(--bg);border:.5px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-sec)}
+
+/* ATTENDANCE */
+.attendance-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:.5px solid var(--border)}
+.attendance-item:last-child{border-bottom:none}
+.attendance-checkbox{width:20px;height:20px;border:.5px solid var(--border);border-radius:4px;cursor:pointer;flex-shrink:0}
+.attendance-checkbox.checked{background:var(--blue-dark);border-color:var(--blue-dark)}
+.attendance-info{flex:1}
+.attendance-name{font-size:14px;font-weight:500;color:var(--text)}
+.attendance-detail{font-size:12px;color:var(--text-sec);margin-top:2px}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:32px 24px;color:var(--text-sec)}
+.empty-state-icon{font-size:32px;margin-bottom:12px}
+
+/* ALERT */
+.alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:12px;display:none}
+.alert.show{display:block}
+.alert-success{background:#E1F5EE;color:var(--teal)}
+.alert-error{background:var(--red-light);color:var(--red)}
+
+/* FILE INPUT */
+input[type="file"]{display:none}
+
 </style>
+
 </head>
 <body>
+
 <div id="app">
-
-<!-- LOGIN -->
-<div class="screen active" id="screen-login">
-  <div class="login-hero">
-    <div class="login-logo"><img src="data:image/jpeg;base64,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" alt="Logo"></div>
-    <div class="login-title">Sci Club Val d'Ayas</div>
-    <div class="login-sub">Stagione 2026/27</div>
-  </div>
-  <div class="login-card" id="login-card">
-    <div class="role-tabs">
-      <div class="role-tab active" id="tab-genitore" onclick="selectRole('genitore',this)">Genitore / Atleta</div>
-      <div class="role-tab" id="tab-allenatore" onclick="selectRole('allenatore',this)">Allenatore</div>
+  <!-- LOGIN -->
+  <div id="screen-login" class="screen active">
+    <div class="login-hero">
+      <div class="login-logo">⛷️</div>
+      <div class="login-title">Sci Club Val d'Ayas</div>
+      <div class="login-sub">App ufficiale — Stagione 2026/27</div>
     </div>
-    <div><div class="field-label">Email</div><input class="field-input" id="login-email" type="email" placeholder="mario.rossi@email.it" autocomplete="email"></div>
-    <div><div class="field-label">Password</div><input class="field-input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password"></div>
-    <div class="error-msg" id="login-error"></div>
-    <button class="btn-primary" id="btn-login" onclick="doLogin()">Accedi</button>
-    <div class="btn-link" id="register-link">Non hai un account? <span onclick="showRegisterForm()">Registrati</span></div>
-  </div>
-  <div class="login-card" id="register-card" style="display:none;overflow-y:auto;max-height:75vh;">
-    <div style="font-size:16px;font-weight:600;color:var(--text)">Nuova registrazione</div>
-    <div><div class="field-label">Il tuo nome e cognome</div><input class="field-input" id="reg-parentname" type="text" placeholder="Mario Rossi"></div>
-    <div><div class="field-label">Email</div><input class="field-input" id="reg-email" type="email" placeholder="mario.rossi@email.it"></div>
-    <div><div class="field-label">Password (min. 6 caratteri)</div><input class="field-input" id="reg-password" type="password" placeholder="••••••••"></div>
-    <div class="section-divider"></div>
-    <div class="section-small-title">Atleta 1</div>
-    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete1" type="text" placeholder="Nome Cognome"></div>
-    <div><div class="field-label">Categoria</div>
-      <select class="field-input" id="reg-cat1">
-        <option value="">-- Seleziona --</option>
-        <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
-        <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
-      </select></div>    <div class="section-divider"></div>
-    <div class="section-small-title">Atleta 2 <span style="font-weight:400;font-size:11px">(opzionale)</span></div>
-    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete2" type="text" placeholder="opzionale"></div>
-    <div><div class="field-label">Categoria</div>
-      <select class="field-input" id="reg-cat2">
-        <option value="">-- Nessun atleta --</option>
-        <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
-        <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
-      </select></div>    <div class="section-divider"></div>
-    <div class="section-small-title">Atleta 3 <span style="font-weight:400;font-size:11px">(opzionale)</span></div>
-    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete3" type="text" placeholder="opzionale"></div>
-    <div><div class="field-label">Categoria</div>
-      <select class="field-input" id="reg-cat3">
-        <option value="">-- Nessun atleta --</option>
-        <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
-        <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
-      </select></div>    <div class="section-divider"></div>
-    <div class="section-small-title">Atleta 4 <span style="font-weight:400;font-size:11px">(opzionale)</span></div>
-    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete4" type="text" placeholder="opzionale"></div>
-    <div><div class="field-label">Categoria</div>
-      <select class="field-input" id="reg-cat4">
-        <option value="">-- Nessun atleta --</option>
-        <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
-        <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
-      </select></div>    <div class="section-divider"></div>
-    <div class="section-small-title">Atleta 5 <span style="font-weight:400;font-size:11px">(opzionale)</span></div>
-    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete5" type="text" placeholder="opzionale"></div>
-    <div><div class="field-label">Categoria</div>
-      <select class="field-input" id="reg-cat5">
-        <option value="">-- Nessun atleta --</option>
-        <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
-        <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
-      </select></div>    <div class="section-divider"></div>
-    <div class="section-small-title">Atleta 6 <span style="font-weight:400;font-size:11px">(opzionale)</span></div>
-    <div><div class="field-label">Nome e cognome atleta</div><input class="field-input" id="reg-athlete6" type="text" placeholder="opzionale"></div>
-    <div><div class="field-label">Categoria</div>
-      <select class="field-input" id="reg-cat6">
-        <option value="">-- Nessun atleta --</option>
-        <option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>
-        <option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option>
-      </select></div>
-    <div class="error-msg" id="reg-error"></div>
-    <button class="btn-primary" onclick="doRegister()">Invia richiesta</button>
-    <div class="btn-link"><span onclick="showLoginForm()">← Torna al login</span></div>
-  </div>
-</div>
-
-<!-- CALENDARIO -->
-<div class="screen" id="screen-calendario">
-  <div class="topbar">
-    <div><div class="topbar-title">Calendario</div><div class="topbar-sub">Stagione 2026/27</div></div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button class="role-switcher" id="btn-switch-to-allenatore" onclick="switchToAllenatore()">🎿 Allenatore</button>
-      <button class="avatar-btn" id="avatar-cal" onclick="showScreen('screen-profilo');renderProfile()"></button>
-    </div>
-  </div>
-  <div class="chips-row" id="cat-chips"></div>
-  <div style="padding:0 14px 10px;display:flex;gap:8px;flex-shrink:0">
-    <button id="filter-all" onclick="setCalFilter('all')" style="flex:1;padding:7px;border-radius:var(--radius-sm);border:.5px solid var(--border);font-size:12px;font-weight:500;background:var(--blue-dark);color:white;cursor:pointer">Tutto</button>
-    <button id="filter-upcoming" onclick="setCalFilter('upcoming')" style="flex:1;padding:7px;border-radius:var(--radius-sm);border:.5px solid var(--border);font-size:12px;font-weight:500;background:var(--bg-card);color:var(--text-sec);cursor:pointer">Prossime</button>
-  </div>
-  <div class="content" id="cal-content"></div>
-  <div class="navbar">
-    <button class="nav-item active" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
-    <button class="nav-item" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-    <button class="nav-item" onclick="showScreen('screen-profilo');renderProfile()"><div class="nav-icon">👤</div><div>Profilo</div></button>
-  </div>
-</div>
-
-<!-- COMUNICAZIONI -->
-<div class="screen" id="screen-comunicazioni">
-  <div class="topbar">
-    <div><div class="topbar-title">Comunicazioni</div><div class="topbar-sub">Le tue categorie</div></div>
-    <button class="avatar-btn" id="avatar-comm" onclick="showScreen('screen-profilo');renderProfile()"></button>
-  </div>
-  <div class="chips-row" id="comm-chips"></div>
-  <div class="content" id="comm-content"></div>
-  <div class="navbar">
-    <button class="nav-item" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
-    <button class="nav-item active" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-    <button class="nav-item" onclick="showScreen('screen-profilo');renderProfile()"><div class="nav-icon">👤</div><div>Profilo</div></button>
-  </div>
-</div>
-
-<!-- PROFILO -->
-<div class="screen" id="screen-profilo">
-  <div class="topbar">
-    <div><div class="topbar-title">Profilo</div><div class="topbar-sub">Sci Club Val d'Ayas</div></div>
-    <button class="avatar-btn" onclick="doLogout()">↩</button>
-  </div>
-  <div class="content"><div class="profile-section" id="profile-content"></div></div>
-  <div class="navbar">
-    <button class="nav-item" onclick="switchTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
-    <button class="nav-item" onclick="switchTab('comunicazioni')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-    <button class="nav-item active"><div class="nav-icon">👤</div><div>Profilo</div></button>
-  </div>
-</div>
-
-<!-- PENDING -->
-<div class="screen" id="screen-pending">
-  <div class="topbar"><div><div class="topbar-title">In attesa</div><div class="topbar-sub">Sci Club Val d'Ayas</div></div></div>
-  <div class="pending-screen">
-    <div class="pending-icon">⏳</div>
-    <div class="pending-title">Registrazione in attesa</div>
-    <div class="pending-sub">La tua richiesta è stata inviata. Un amministratore verificherà i tuoi dati e attiverà il tuo account.</div>
-  </div>
-  <div style="padding:0 16px calc(16px + var(--safe-bottom))">
-    <button class="btn-primary" style="background:var(--gray-600)" onclick="doLogout()">Esci</button>
-  </div>
-</div>
-
-<!-- ALLENATORE -->
-<div class="screen" id="screen-allenatore">
-  <div class="topbar topbar-green">
-    <div><div class="topbar-title" id="coach-topbar-title">Comunicazioni</div><div class="topbar-sub" id="coach-sub">Allenatore</div></div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button class="role-switcher" id="btn-switch-to-genitore" onclick="switchToGenitore()">👨‍👧 Genitore</button>
-      <button class="avatar-btn" onclick="doLogout()">↩</button>
-    </div>
-  </div>
-  <div class="chips-row" id="coach-cat-chips" style="display:none"></div>
-  <div class="content" id="coach-content"></div>
-  <button class="fab" id="coach-fab" onclick="openCompose()">+</button>
-  <div class="navbar">
-    <button class="nav-item active" id="coach-tab-comm" onclick="switchCoachTab('comunicazioni')" style="color:var(--teal)"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-    <button class="nav-item" id="coach-tab-cal" onclick="switchCoachTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
-    <button class="nav-item" onclick="doLogout()"><div class="nav-icon">↩</div><div>Esci</div></button>
-  </div>
-</div>
-
-<!-- ADMIN -->
-<div class="screen" id="screen-admin">
-  <div class="topbar topbar-dark">
-    <div><div class="topbar-title">Pannello Admin</div><div class="topbar-sub">Sci Club Val d'Ayas</div></div>
-    <button class="avatar-btn" onclick="doLogout()">↩</button>
-  </div>
-  <div class="admin-tabs">
-    <button class="admin-tab active" id="atab-pending" onclick="switchAdminTab('pending')">Richieste</button>
-    <button class="admin-tab" id="atab-parents" onclick="switchAdminTab('parents')">Genitori</button>
-    <button class="admin-tab" id="atab-coaches" onclick="switchAdminTab('coaches')">Allenatori</button>
-    <button class="admin-tab" id="atab-medical" onclick="switchAdminTab('medical')">Visite CM</button>
-    <button class="admin-tab" id="atab-users" onclick="switchAdminTab('users')">Utenti</button>
-  </div>
-  <div class="content" id="admin-content"></div>
-
-<!-- ADMIN MODAL -->
-<div class="modal-overlay" id="modal-admin" onclick="closeAdminModal()">
-  <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto">
-    <div id="admin-modal-content"></div>
-    <button class="btn-cancel" style="width:100%;margin-top:10px" onclick="closeAdminModal()">Chiudi</button>
-  </div>
-</div>
-
-<!-- COMPOSE MODAL -->
-<div class="modal-overlay" id="modal-compose" onclick="closeCompose()">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <div class="modal-title" id="modal-compose-title">Nuova comunicazione</div>
-    <textarea class="modal-textarea" id="compose-text" placeholder="Scrivi un messaggio per i genitori..."></textarea>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeCompose()">Annulla</button>
-      <button class="btn-send" onclick="sendComm()">Invia</button>
-    </div>
-  </div>
-</div>
-
-<!-- EVENT MODAL -->
-<div class="modal-overlay" id="modal-event" onclick="closeEventModal()">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <div id="event-modal-content"></div>
-    <div id="event-note-form" style="display:none;flex-direction:column;gap:8px;margin-top:12px">
-      <div style="font-size:14px;font-weight:600;color:var(--text)">Dettagli appuntamento</div>
-      <input class="field-input" id="event-place" placeholder="Luogo (es. Cervinia, Pista Ventina)">
-      <input class="field-input" id="event-time" placeholder="Orario (es. 07:30 partenza)">
-      <textarea class="modal-textarea" id="event-notes" placeholder="Note per i genitori..." style="height:80px"></textarea>
-      <div class="modal-actions">
-        <button class="btn-cancel" onclick="document.getElementById('event-note-form').style.display='none'">Annulla</button>
-        <button class="btn-send" onclick="saveEventNote()">Salva</button>
+    <div class="login-card">
+      <div class="role-tabs">
+        <button class="role-tab active" onclick="switchRole('genitore')">👨‍👩‍👧 Genitore</button>
+        <button class="role-tab" onclick="switchRole('allenatore')">🎿 Allenatore</button>
+        <button class="role-tab" onclick="switchRole('admin')">⚙️ Admin</button>
+      </div>
+      <div class="field-label">Email</div>
+      <input class="field-input" id="login-email" type="email" placeholder="email@esempio.it">
+      <div class="field-label">Password</div>
+      <input class="field-input" id="login-pwd" type="password" placeholder="••••••">
+      <div class="error-msg" id="login-error"></div>
+      <button class="btn-primary" onclick="loginUser()">Accedi</button>
+      <div class="btn-link" style="margin-top:8px">
+        Non hai un account? <span onclick="switchToRegister()">Registrati</span>
       </div>
     </div>
-    <button class="btn-cancel" style="width:100%;margin-top:10px" onclick="closeEventModal()">Chiudi</button>
   </div>
+
+  <!-- REGISTER -->
+  <div id="screen-register" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Registrazione</div>
+      </div>
+      <button class="avatar-btn" onclick="switchToLogin()" style="background:rgba(255,255,255,.1)">←</button>
+    </div>
+    <div class="content" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div class="field-label">Nome e cognome</div>
+      <input class="field-input" id="reg-name" placeholder="Giovanni Bianchi">
+      <div class="field-label">Email</div>
+      <input class="field-input" id="reg-email" type="email" placeholder="email@esempio.it">
+      <div class="field-label">Password (min. 6 caratteri)</div>
+      <input class="field-input" id="reg-pwd" type="password" placeholder="••••••">
+      <div class="field-label">Categoria atleta</div>
+      <select class="field-input" id="reg-cat">
+        <option value="">-- Seleziona categoria --</option>
+        <option value="sbaby">S.Baby</option>
+        <option value="baby">Baby</option>
+        <option value="cuccioli">Cuccioli</option>
+        <option value="ragazzi">Ragazzi</option>
+        <option value="allievi">Allievi</option>
+        <option value="giovani">Giovani</option>
+        <option value="master">Master</option>
+        <option value="giovani_fisi">Giovani FISI</option>
+      </select>
+      <div id="athletes-container" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button class="btn-primary" style="background:var(--gray-400);margin-top:8px" onclick="addAthleteField()">+ Aggiungi atleta</button>
+      <div class="error-msg" id="reg-error"></div>
+      <button class="btn-primary" onclick="registerUser()">Invia richiesta</button>
+    </div>
+  </div>
+
+  <!-- GENITORE -->
+  <div id="screen-genitore" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Calendario</div>
+        <div class="topbar-sub" id="genitore-cat-display"></div>
+      </div>
+      <button class="avatar-btn" onclick="showProfile()">👤</button>
+    </div>
+    <div class="chips-row">
+      <button class="chip active" onclick="filterCategory('all')">Tutto</button>
+      <button class="chip" onclick="filterCategory('sbaby')">S.Baby</button>
+      <button class="chip" onclick="filterCategory('baby')">Baby</button>
+      <button class="chip" onclick="filterCategory('cuccioli')">Cuccioli</button>
+      <button class="chip" onclick="filterCategory('ragazzi')">Ragazzi</button>
+      <button class="chip" onclick="filterCategory('allievi')">Allievi</button>
+      <button class="chip" onclick="filterCategory('giovani')">Giovani</button>
+      <button class="chip" onclick="filterCategory('master')">Master</button>
+      <button class="chip" onclick="filterCategory('giovani_fisi')">G. FISI</button>
+    </div>
+    <div class="content" id="genitore-content"></div>
+    <div class="navbar">
+      <button class="nav-item active" onclick="switchScreen('genitore')"><div class="nav-icon">📅</div><div>Calendario</div></button>
+      <button class="nav-item" onclick="switchScreen('comm')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+      <button class="nav-item" onclick="showProfile()"><div class="nav-icon">👤</div><div>Profilo</div></button>
+    </div>
+  </div>
+
+  <!-- ALLENATORE -->
+  <div id="screen-allenatore" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Allenatore</div>
+        <div class="topbar-sub" id="allenatore-cat-display"></div>
+      </div>
+      <button class="avatar-btn" onclick="showProfile()">👤</button>
+    </div>
+    <div class="chips-row">
+      <button class="chip active" onclick="filterAllenatoreCat('all')">Tutte</button>
+      <button class="chip" onclick="filterAllenatoreCat('sbaby')">S.Baby</button>
+      <button class="chip" onclick="filterAllenatoreCat('baby')">Baby</button>
+      <button class="chip" onclick="filterAllenatoreCat('cuccioli')">Cuccioli</button>
+      <button class="chip" onclick="filterAllenatoreCat('ragazzi')">Ragazzi</button>
+      <button class="chip" onclick="filterAllenatoreCat('allievi')">Allievi</button>
+      <button class="chip" onclick="filterAllenatoreCat('giovani')">Giovani</button>
+      <button class="chip" onclick="filterAllenatoreCat('master')">Master</button>
+      <button class="chip" onclick="filterAllenatoreCat('giovani_fisi')">G. FISI</button>
+    </div>
+    <div class="content" id="allenatore-content"></div>
+    <div class="navbar">
+      <button class="nav-item active" onclick="switchAllenatoreTab('comm')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
+      <button class="nav-item" onclick="switchAllenatoreTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
+      <button class="nav-item" onclick="showProfile()"><div class="nav-icon">👤</div><div>Profilo</div></button>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="screen-admin" class="screen">
+    <div class="topbar topbar-dark">
+      <div>
+        <div class="topbar-title">⚙️ Amministrazione</div>
+      </div>
+      <button class="avatar-btn" onclick="logoutUser()">Esci</button>
+    </div>
+    <div class="admin-topbar">
+      <button class="admin-tab active" onclick="switchAdminTab('import')">📥 Importa</button>
+      <button class="admin-tab" onclick="switchAdminTab('atleti')">👥 Atleti</button>
+      <button class="admin-tab" onclick="switchAdminTab('categorie')">🏷️ Categorie</button>
+      <button class="admin-tab" onclick="switchAdminTab('utenti')">🔑 Utenti</button>
+      <button class="admin-tab" onclick="switchAdminTab('medici')">🏥 Medici</button>
+      <button class="admin-tab" onclick="switchAdminTab('events')">📌 Eventi</button>
+    </div>
+    <div class="content" id="admin-content"></div>
+    <div class="navbar">
+      <button class="nav-item" onclick="logoutUser()"><div class="nav-icon">🚪</div><div>Esci</div></button>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal-content" id="modal-content">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- PROFILE MODAL -->
+  <div id="profile-modal" class="modal-overlay">
+    <div class="modal-content" id="profile-content">
+      <button class="modal-close" onclick="closeProfile()">×</button>
+      <div id="profile-body"></div>
+    </div>
+  </div>
+
 </div>
 
-</div><!-- #app -->
-
 <script>
-// ─── FIREBASE CONFIG ──────────────────────────────────────────────────────────
-firebase.initializeApp({
+// ============ FIREBASE CONFIG ============
+const firebaseConfig = {
   apiKey: "AIzaSyAb7GSGVmfDEgoRlv6-sx5JHZv3GNfsToU",
   authDomain: "sciclub-valdayas.firebaseapp.com",
   projectId: "sciclub-valdayas",
   storageBucket: "sciclub-valdayas.firebasestorage.app",
   messagingSenderId: "402983337756",
   appId: "1:402983337756:web:bbe2e6a4b0b7a17431c4d9"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ============ GLOBAL STATE ============
+let currentUser = null;
+let userRole = 'genitore';
+let selectedCategory = 'all';
+let selectedAllenatoreCat = 'all';
+let allenatoreTab = 'comm';
+let adminTab = 'import';
+let importedAthletes = {};
+
+const CAT_LABELS = {
+  'sbaby': 'S.Baby',
+  'baby': 'Baby',
+  'cuccioli': 'Cuccioli',
+  'ragazzi': 'Ragazzi',
+  'allievi': 'Allievi',
+  'giovani': 'Giovani',
+  'master': 'Master',
+  'giovani_fisi': 'Giovani FISI'
+};
+
+const CAT_ORDER = ['sbaby', 'baby', 'cuccioli', 'ragazzi', 'allievi', 'giovani', 'master', 'giovani_fisi'];
+
+// ============ AUTH ============
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    currentUser = user;
+    loadUserAndShowScreen();
+  } else {
+    showScreen('login');
+  }
 });
-var auth = firebase.auth();
-var db = firebase.firestore();
 
-// ─── CALENDAR DATA ────────────────────────────────────────────────────────────
-var CALENDAR_DATA = {"sbaby": [{"month": "Aprile", "day": 19, "dow": "D", "location": "FINE STAGIONE INVERNALE"}, {"month": "Giugno", "day": 10, "dow": "M", "location": "FINE SCUOLE"}, {"month": "Luglio", "day": 7, "dow": "M", "location": "VIAGGIO"}, {"month": "Luglio", "day": 8, "dow": "M", "location": "LIGNANO"}, {"month": "Luglio", "day": 9, "dow": "G", "location": "LIGNANO"}, {"month": "Luglio", "day": 10, "dow": "V", "location": "LIGNANO"}, {"month": "Luglio", "day": 11, "dow": "S", "location": "LIGNANO"}, {"month": "Luglio", "day": 20, "dow": "L", "location": "MULTISPORT"}, {"month": "Luglio", "day": 21, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 22, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 23, "dow": "G", "location": "MULTISPORT"}, {"month": "Luglio", "day": 27, "dow": "L", "location": "MULTISPORT"}, {"month": "Luglio", "day": 28, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 29, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 30, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 3, "dow": "L", "location": "MULTISPORT"}, {"month": "Agosto", "day": 4, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 5, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 6, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 17, "dow": "L", "location": "MULTISPORT"}, {"month": "Agosto", "day": 18, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 19, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 20, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 24, "dow": "L", "location": "MULTISPORT"}, {"month": "Agosto", "day": 25, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 26, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 27, "dow": "G", "location": "MULTISPORT"}, {"month": "Settembre", "day": 7, "dow": "L", "location": "MULTISPORT"}, {"month": "Settembre", "day": 8, "dow": "M", "location": "MULTISPORT"}, {"month": "Settembre", "day": 9, "dow": "M", "location": "MULTISPORT"}, {"month": "Settembre", "day": 10, "dow": "G", "location": "MULTISPORT"}, {"month": "Settembre", "day": 14, "dow": "L", "location": "INIZIO SCUOLE"}, {"month": "Ottobre", "day": 3, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 7, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 10, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 14, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 17, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 21, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 24, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 28, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 31, "dow": "S", "location": "ACROBATICA"}], "baby": [{"month": "Aprile", "day": 26, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 1, "dow": "V", "location": "CERVINIA"}, {"month": "Maggio", "day": 3, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 9, "dow": "S", "location": "CERVINIA"}, {"month": "Maggio", "day": 17, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 23, "dow": "S", "location": "CERVINIA"}, {"month": "Maggio", "day": 31, "dow": "D", "location": "CERVINIA"}, {"month": "Giugno", "day": 1, "dow": "L", "location": "CERVINIA"}, {"month": "Giugno", "day": 16, "dow": "M", "location": "VIAGGIO"}, {"month": "Giugno", "day": 17, "dow": "M", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 18, "dow": "G", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 19, "dow": "V", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 20, "dow": "S", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 26, "dow": "V", "location": "VIAGGIO"}, {"month": "Giugno", "day": 27, "dow": "S", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 28, "dow": "D", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 29, "dow": "L", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 30, "dow": "M", "location": "DEUX ALPES"}, {"month": "Luglio", "day": 7, "dow": "M", "location": "VIAGGIO"}, {"month": "Luglio", "day": 8, "dow": "M", "location": "LIGNANO"}, {"month": "Luglio", "day": 9, "dow": "G", "location": "LIGNANO"}, {"month": "Luglio", "day": 10, "dow": "V", "location": "LIGNANO"}, {"month": "Luglio", "day": 11, "dow": "S", "location": "LIGNANO"}, {"month": "Luglio", "day": 20, "dow": "L", "location": "MULTISPORT"}, {"month": "Luglio", "day": 21, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 22, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 23, "dow": "G", "location": "MULTISPORT"}, {"month": "Luglio", "day": 27, "dow": "L", "location": "MULTISPORT"}, {"month": "Luglio", "day": 28, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 29, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 30, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 3, "dow": "L", "location": "MULTISPORT"}, {"month": "Agosto", "day": 4, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 5, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 6, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 17, "dow": "L", "location": "MULTISPORT"}, {"month": "Agosto", "day": 18, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 19, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 20, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 24, "dow": "L", "location": "MULTISPORT"}, {"month": "Agosto", "day": 25, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 26, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 27, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 31, "dow": "L", "location": "CERVINIA"}, {"month": "Settembre", "day": 1, "dow": "M", "location": "CERVINIA"}, {"month": "Settembre", "day": 2, "dow": "M", "location": "CERVINIA"}, {"month": "Settembre", "day": 3, "dow": "G", "location": "CERVINIA"}, {"month": "Settembre", "day": 7, "dow": "L", "location": "MULTISPORT"}, {"month": "Settembre", "day": 8, "dow": "M", "location": "MULTISPORT"}, {"month": "Settembre", "day": 9, "dow": "M", "location": "MULTISPORT"}, {"month": "Settembre", "day": 10, "dow": "G", "location": "MULTISPORT"}, {"month": "Ottobre", "day": 3, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 7, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 10, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 14, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 17, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 21, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 24, "dow": "S", "location": "VIAGGIO"}, {"month": "Ottobre", "day": 25, "dow": "D", "location": "SNOWHALL"}, {"month": "Ottobre", "day": 26, "dow": "L", "location": "SNOWHALL"}, {"month": "Ottobre", "day": 27, "dow": "M", "location": "SNOWHALL"}, {"month": "Ottobre", "day": 28, "dow": "M", "location": "SNOWHALL"}, {"month": "Ottobre", "day": 31, "dow": "S", "location": "ACROBATICA"}], "cuccioli": [{"month": "Aprile", "day": 26, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 1, "dow": "V", "location": "CERVINIA"}, {"month": "Maggio", "day": 3, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 9, "dow": "S", "location": "CERVINIA"}, {"month": "Maggio", "day": 17, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 23, "dow": "S", "location": "CERVINIA"}, {"month": "Maggio", "day": 31, "dow": "D", "location": "CERVINIA"}, {"month": "Giugno", "day": 1, "dow": "L", "location": "CERVINIA"}, {"month": "Giugno", "day": 16, "dow": "M", "location": "VIAGGIO"}, {"month": "Giugno", "day": 17, "dow": "M", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 18, "dow": "G", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 19, "dow": "V", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 20, "dow": "S", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 26, "dow": "V", "location": "VIAGGIO"}, {"month": "Giugno", "day": 27, "dow": "S", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 28, "dow": "D", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 29, "dow": "L", "location": "DEUX ALPES"}, {"month": "Giugno", "day": 30, "dow": "M", "location": "DEUX ALPES"}, {"month": "Luglio", "day": 7, "dow": "M", "location": "VIAGGIO"}, {"month": "Luglio", "day": 8, "dow": "M", "location": "LIGNANO"}, {"month": "Luglio", "day": 9, "dow": "G", "location": "LIGNANO"}, {"month": "Luglio", "day": 10, "dow": "V", "location": "LIGNANO"}, {"month": "Luglio", "day": 11, "dow": "S", "location": "LIGNANO"}, {"month": "Luglio", "day": 20, "dow": "L", "location": "MULTISPORT"}, {"month": "Luglio", "day": 21, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 22, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 23, "dow": "G", "location": "MULTISPORT"}, {"month": "Luglio", "day": 27, "dow": "L", "location": "MULTISPORT"}, {"month": "Luglio", "day": 28, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 29, "dow": "M", "location": "MULTISPORT"}, {"month": "Luglio", "day": 30, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 3, "dow": "L", "location": "MULTISPORT"}, {"month": "Agosto", "day": 4, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 5, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 6, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 17, "dow": "L", "location": "MULTISPORT"}, {"month": "Agosto", "day": 18, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 19, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 20, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 24, "dow": "L", "location": "MULTISPORT"}, {"month": "Agosto", "day": 25, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 26, "dow": "M", "location": "MULTISPORT"}, {"month": "Agosto", "day": 27, "dow": "G", "location": "MULTISPORT"}, {"month": "Agosto", "day": 31, "dow": "L", "location": "CERVINIA"}, {"month": "Settembre", "day": 1, "dow": "M", "location": "CERVINIA"}, {"month": "Settembre", "day": 2, "dow": "M", "location": "CERVINIA"}, {"month": "Settembre", "day": 3, "dow": "G", "location": "CERVINIA"}, {"month": "Settembre", "day": 7, "dow": "L", "location": "MULTISPORT"}, {"month": "Settembre", "day": 8, "dow": "M", "location": "MULTISPORT"}, {"month": "Settembre", "day": 9, "dow": "M", "location": "MULTISPORT"}, {"month": "Settembre", "day": 10, "dow": "G", "location": "MULTISPORT"}, {"month": "Ottobre", "day": 3, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 7, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 10, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 14, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 17, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 21, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 24, "dow": "S", "location": "VIAGGIO"}, {"month": "Ottobre", "day": 25, "dow": "D", "location": "SNOWHALL"}, {"month": "Ottobre", "day": 26, "dow": "L", "location": "SNOWHALL"}, {"month": "Ottobre", "day": 27, "dow": "M", "location": "SNOWHALL"}, {"month": "Ottobre", "day": 28, "dow": "M", "location": "SNOWHALL"}, {"month": "Ottobre", "day": 31, "dow": "S", "location": "ACROBATICA"}], "ragazzi": [{"month": "Aprile", "day": 25, "dow": "S", "location": "CERVINIA"}, {"month": "Aprile", "day": 30, "dow": "G", "location": "CERVINIA"}, {"month": "Maggio", "day": 2, "dow": "S", "location": "CERVINIA"}, {"month": "Maggio", "day": 10, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 16, "dow": "S", "location": "CERVINIA"}, {"month": "Maggio", "day": 24, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 30, "dow": "S", "location": "CERVINIA"}, {"month": "Giugno", "day": 2, "dow": "M", "location": "CERVINIA"}, {"month": "Giugno", "day": 11, "dow": "G", "location": "VIAGGIO"}, {"month": "Giugno", "day": 12, "dow": "V", "location": "ISERAN"}, {"month": "Giugno", "day": 13, "dow": "S", "location": "ISERAN"}, {"month": "Giugno", "day": 14, "dow": "D", "location": "ISERAN"}, {"month": "Giugno", "day": 15, "dow": "L", "location": "ISERAN"}, {"month": "Giugno", "day": 18, "dow": "G", "location": "ATLETICA"}, {"month": "Giugno", "day": 19, "dow": "V", "location": "ATLETICA"}, {"month": "Giugno", "day": 21, "dow": "D", "location": "VIAGGIO"}, {"month": "Giugno", "day": 22, "dow": "L", "location": "ISERAN"}, {"month": "Giugno", "day": 23, "dow": "M", "location": "ISERAN"}, {"month": "Giugno", "day": 24, "dow": "M", "location": "ISERAN"}, {"month": "Giugno", "day": 25, "dow": "G", "location": "ISERAN"}, {"month": "Giugno", "day": 28, "dow": "D", "location": "ATLETICA"}, {"month": "Giugno", "day": 29, "dow": "L", "location": "ATLETICA"}, {"month": "Luglio", "day": 1, "dow": "M", "location": "VIAGGIO"}, {"month": "Luglio", "day": 2, "dow": "G", "location": "ISERAN"}, {"month": "Luglio", "day": 3, "dow": "V", "location": "ISERAN"}, {"month": "Luglio", "day": 4, "dow": "S", "location": "ISERAN"}, {"month": "Luglio", "day": 5, "dow": "D", "location": "ISERAN"}, {"month": "Luglio", "day": 8, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 9, "dow": "G", "location": "ATLETICA"}, {"month": "Luglio", "day": 10, "dow": "V", "location": "ATLETICA"}, {"month": "Luglio", "day": 13, "dow": "L", "location": "CERVINIA"}, {"month": "Luglio", "day": 14, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 15, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 16, "dow": "G", "location": "ATLETICA"}, {"month": "Luglio", "day": 20, "dow": "L", "location": "CERVINIA"}, {"month": "Luglio", "day": 21, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 22, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 23, "dow": "G", "location": "ATLETICA"}, {"month": "Luglio", "day": 27, "dow": "L", "location": "CERVINIA"}, {"month": "Luglio", "day": 28, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 29, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 30, "dow": "G", "location": "ATLETICA"}, {"month": "Agosto", "day": 3, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 4, "dow": "M", "location": "CERVINIA"}, {"month": "Agosto", "day": 5, "dow": "M", "location": "CERVINIA"}, {"month": "Agosto", "day": 10, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 11, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 12, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 13, "dow": "G", "location": "ATLETICA"}, {"month": "Agosto", "day": 17, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 18, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 19, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 20, "dow": "G", "location": "ATLETICA"}, {"month": "Agosto", "day": 24, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 25, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 26, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 27, "dow": "G", "location": "ATLETICA"}, {"month": "Settembre", "day": 1, "dow": "M", "location": "CERVINIA"}, {"month": "Settembre", "day": 2, "dow": "M", "location": "ATLETICA"}, {"month": "Settembre", "day": 3, "dow": "G", "location": "ATLETICA"}, {"month": "Settembre", "day": 4, "dow": "V", "location": "ATLETICA"}, {"month": "Settembre", "day": 7, "dow": "L", "location": "VIAGGIO"}, {"month": "Settembre", "day": 8, "dow": "M", "location": "SNOWHALL"}, {"month": "Settembre", "day": 9, "dow": "M", "location": "SNOWHALL"}, {"month": "Settembre", "day": 10, "dow": "G", "location": "SNOWHALL"}, {"month": "Settembre", "day": 11, "dow": "V", "location": "SNOWHALL"}, {"month": "Settembre", "day": 30, "dow": "M", "location": "VIAGGIO"}, {"month": "Ottobre", "day": 1, "dow": "G", "location": "SCI"}, {"month": "Ottobre", "day": 2, "dow": "V", "location": "SCI"}, {"month": "Ottobre", "day": 3, "dow": "S", "location": "SCI"}, {"month": "Ottobre", "day": 4, "dow": "D", "location": "SCI"}, {"month": "Ottobre", "day": 7, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 10, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 14, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 17, "dow": "S", "location": "VIAGGIO"}, {"month": "Ottobre", "day": 18, "dow": "D", "location": "SCI"}, {"month": "Ottobre", "day": 19, "dow": "L", "location": "SCI"}, {"month": "Ottobre", "day": 20, "dow": "M", "location": "SCI"}, {"month": "Ottobre", "day": 21, "dow": "M", "location": "SCI"}, {"month": "Ottobre", "day": 24, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 28, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 31, "dow": "S", "location": "VIAGGIO"}], "allievi": [{"month": "Aprile", "day": 25, "dow": "S", "location": "CERVINIA"}, {"month": "Aprile", "day": 30, "dow": "G", "location": "CERVINIA"}, {"month": "Maggio", "day": 2, "dow": "S", "location": "CERVINIA"}, {"month": "Maggio", "day": 10, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 16, "dow": "S", "location": "CERVINIA"}, {"month": "Maggio", "day": 24, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 30, "dow": "S", "location": "CERVINIA"}, {"month": "Giugno", "day": 2, "dow": "M", "location": "CERVINIA"}, {"month": "Giugno", "day": 11, "dow": "G", "location": "VIAGGIO"}, {"month": "Giugno", "day": 12, "dow": "V", "location": "ISERAN"}, {"month": "Giugno", "day": 13, "dow": "S", "location": "ISERAN"}, {"month": "Giugno", "day": 14, "dow": "D", "location": "ISERAN"}, {"month": "Giugno", "day": 15, "dow": "L", "location": "ISERAN"}, {"month": "Giugno", "day": 18, "dow": "G", "location": "ATLETICA"}, {"month": "Giugno", "day": 19, "dow": "V", "location": "ATLETICA"}, {"month": "Giugno", "day": 21, "dow": "D", "location": "VIAGGIO"}, {"month": "Giugno", "day": 22, "dow": "L", "location": "ISERAN"}, {"month": "Giugno", "day": 23, "dow": "M", "location": "ISERAN"}, {"month": "Giugno", "day": 24, "dow": "M", "location": "ISERAN"}, {"month": "Giugno", "day": 25, "dow": "G", "location": "ISERAN"}, {"month": "Giugno", "day": 28, "dow": "D", "location": "ATLETICA"}, {"month": "Giugno", "day": 29, "dow": "L", "location": "ATLETICA"}, {"month": "Luglio", "day": 1, "dow": "M", "location": "VIAGGIO"}, {"month": "Luglio", "day": 2, "dow": "G", "location": "ISERAN"}, {"month": "Luglio", "day": 3, "dow": "V", "location": "ISERAN"}, {"month": "Luglio", "day": 4, "dow": "S", "location": "ISERAN"}, {"month": "Luglio", "day": 5, "dow": "D", "location": "ISERAN"}, {"month": "Luglio", "day": 8, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 9, "dow": "G", "location": "ATLETICA"}, {"month": "Luglio", "day": 10, "dow": "V", "location": "ATLETICA"}, {"month": "Luglio", "day": 13, "dow": "L", "location": "CERVINIA"}, {"month": "Luglio", "day": 14, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 15, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 16, "dow": "G", "location": "ATLETICA"}, {"month": "Luglio", "day": 20, "dow": "L", "location": "CERVINIA"}, {"month": "Luglio", "day": 21, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 22, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 23, "dow": "G", "location": "ATLETICA"}, {"month": "Luglio", "day": 27, "dow": "L", "location": "CERVINIA"}, {"month": "Luglio", "day": 28, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 29, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 30, "dow": "G", "location": "ATLETICA"}, {"month": "Agosto", "day": 3, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 4, "dow": "M", "location": "CERVINIA"}, {"month": "Agosto", "day": 5, "dow": "M", "location": "CERVINIA"}, {"month": "Agosto", "day": 10, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 11, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 12, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 13, "dow": "G", "location": "ATLETICA"}, {"month": "Agosto", "day": 17, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 18, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 19, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 20, "dow": "G", "location": "ATLETICA"}, {"month": "Agosto", "day": 24, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 25, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 26, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 27, "dow": "G", "location": "ATLETICA"}, {"month": "Settembre", "day": 1, "dow": "M", "location": "CERVINIA"}, {"month": "Settembre", "day": 2, "dow": "M", "location": "ATLETICA"}, {"month": "Settembre", "day": 3, "dow": "G", "location": "ATLETICA"}, {"month": "Settembre", "day": 4, "dow": "V", "location": "ATLETICA"}, {"month": "Settembre", "day": 7, "dow": "L", "location": "VIAGGIO"}, {"month": "Settembre", "day": 8, "dow": "M", "location": "SNOWHALL"}, {"month": "Settembre", "day": 9, "dow": "M", "location": "SNOWHALL"}, {"month": "Settembre", "day": 10, "dow": "G", "location": "SNOWHALL"}, {"month": "Settembre", "day": 11, "dow": "V", "location": "SNOWHALL"}, {"month": "Settembre", "day": 30, "dow": "M", "location": "VIAGGIO"}, {"month": "Ottobre", "day": 1, "dow": "G", "location": "SCI"}, {"month": "Ottobre", "day": 2, "dow": "V", "location": "SCI"}, {"month": "Ottobre", "day": 3, "dow": "S", "location": "SCI"}, {"month": "Ottobre", "day": 4, "dow": "D", "location": "SCI"}, {"month": "Ottobre", "day": 7, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 10, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 14, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 17, "dow": "S", "location": "VIAGGIO"}, {"month": "Ottobre", "day": 18, "dow": "D", "location": "SCI"}, {"month": "Ottobre", "day": 19, "dow": "L", "location": "SCI"}, {"month": "Ottobre", "day": 20, "dow": "M", "location": "SCI"}, {"month": "Ottobre", "day": 21, "dow": "M", "location": "SCI"}, {"month": "Ottobre", "day": 24, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 28, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 31, "dow": "S", "location": "VIAGGIO"}], "giovani": [{"month": "Aprile", "day": 25, "dow": "S", "location": "CERVINIA"}, {"month": "Aprile", "day": 30, "dow": "G", "location": "CERVINIA"}, {"month": "Maggio", "day": 2, "dow": "S", "location": "CERVINIA"}, {"month": "Maggio", "day": 10, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 16, "dow": "S", "location": "CERVINIA"}, {"month": "Maggio", "day": 24, "dow": "D", "location": "CERVINIA"}, {"month": "Maggio", "day": 30, "dow": "S", "location": "CERVINIA"}, {"month": "Giugno", "day": 2, "dow": "M", "location": "CERVINIA"}, {"month": "Giugno", "day": 11, "dow": "G", "location": "VIAGGIO"}, {"month": "Giugno", "day": 12, "dow": "V", "location": "ISERAN"}, {"month": "Giugno", "day": 13, "dow": "S", "location": "ISERAN"}, {"month": "Giugno", "day": 14, "dow": "D", "location": "ISERAN"}, {"month": "Giugno", "day": 15, "dow": "L", "location": "ISERAN"}, {"month": "Giugno", "day": 18, "dow": "G", "location": "ATLETICA"}, {"month": "Giugno", "day": 19, "dow": "V", "location": "ATLETICA"}, {"month": "Giugno", "day": 21, "dow": "D", "location": "VIAGGIO"}, {"month": "Giugno", "day": 22, "dow": "L", "location": "ISERAN"}, {"month": "Giugno", "day": 23, "dow": "M", "location": "ISERAN"}, {"month": "Giugno", "day": 24, "dow": "M", "location": "ISERAN"}, {"month": "Giugno", "day": 25, "dow": "G", "location": "ISERAN"}, {"month": "Giugno", "day": 28, "dow": "D", "location": "ATLETICA"}, {"month": "Giugno", "day": 29, "dow": "L", "location": "ATLETICA"}, {"month": "Luglio", "day": 1, "dow": "M", "location": "VIAGGIO"}, {"month": "Luglio", "day": 2, "dow": "G", "location": "ISERAN"}, {"month": "Luglio", "day": 3, "dow": "V", "location": "ISERAN"}, {"month": "Luglio", "day": 4, "dow": "S", "location": "ISERAN"}, {"month": "Luglio", "day": 5, "dow": "D", "location": "ISERAN"}, {"month": "Luglio", "day": 8, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 9, "dow": "G", "location": "ATLETICA"}, {"month": "Luglio", "day": 10, "dow": "V", "location": "ATLETICA"}, {"month": "Luglio", "day": 13, "dow": "L", "location": "CERVINIA"}, {"month": "Luglio", "day": 14, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 15, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 16, "dow": "G", "location": "ATLETICA"}, {"month": "Luglio", "day": 20, "dow": "L", "location": "CERVINIA"}, {"month": "Luglio", "day": 21, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 22, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 23, "dow": "G", "location": "ATLETICA"}, {"month": "Luglio", "day": 27, "dow": "L", "location": "CERVINIA"}, {"month": "Luglio", "day": 28, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 29, "dow": "M", "location": "ATLETICA"}, {"month": "Luglio", "day": 30, "dow": "G", "location": "ATLETICA"}, {"month": "Agosto", "day": 3, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 4, "dow": "M", "location": "CERVINIA"}, {"month": "Agosto", "day": 5, "dow": "M", "location": "CERVINIA"}, {"month": "Agosto", "day": 10, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 11, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 12, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 13, "dow": "G", "location": "ATLETICA"}, {"month": "Agosto", "day": 17, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 18, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 19, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 20, "dow": "G", "location": "ATLETICA"}, {"month": "Agosto", "day": 24, "dow": "L", "location": "CERVINIA"}, {"month": "Agosto", "day": 25, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 26, "dow": "M", "location": "ATLETICA"}, {"month": "Agosto", "day": 27, "dow": "G", "location": "ATLETICA"}, {"month": "Settembre", "day": 1, "dow": "M", "location": "CERVINIA"}, {"month": "Settembre", "day": 2, "dow": "M", "location": "ATLETICA"}, {"month": "Settembre", "day": 3, "dow": "G", "location": "ATLETICA"}, {"month": "Settembre", "day": 4, "dow": "V", "location": "ATLETICA"}, {"month": "Settembre", "day": 7, "dow": "L", "location": "VIAGGIO"}, {"month": "Settembre", "day": 8, "dow": "M", "location": "SNOWHALL"}, {"month": "Settembre", "day": 9, "dow": "M", "location": "SNOWHALL"}, {"month": "Settembre", "day": 10, "dow": "G", "location": "SNOWHALL"}, {"month": "Settembre", "day": 11, "dow": "V", "location": "SNOWHALL"}, {"month": "Settembre", "day": 30, "dow": "M", "location": "VIAGGIO"}, {"month": "Ottobre", "day": 1, "dow": "G", "location": "SCI"}, {"month": "Ottobre", "day": 2, "dow": "V", "location": "SCI"}, {"month": "Ottobre", "day": 3, "dow": "S", "location": "SCI"}, {"month": "Ottobre", "day": 4, "dow": "D", "location": "SCI"}, {"month": "Ottobre", "day": 7, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 10, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 14, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 17, "dow": "S", "location": "VIAGGIO"}, {"month": "Ottobre", "day": 18, "dow": "D", "location": "SCI"}, {"month": "Ottobre", "day": 19, "dow": "L", "location": "SCI"}, {"month": "Ottobre", "day": 20, "dow": "M", "location": "SCI"}, {"month": "Ottobre", "day": 21, "dow": "M", "location": "SCI"}, {"month": "Ottobre", "day": 24, "dow": "S", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 28, "dow": "M", "location": "ACROBATICA"}, {"month": "Ottobre", "day": 31, "dow": "S", "location": "VIAGGIO"}]};
-
-var CAT_LABELS = {sbaby:'S.Baby',baby:'Baby',cuccioli:'Cuccioli',ragazzi:'Ragazzi',allievi:'Allievi',giovani:'Giovani'};
-
-// ─── STATE ────────────────────────────────────────────────────────────────────
-var currentUser = null;
-var userProfile = null;
-var currentRole = 'genitore';
-var selectedCalCat = null;
-var selectedCommCat = 'Tutti';
-var commUnsub = null;
-var currentEventKey = null;
-var calFilter = "all";
-var eventNotesCache = {};
-
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
+function switchRole(role) {
+  userRole = role;
+  document.querySelectorAll('.role-tab').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
 }
 
-function initials(name) {
-  if (!name) return '?';
-  return name.split(' ').map(function(p){ return p[0]; }).join('').toUpperCase().slice(0,2);
-}
-
-function timeAgo(ts) {
-  if (!ts) return '';
-  var now = Date.now();
-  var t = ts.toDate ? ts.toDate().getTime() : ts;
-  var diff = Math.floor((now - t) / 60000);
-  if (diff < 1) return 'Adesso';
-  if (diff < 60) return diff + ' min fa';
-  if (diff < 1440) return Math.floor(diff/60) + ' ore fa';
-  return Math.floor(diff/1440) + ' giorni fa';
-}
-
-function getEventColor(loc) {
-  var l = loc.toUpperCase();
-  if (l.indexOf('ATLETICA') >= 0) return 'c-atletica';
-  if (l.indexOf('MULTISPORT') >= 0) return 'c-multi';
-  if (l.indexOf('ACROBATICA') >= 0 || l.indexOf('LIGNANO') >= 0 || l.indexOf('VIAGGIO') >= 0) return 'c-campus';
-  if (l.indexOf('FINE') >= 0 || l.indexOf('INIZIO') >= 0) return 'c-info';
-  if (l.indexOf('CERVINIA') >= 0 || l.indexOf('ISERAN') >= 0 || l.indexOf('DEUX') >= 0 || l.indexOf('SNOWHALL') >= 0 || l.indexOf('SCI') >= 0) return 'c-sci';
-  return 'c-info';
-}
-
-function getEventBadge(loc) {
-  var l = loc.toUpperCase();
-  if (l.indexOf('ATLETICA') >= 0) return {cls:'badge-atletica', label:'Atletica'};
-  if (l.indexOf('MULTISPORT') >= 0) return {cls:'badge-multi', label:'Multisport'};
-  if (l.indexOf('ACROBATICA') >= 0) return {cls:'badge-campus', label:'Acrobatica'};
-  if (l.indexOf('LIGNANO') >= 0 || l.indexOf('VIAGGIO') >= 0) return {cls:'badge-campus', label:'Viaggio'};
-  if (l.indexOf('FINE') >= 0 || l.indexOf('INIZIO') >= 0) return {cls:'badge-info', label:'Info'};
-  if (l.indexOf('CERVINIA') >= 0 || l.indexOf('ISERAN') >= 0 || l.indexOf('DEUX') >= 0 || l.indexOf('SNOWHALL') >= 0 || l.indexOf('SCI') >= 0) return {cls:'badge-sci', label:'Sci'};
-  return {cls:'badge-info', label:'Info'};
-}
-
-function getGroupType(loc) {
-  var l = loc.toUpperCase();
-  if (l.indexOf('ATLETICA') >= 0) return 'atletica';
-  if (l.indexOf('MULTISPORT') >= 0) return 'multisport';
-  if (l.indexOf('ACROBATICA') >= 0) return 'acrobatica';
-  if (l.indexOf('LIGNANO') >= 0) return 'lignano';
-  if (l.indexOf('CERVINIA') >= 0) return 'cervinia';
-  if (l.indexOf('ISERAN') >= 0) return 'iseran';
-  if (l.indexOf('DEUX') >= 0) return 'deuxalpes';
-  if (l.indexOf('SNOWHALL') >= 0) return 'snowhall';
-  if (l.indexOf('VIAGGIO') >= 0) return 'viaggio';
-  return l.replace(/\s/g,'_');
-}
-
-function dowFull(d) {
-  var map = {L:'Lun',M:'Mar',Me:'Mer',G:'Gio',V:'Ven',S:'Sab',D:'Dom'};
-  return map[d] || d;
-}
-
-function getEventKey(cat, month, day) { return cat+'_'+month+'_'+day; }
-
-function vmStatus(dateStr) {
-  if (!dateStr) return {cls:'vm-none', label:'Non inserita', dot:'⚪'};
-  var exp = new Date(dateStr); var now = new Date();
-  var days = Math.floor((exp - now) / 86400000);
-  if (days < 0) return {cls:'vm-scad', label:'Scaduta', dot:'🔴'};
-  if (days <= 30) return {cls:'vm-warn', label:'Scade in '+days+'gg', dot:'🟡'};
-  return {cls:'vm-ok', label:'Valida fino al '+exp.toLocaleDateString('it-IT'), dot:'🟢'};
-}
-
-// ─── LOGIN ────────────────────────────────────────────────────────────────────
-function selectRole(role, el) {
-  currentRole = role;
-  document.querySelectorAll('.role-tab').forEach(function(t){ t.classList.remove('active'); });
-  el.classList.add('active');
-  var rl = document.getElementById('register-link');
-  if (rl) rl.style.display = role === 'genitore' ? 'block' : 'none';
-}
-
-function doLogin() {
+function loginUser() {
   var email = document.getElementById('login-email').value.trim();
-  var pwd = document.getElementById('login-password').value;
+  var pwd = document.getElementById('login-pwd').value;
   var err = document.getElementById('login-error');
-  var btn = document.getElementById('btn-login');
   err.style.display = 'none';
-  btn.textContent = 'Accesso...'; btn.disabled = true;
-  auth.signInWithEmailAndPassword(email, pwd).catch(function(e) {
-    err.style.display = 'block'; err.textContent = 'Email o password non corretti.';
-    btn.textContent = 'Accedi'; btn.disabled = false;
-  });
+  
+  if (!email || !pwd) {
+    err.style.display = 'block';
+    err.textContent = 'Compila email e password.';
+    return;
+  }
+  
+  auth.signInWithEmailAndPassword(email, pwd)
+    .then(function(cred) {
+      currentUser = cred.user;
+      loadUserAndShowScreen();
+    })
+    .catch(function(e) {
+      err.style.display = 'block';
+      err.textContent = 'Email o password errate.';
+    });
 }
 
-function showRegisterForm() {
-  document.getElementById('login-card').style.display = 'none';
-  var rc = document.getElementById('register-card');
-  rc.style.display = 'flex'; rc.style.flexDirection = 'column'; rc.style.gap = '14px';
-}
-
-function showLoginForm() {
-  document.getElementById('login-card').style.display = 'flex';
-  document.getElementById('register-card').style.display = 'none';
-}
-
-function doRegister() {
-  var parentName = document.getElementById('reg-parentname').value.trim();
-  var email = document.getElementById('reg-email').value.trim();
-  var pwd = document.getElementById('reg-password').value;
-  var err = document.getElementById('reg-error');
-  err.style.display = 'none';
-  if (!parentName) { err.style.display='block'; err.textContent='Inserisci il tuo nome e cognome.'; return; }
-  if (!email) { err.style.display='block'; err.textContent='Inserisci una email valida.'; return; }
-  if (pwd.length < 6) { err.style.display='block'; err.textContent='La password deve avere almeno 6 caratteri.'; return; }
-  var athlete1 = document.getElementById('reg-athlete1').value.trim();
-  var cat1 = document.getElementById('reg-cat1').value;
-  if (!athlete1) { err.style.display='block'; err.textContent='Inserisci il nome del primo atleta.'; return; }
-  if (!cat1) { err.style.display='block'; err.textContent='Seleziona la categoria del primo atleta.'; return; }
-  auth.createUserWithEmailAndPassword(email, pwd).then(function(cred) {
-    var athletes = [];
-    var categories = [];
-    for (var i = 1; i <= 6; i++) {
-      var aName = document.getElementById('reg-athlete'+i);
-      var aCat = document.getElementById('reg-cat'+i);
-      if (aName && aCat && aName.value.trim() && aCat.value) {
-        athletes.push({name:aName.value.trim(), category:aCat.value});
-        if (categories.indexOf(aCat.value) < 0) categories.push(aCat.value);
+function loadUserAndShowScreen() {
+  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
+    if (snap.exists) {
+      var userData = snap.data();
+      if (userData.role === 'admin') {
+        showScreen('admin');
+        switchAdminTab('import');
+      } else if (userData.role === 'allenatore') {
+        showScreen('allenatore');
+        loadAllenatoreData();
+      } else {
+        showScreen('genitore');
+        loadGenitoreData();
       }
     }
-    return db.collection('users').doc(cred.user.uid).set({
-      email:email, displayName:parentName, role:'genitore', status:'pending',
-      categories:categories, athletes:athletes, createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }).catch(function(e) {
-    err.style.display='block';
-    err.textContent = e.code==='auth/email-already-in-use' ? 'Email già registrata.' : 'Errore: '+e.message;
   });
 }
 
-function doLogout() {
-  if (commUnsub) { commUnsub(); commUnsub = null; }
+function switchToRegister() {
+  showScreen('register');
+}
+
+function switchToLogin() {
+  showScreen('login');
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pwd').value = '';
+}
+
+function registerUser() {
+  var name = document.getElementById('reg-name').value.trim();
+  var email = document.getElementById('reg-email').value.trim();
+  var pwd = document.getElementById('reg-pwd').value;
+  var cat = document.getElementById('reg-cat').value;
+  var err = document.getElementById('reg-error');
+  err.style.display = 'none';
+  
+  if (!name || !email || pwd.length < 6 || !cat) {
+    err.style.display = 'block';
+    err.textContent = 'Compila tutti i campi.';
+    return;
+  }
+  
+  auth.createUserWithEmailAndPassword(email, pwd)
+    .then(function(cred) {
+      var athletes = [];
+      document.querySelectorAll('.athlete-input-name').forEach(function(el) {
+        var aname = el.value.trim();
+        if (aname) {
+          athletes.push({ name: aname, category: cat });
+        }
+      });
+      
+      return db.collection('users').doc(cred.user.uid).set({
+        email: email,
+        displayName: name,
+        role: 'genitore',
+        status: 'pending',
+        categories: [cat],
+        athletes: athletes,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    })
+    .then(function() {
+      alert('Registrazione inviata! Attendi l\'approvazione dell\'amministratore.');
+      switchToLogin();
+    })
+    .catch(function(e) {
+      err.style.display = 'block';
+      err.textContent = e.code === 'auth/email-already-in-use' ? 'Email già registrata.' : 'Errore: ' + e.message;
+    });
+}
+
+function logoutUser() {
   auth.signOut();
 }
 
-// ─── AUTH STATE ───────────────────────────────────────────────────────────────
-auth.onAuthStateChanged(function(user) {
-  if (!user) {
-    showScreen('screen-login');
-    var btn = document.getElementById('btn-login');
-    if (btn) { btn.textContent = 'Accedi'; btn.disabled = false; }
-    currentUser = null; userProfile = null;
-    return;
-  }
-  currentUser = user;
-  db.collection('users').doc(user.uid).get().then(function(snap) {
-    if (!snap.exists) { showScreen('screen-login'); return; }
-    userProfile = snap.data();
-    if (userProfile.role === 'admin') setupAdmin();
-    else if (userProfile.role === 'allenatore') {
-      // Check if also a parent (has athletes)
-      if (userProfile.athletes && userProfile.athletes.length > 0) {
-        userProfile._isAlsoGenitore = true;
-      }
-      setupAllenatore();
-    }
-    else if (userProfile.status === 'pending') showScreen('screen-pending');
-    else setupGenitore();
-  });
-});
-
-// ─── GENITORE ─────────────────────────────────────────────────────────────────
-function setupGenitore() {
-  var cats = userProfile.categories || [];
-  selectedCalCat = cats[0] || null;
-  selectedCommCat = 'Tutti';
-  var ini = initials(userProfile.displayName || userProfile.email);
-  document.getElementById('avatar-cal').textContent = ini;
-  document.getElementById('avatar-comm').textContent = ini;
-  renderCatChips(cats);
-  loadEventNotesForCats(cats, function(){ renderCalendar(); });
-  setupCommListener(cats);
-  renderProfile();
-  // Show switcher if also a coach
-  var switcher = document.getElementById('btn-switch-to-allenatore');
-  if (switcher) switcher.className = userProfile._isAlsoAllenatore ? 'role-switcher visible' : 'role-switcher';
-  showScreen('screen-calendario');
+function showScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  document.getElementById('screen-' + screenId).classList.add('active');
 }
 
-function renderCatChips(cats) {
-  var el = document.getElementById('cat-chips');
-  var html = '';
-  cats.forEach(function(c) {
-    var active = c===selectedCalCat ? ' active' : '';
-    html += '<div class="chip'+active+'" data-cat="'+c+'" onclick="selectCalCat(this)">'+(CAT_LABELS[c]||c)+'</div>';
-  });
-  el.innerHTML = html;
+function switchScreen(screenId) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event.target.closest('.nav-item').classList.add('active');
+  loadGenitoreData();
 }
 
-function selectCalCat(el) {
-  selectedCalCat = el.dataset ? el.dataset.cat : el;
-  renderCatChips(userProfile.categories || []);
-  renderCalendar();
+function switchAllenatoreTab(tab) {
+  allenatoreTab = tab;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event.target.closest('.nav-item').classList.add('active');
+  loadAllenatoreData();
 }
 
-function loadEventNotesForCats(cats, cb) {
-  if (!cats || !cats.length) { cb(); return; }
-  var promises = cats.map(function(cat) {
-    return db.collection('eventNotes').where('category','==',cat).get().then(function(snap) {
-      snap.docs.forEach(function(d){ eventNotesCache[d.id] = d.data(); });
-    });
-  });
-  Promise.all(promises).then(cb).catch(cb);
+function addAthleteField() {
+  var container = document.getElementById('athletes-container');
+  var field = document.createElement('div');
+  field.style.display = 'flex';
+  field.style.gap = '8px';
+  field.innerHTML = 
+    '<input class="field-input athlete-input-name" placeholder="Nome atleta" style="flex:1">' +
+    '<button class="btn-sm btn-sm-red" style="width:40px;padding:8px 0" onclick="this.parentElement.remove()">×</button>';
+  container.appendChild(field);
 }
 
-function setCalFilter(f) {
-  calFilter = f;
-  var ba = document.getElementById("filter-all");
-  var bu = document.getElementById("filter-upcoming");
-  if (ba) { ba.style.background = f==="all" ? "var(--blue-dark)" : "var(--bg-card)"; ba.style.color = f==="all" ? "white" : "var(--text-sec)"; }
-  if (bu) { bu.style.background = f==="upcoming" ? "var(--blue-dark)" : "var(--bg-card)"; bu.style.color = f==="upcoming" ? "white" : "var(--text-sec)"; }
-  renderCalendar();
-}
-
-function filterEvents(events) {
-  if (calFilter !== "upcoming") return events;
-  var mo = {Aprile:4,Maggio:5,Giugno:6,Luglio:7,Agosto:8,Settembre:9,Ottobre:10};
-  var now = new Date(); var tm = now.getMonth()+1; var td = now.getDate();
-  return events.filter(function(e) {
-    var m = mo[e.month]||0;
-    if (m < tm) return false;
-    if (m === tm && e.day < td) return false;
-    return true;
+// ============ GENITORE FUNCTIONS ============
+function loadGenitoreData() {
+  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
+    var userData = snap.data();
+    var cats = userData.categories || [];
+    document.getElementById('genitore-cat-display').textContent = cats.map(c => CAT_LABELS[c]).join(', ') || '';
+    renderGenitoreCalendar();
   });
 }
 
-function renderCalendar() {
-  var el = document.getElementById('cal-content');
-  if (!el) return;
-  var events = filterEvents(selectedCalCat ? (CALENDAR_DATA[selectedCalCat] || []) : []);
-  if (!events.length) { el.innerHTML = '<div class="empty-state">Nessun evento trovato.</div>'; return; }
-  var byMonth = {};
-  events.forEach(function(e){ if (!byMonth[e.month]) byMonth[e.month]=[]; byMonth[e.month].push(e); });
-  var html = '<div style="height:8px"></div>';
-  Object.keys(byMonth).forEach(function(month) {
-    var evs = byMonth[month];
-    html += '<div class="month-label">'+month+'</div>';
-    for (var i=0; i<evs.length; i++) {
-      var e = evs[i];
-      var gt = getGroupType(e.location);
-      var prevGt = i>0 ? getGroupType(evs[i-1].location) : null;
-      var nextGt = i<evs.length-1 ? getGroupType(evs[i+1].location) : null;
-      var isStart = gt!==prevGt && gt===nextGt;
-      var isMid   = gt===prevGt && gt===nextGt;
-      var isEnd   = gt===prevGt && gt!==nextGt;
-      var groupCls = isStart?'group-start':isMid?'group-mid':isEnd?'group-end':'';
-      var badge = getEventBadge(e.location);
-      var key = getEventKey(selectedCalCat, e.month, e.day);
-      var hasNote = !!eventNotesCache[key];
-      html += '<div class="event-card '+groupCls+'" data-cat="'+selectedCalCat+'" data-month="'+e.month+'" data-day="'+e.day+'" data-loc="'+encodeURIComponent(e.location)+'" data-dow="'+dowFull(e.dow)+'" onclick="handleEventClick(this)">'+
-        '<div class="event-date"><div class="event-day-num">'+e.day+'</div><div class="event-day-name">'+dowFull(e.dow)+'</div></div>'+
-        '<div class="event-bar '+getEventColor(e.location)+'"></div>'+
-        '<div class="event-info"><div class="event-title">'+e.location+(hasNote?' 📌':'')+'</div><div class="event-sub">'+(CAT_LABELS[selectedCalCat]||'')+'</div></div>'+
-        '<div class="event-badge '+badge.cls+'">'+badge.label+'</div></div>';
-    }
-  });
-  html += '<div style="height:16px"></div>';
-  el.innerHTML = html;
+function filterCategory(cat) {
+  selectedCategory = cat;
+  document.querySelectorAll('#screen-genitore .chips-row .chip').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+  renderGenitoreCalendar();
 }
 
-function switchTab(tab) {
-  if (tab === 'calendario') {
-    showScreen('screen-calendario');
-    renderCatChips(userProfile ? userProfile.categories || [] : []);
-    renderCalendar();
-  } else {
-    showScreen('screen-comunicazioni');
-    renderCommChips();
-  }
-}
-
-function renderCommChips() {
-  var cats = userProfile ? (userProfile.categories || []) : [];
-  var all = ['Tutti'].concat(cats);
-  var el = document.getElementById('comm-chips');
-  var html = '';
-  all.forEach(function(c) {
-    var label = c==='Tutti' ? 'Tutti' : (CAT_LABELS[c]||c);
-    var active = c===selectedCommCat ? ' active' : '';
-    html += '<div class="chip'+active+'" data-cat="'+c+'" onclick="selectCommCat(this)">'+label+'</div>';
-  });
-  el.innerHTML = html;
-}
-
-function selectCommCat(el) { selectedCommCat = el.dataset ? el.dataset.cat : el; renderCommChips(); }
-
-function setupCommListener(cats) {
-  if (commUnsub) { commUnsub(); commUnsub = null; }
-  if (!cats.length) return;
-  commUnsub = db.collection('communications').where('category','in',cats).onSnapshot(function(snap) {
-    var comms = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-    comms.sort(function(a,b){ return (b.createdAt&&b.createdAt.seconds||0)-(a.createdAt&&a.createdAt.seconds||0); });
-    renderComms(comms);
-  });
-}
-
-function renderComms(comms) {
-  var el = document.getElementById('comm-content');
-  var filtered = selectedCommCat==='Tutti' ? comms : comms.filter(function(c){ return c.category===selectedCommCat; });
-  if (!filtered.length) { el.innerHTML = '<div class="empty-state">Nessuna comunicazione.</div>'; return; }
-  el.innerHTML = '<div style="height:8px"></div>' + filtered.map(function(c) {
-    var catLabel = CAT_LABELS[c.category]||c.category;
-    return '<div class="comm-card"><div class="comm-header">'+
-      '<div class="comm-avatar" style="background:#E1F5EE;color:#085041">'+initials(c.coachName||'?')+'</div>'+
-      '<div style="flex:1;min-width:0"><div class="comm-name">'+(c.coachName||'Allenatore')+'</div><div class="comm-meta">'+timeAgo(c.createdAt)+'</div></div>'+
-      '<div class="unread-dot"></div></div>'+
-      '<div class="comm-text">'+c.text+'</div>'+
-      '<div class="comm-footer"><div class="cat-pill" style="background:#E1F5EE;color:#085041">'+catLabel+'</div></div></div>';
-  }).join('') + '<div style="height:16px"></div>';
-}
-
-function renderProfile() {
-  try {
-    var cats = (userProfile && userProfile.categories) || [];
-    var athletes = (userProfile && userProfile.athletes) || [];
-    var displayName = (userProfile && userProfile.displayName) || '';
-    var email = (userProfile && userProfile.email) || (currentUser && currentUser.email) || '';
-    var medicalVisits = (userProfile && userProfile.medicalVisits) || {};
-    var el = document.getElementById('profile-content');
-    if (!el) return;
-    var athleteHtml = '';
-    if (athletes.length > 0) {
-      athleteHtml = athletes.map(function(a) {
-        var st = vmStatus(medicalVisits[a.category]||'');
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--border)">'+
-          '<span class="athlete-pill">⛷️ '+(a.name||'')+' — '+(CAT_LABELS[a.category]||a.category||'')+'</span>'+
-          '<span class="vm-status '+st.cls+'" style="font-size:11px">'+st.dot+' '+st.label+'</span></div>';
-      }).join('');
-    } else {
-      athleteHtml = cats.map(function(c){ return '<span class="athlete-pill">⛷️ '+(CAT_LABELS[c]||c)+'</span>'; }).join('');
-    }
-    el.innerHTML =
-      '<div class="profile-card"><div class="profile-header">'+
-        '<div class="profile-avatar">'+initials(displayName||email)+'</div>'+
-        '<div><div class="profile-name">'+(displayName||'Genitore')+'</div><div class="profile-email">'+email+'</div></div></div>'+
-        '<div class="profile-row"><div class="profile-row-label">Ruolo</div><div class="profile-row-val">Genitore</div></div>'+
-        '<div class="profile-row" style="flex-direction:column;align-items:flex-start;gap:6px"><div class="profile-row-label">Atleti e visite mediche</div>'+athleteHtml+'</div>'+
-        '<div class="profile-row"><div class="profile-row-label">Stato</div>'+
-          '<div style="display:flex;align-items:center;gap:6px"><div style="width:8px;height:8px;border-radius:50%;background:#1D9E75"></div><div class="profile-row-val" style="color:#0F6E56">Approvato</div></div>'+
-        '</div></div>'+
-      '<div style="padding:12px">'+
-        '<button onclick="doLogout()" style="width:100%;padding:13px;border-radius:var(--radius-sm);border:.5px solid var(--border);background:var(--bg-card);font-size:14px;font-weight:500;color:var(--red);cursor:pointer">Esci dall’account</button>'+
-      '</div>';
-  } catch(e) { console.error('renderProfile:', e); }
-}
-
-// ─── EVENT NOTES ──────────────────────────────────────────────────────────────
-
-function handleEventClick(el) {
-  var cat = el.dataset.cat;
-  var month = el.dataset.month;
-  var day = parseInt(el.dataset.day);
-  var loc = decodeURIComponent(el.dataset.loc);
-  var dow = el.dataset.dow;
-  openEventModal(cat, month, day, loc, dow);
-}
-
-function openEventModal(cat, month, day, location, dow) {
-  currentEventKey = getEventKey(cat, month, day);
-  var note = eventNotesCache[currentEventKey];
-  var isCoach = userProfile && userProfile.role === 'allenatore' && (userProfile.categories||[userProfile.category]).indexOf(cat)>=0;
-  var noteHtml = note ?
-    '<div class="event-detail-row"><div class="event-detail-icon">📍</div><div class="event-detail-text">'+(note.place||'—')+'</div></div>'+
-    '<div class="event-detail-row"><div class="event-detail-icon">🕐</div><div class="event-detail-text">'+(note.time||'—')+'</div></div>'+
-    '<div class="event-detail-row"><div class="event-detail-icon">📝</div><div class="event-detail-text">'+(note.notes||'—')+'</div></div>'
-    : '<div style="font-size:13px;color:var(--text-sec);padding:8px 0">Nessun dettaglio aggiunto dagli allenatori.</div>';
-  var editBtn = isCoach ? '<button class="btn-add-note" onclick="showEventNoteForm()">✏️ '+(note?'Modifica':'Aggiungi dettagli')+'</button>' : '';
-  document.getElementById('event-modal-content').innerHTML =
-    '<div class="event-modal-title">'+location+'</div>'+
-    '<div class="event-modal-date">'+dow+' '+day+' '+month+' · '+(CAT_LABELS[cat]||cat)+'</div>'+
-    noteHtml + editBtn;
-  document.getElementById('event-note-form').style.display = 'none';
-  if (note) {
-    document.getElementById('event-place').value = note.place||'';
-    document.getElementById('event-time').value = note.time||'';
-    document.getElementById('event-notes').value = note.notes||'';
-  } else {
-    document.getElementById('event-place').value = '';
-    document.getElementById('event-time').value = '';
-    document.getElementById('event-notes').value = '';
-  }
-  document.getElementById('modal-event').classList.add('open');
-}
-
-function showEventNoteForm() {
-  var f = document.getElementById('event-note-form');
-  f.style.display = 'flex'; f.style.flexDirection = 'column'; f.style.gap = '8px';
-}
-
-function saveEventNote() {
-  var place = document.getElementById('event-place').value.trim();
-  var time = document.getElementById('event-time').value.trim();
-  var notes = document.getElementById('event-notes').value.trim();
-  db.collection('eventNotes').doc(currentEventKey).set({
-    place:place, time:time, notes:notes,
-    category: userProfile.category,
-    updatedBy: userProfile.displayName||userProfile.email,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function() {
-    eventNotesCache[currentEventKey] = {place:place,time:time,notes:notes};
-    renderCalendar(); closeEventModal();
-  }).catch(function(e){ alert('Errore: '+e.message); });
-}
-
-function closeEventModal() { document.getElementById('modal-event').classList.remove('open'); }
-
-// ─── ALLENATORE ───────────────────────────────────────────────────────────────
-
-function switchToAllenatore() {
-  userProfile._isAlsoAllenatore = true;
-  setupAllenatore();
-}
-
-function switchToGenitore() {
-  userProfile._isAlsoAllenatore = true;
-  // Temporarily set role to genitore view
-  var savedRole = userProfile.role;
-  userProfile.role = 'genitore';
-  setupGenitore();
-  userProfile.role = savedRole;
-}
-
-var coachCurrentTab = 'comunicazioni';
-var coachSelectedCat = null;
-
-function setupAllenatore() {
-  // Support both single category and multiple categories
-  var cats = userProfile.categories && userProfile.categories.length ? userProfile.categories : (userProfile.category ? [userProfile.category] : []);
-  coachSelectedCat = cats[0] || '';
-  var catsLabel = cats.map(function(c){ return CAT_LABELS[c]||c; }).join(', ');
-  document.getElementById('coach-sub').textContent = catsLabel + ' · ' + (userProfile.displayName||'');
-  loadEventNotesForCats(cats, function(){});
-  // Listen to communications for all coach categories
-  if (cats.length === 1) {
-    commUnsub = db.collection('communications').where('category','==',cats[0]).onSnapshot(function(snap) {
-      var comms = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-      comms.sort(function(a,b){ return (b.createdAt&&b.createdAt.seconds||0)-(a.createdAt&&a.createdAt.seconds||0); });
-      renderCoachComms(comms);
-    });
-  } else if (cats.length > 1) {
-    commUnsub = db.collection('communications').where('category','in',cats).onSnapshot(function(snap) {
-      var comms = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-      comms.sort(function(a,b){ return (b.createdAt&&b.createdAt.seconds||0)-(a.createdAt&&a.createdAt.seconds||0); });
-      renderCoachComms(comms);
-    });
-  }
-  // Show category chips if multiple cats
-  renderCoachCatChips(cats);
-  updateComposeTitle();
-  // Show switcher if also a parent
-  var switcher = document.getElementById('btn-switch-to-genitore');
-  if (switcher) switcher.className = userProfile._isAlsoGenitore ? 'role-switcher visible' : 'role-switcher';
-  showScreen('screen-allenatore');
-  switchCoachTab('comunicazioni');
-}
-
-function renderCoachCatChips(cats) {
-  var el = document.getElementById('coach-cat-chips');
-  if (cats.length <= 1) { el.style.display = 'none'; return; }
-  el.style.display = 'flex';
-  var html = '';
-  cats.forEach(function(c) {
-    var active = c===coachSelectedCat ? ' active' : '';
-    html += '<div class="chip'+active+'" data-cat="'+c+'" onclick="selectCoachCat(this)">'+(CAT_LABELS[c]||c)+'</div>';
-  });
-  el.innerHTML = html;
-}
-
-function selectCoachCat(el) {
-  coachSelectedCat = el.dataset.cat;
-  var cats = userProfile.categories && userProfile.categories.length ? userProfile.categories : [userProfile.category];
-  renderCoachCatChips(cats);
-  if (coachCurrentTab === 'calendario') renderCoachCalendar();
-  updateComposeTitle();
-}
-
-function updateComposeTitle() {
-  var el = document.getElementById('modal-compose-title');
-  if (el) el.textContent = 'Nuova comunicazione — '+(CAT_LABELS[coachSelectedCat]||coachSelectedCat);
-}
-
-function switchCoachTab(tab) {
-  coachCurrentTab = tab;
-  var cats = userProfile.categories && userProfile.categories.length ? userProfile.categories : [userProfile.category];
-  document.getElementById('coach-tab-comm').classList.toggle('active', tab==='comunicazioni');
-  document.getElementById('coach-tab-comm').style.color = tab==='comunicazioni' ? 'var(--teal)' : '';
-  document.getElementById('coach-tab-cal').classList.toggle('active', tab==='calendario');
-  document.getElementById('coach-tab-cal').style.color = tab==='calendario' ? 'var(--teal)' : '';
-  var fab = document.getElementById('coach-fab');
-  if (fab) fab.style.display = tab==='comunicazioni' ? 'flex' : 'none';
-  // Show/hide cat chips
-  renderCoachCatChips(cats);
-  if (tab === 'calendario') {
-    document.getElementById('coach-topbar-title').textContent = 'Calendario';
-    renderCoachCalendar();
-  } else {
-    document.getElementById('coach-topbar-title').textContent = 'Comunicazioni';
-  }
-}
-
-function renderCoachCalendar() {
-  var el = document.getElementById('coach-content');
-  if (!el) return;
-  var cat = coachSelectedCat;
-  var events = filterEvents(cat ? (CALENDAR_DATA[cat] || []) : []);
-  if (!events.length) { el.innerHTML = '<div class="empty-state">Nessun evento trovato.</div>'; return; }
-  var byMonth = {};
-  events.forEach(function(e){ if (!byMonth[e.month]) byMonth[e.month]=[]; byMonth[e.month].push(e); });
-  var html = '<div style="height:8px"></div>';
-  Object.keys(byMonth).forEach(function(month) {
-    var evs = byMonth[month];
-    html += '<div class="month-label">'+month+'</div>';
-    for (var i=0; i<evs.length; i++) {
-      var e = evs[i];
-      var gt = getGroupType(e.location);
-      var prevGt = i>0 ? getGroupType(evs[i-1].location) : null;
-      var nextGt = i<evs.length-1 ? getGroupType(evs[i+1].location) : null;
-      var isStart = gt!==prevGt && gt===nextGt;
-      var isMid   = gt===prevGt && gt===nextGt;
-      var isEnd   = gt===prevGt && gt!==nextGt;
-      var groupCls = isStart?'group-start':isMid?'group-mid':isEnd?'group-end':'';
-      var badge = getEventBadge(e.location);
-      var key = getEventKey(cat, e.month, e.day);
-      var hasNote = !!eventNotesCache[key];
-      html += '<div class="event-card '+groupCls+'" data-cat="'+cat+'" data-month="'+e.month+'" data-day="'+e.day+'" data-loc="'+encodeURIComponent(e.location)+'" data-dow="'+dowFull(e.dow)+'" onclick="handleEventClick(this)">'+
-        '<div class="event-date"><div class="event-day-num">'+e.day+'</div><div class="event-day-name">'+dowFull(e.dow)+'</div></div>'+
-        '<div class="event-bar '+getEventColor(e.location)+'"></div>'+
-        '<div class="event-info"><div class="event-title">'+e.location+(hasNote?' 📌':'')+'</div><div class="event-sub">'+(CAT_LABELS[cat]||cat)+'</div></div>'+
-        '<div class="event-badge '+badge.cls+'">'+badge.label+'</div></div>';
-    }
-  });
-  html += '<div style="height:16px"></div>';
-  el.innerHTML = html;
-}
-
-function renderCoachComms(comms) {
-  var el = document.getElementById('coach-content');
-  if (!comms.length) { el.innerHTML = '<div class="empty-state">Nessuna comunicazione inviata.<br>Premi + per iniziare.</div>'; return; }
-  el.innerHTML = '<div style="height:8px"></div>' + comms.map(function(c) {
-    return '<div class="comm-card"><div class="comm-header">'+
-      '<div class="comm-avatar" style="background:#E1F5EE;color:#085041">'+initials(c.coachName||'?')+'</div>'+
-      '<div style="flex:1"><div class="comm-name">'+(c.coachName||'Tu')+'</div><div class="comm-meta">'+timeAgo(c.createdAt)+'</div></div></div>'+
-      '<div class="comm-text">'+c.text+'</div></div>';
-  }).join('') + '<div style="height:80px"></div>';
-}
-
-function openCompose() {
-  document.getElementById('compose-text').value = '';
-  document.getElementById('modal-compose').classList.add('open');
-}
-
-function closeCompose() { document.getElementById('modal-compose').classList.remove('open'); }
-
-function sendComm() {
-  var text = document.getElementById('compose-text').value.trim();
-  if (!text) return;
-  db.collection('communications').add({
-    text:text, category:coachSelectedCat||userProfile.category||'',
-    coachName:userProfile.displayName||userProfile.email,
-    coachId:currentUser.uid,
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(){ closeCompose(); }).catch(function(e){ alert('Errore: '+e.message); });
-}
-
-// ─── ADMIN ────────────────────────────────────────────────────────────────────
-
-var ALL_CATS = ['sbaby','baby','cuccioli','ragazzi','allievi','giovani','master','giovani_fisi'];
-var CAT_OPTS = '<option value="">-- Seleziona --</option><option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option><option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option><option value="master">Master</option><option value="giovani_fisi">Giovani FISI</option>';
-CAT_LABELS['master'] = 'Master';
-CAT_LABELS['giovani_fisi'] = 'Giovani FISI';
-
-function setupAdmin() { showScreen('screen-admin'); switchAdminTab('pending'); }
-
-function switchAdminTab(tab) {
-  document.querySelectorAll('.admin-tab').forEach(function(t){ t.classList.remove('active'); });
-  var tabEl = document.getElementById('atab-'+tab);
-  if (tabEl) tabEl.classList.add('active');
-  var el = document.getElementById('admin-content');
-  el.innerHTML = '<div class="loading">Caricamento...</div>';
-  if (tab==='pending') renderPending(el);
-  else if (tab==='parents') renderParents(el);
-  else if (tab==='coaches') renderCoachesTab(el);
-  else if (tab==='medical') renderMedical(el);
-  else if (tab==='users') renderUsers(el);
-}
-
-function closeAdminModal() { document.getElementById('modal-admin').classList.remove('open'); }
-function openAdminModal(html) {
-  document.getElementById('admin-modal-content').innerHTML = html;
-  document.getElementById('modal-admin').classList.add('open');
-}
-
-// ── PARENTS TAB ──────────────────────────────────────────────────────────────
-function renderParents(el) {
-  db.collection('users').where('role','==','genitore').where('status','==','approved').get().then(function(snap) {
-    var users = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-    users.sort(function(a,b){ return (a.displayName||'').localeCompare(b.displayName||''); });
-    if (!users.length) { el.innerHTML = '<div class="empty-state">Nessun genitore approvato.</div>'; return; }
-    el.innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Genitori ('+users.length+')</div>'+
-      users.map(function(u) {
-        var aths = (u.athletes||[]).map(function(a){ return (CAT_LABELS[a.category]||a.category)+': '+a.name; }).join(' | ') || 'Nessun atleta';
-        return '<div class="request-row">'+
-          '<div class="request-info">'+
-            '<div class="request-name">'+(u.displayName||u.email)+'</div>'+
-            '<div class="request-detail">'+u.email+'</div>'+
-            '<div class="request-detail" style="color:var(--blue-mid)">'+aths+'</div>'+
-          '</div>'+
-          '<button class="btn-sm btn-sm-blue" data-uid="'+u.id+'" onclick="editParent(this.dataset.uid)">Modifica</button>'+
-        '</div>';
-      }).join('')+'</div></div>';
-  });
-}
-
-function editParent(uid) {
-  db.collection('users').doc(uid).get().then(function(snap) {
-    var u = Object.assign({id:uid}, snap.data());
-    var athletes = u.athletes || [];
-    var mv = u.medicalVisits || {};
-    window._editUID = uid;
-    window._editAthCount = athletes.length;
-    function makeAthRow(i, name, cat, vmDate) {
-      var opts = CAT_OPTS.replace('value="'+cat+'"', 'value="'+cat+'" selected');
-      return '<div class="athlete-admin-row" id="ea-row-'+i+'">'+
-        '<div style="flex:1;display:flex;flex-direction:column;gap:4px">'+
-          '<input class="admin-input" id="ea-name-'+i+'" value="'+(name||'')+'" placeholder="Nome e cognome atleta">'+
-          '<div style="display:flex;gap:4px">'+
-            '<select class="admin-select" id="ea-cat-'+i+'" style="flex:1">'+opts+'</select>'+
-            '<input type="date" id="ea-cm-'+i+'" value="'+(vmDate||'')+'" title="Scadenza CM" style="padding:7px 6px;border-radius:8px;border:.5px solid var(--border);font-size:11px;background:var(--bg);color:var(--text)">'+
-          '</div>'+
-        '</div>'+
-        '<button class="btn-sm btn-sm-red" onclick="removeEARow('+i+')">x</button>'+
-      '</div>';
-    }
-    var rows = athletes.map(function(a,i){ return makeAthRow(i, a.name, a.category, (mv[a.category]||'')); }).join('');
-    openAdminModal(
-      '<div style="font-size:16px;font-weight:600;margin-bottom:4px">'+(u.displayName||u.email)+'</div>'+
-      '<div style="font-size:12px;color:var(--text-sec);margin-bottom:14px">'+u.email+'</div>'+
-      '<div style="font-size:13px;font-weight:600;margin-bottom:8px">Atleti (max 6)</div>'+
-      '<div id="ea-editor">'+rows+'</div>'+
-      '<button class="btn-add-note" style="margin-top:8px" onclick="addEARow()">+ Aggiungi atleta</button>'+
-      '<div style="display:flex;gap:8px;margin-top:14px">'+
-        '<button class="btn-send" style="flex:1" data-uid="'+uid+'" onclick="saveParentAthletes(this.dataset.uid)">Salva</button>'+
-      '</div>'+
-      '<div class="error-msg" id="ea-error" style="margin-top:8px"></div>'
-    );
-  });
-}
-
-function addEARow() {
-  var i = window._editAthCount++;
-  var div = document.createElement('div');
-  div.className = 'athlete-admin-row'; div.id = 'ea-row-'+i;
-  div.innerHTML = '<div style="flex:1;display:flex;flex-direction:column;gap:4px">'+
-    '<input class="admin-input" id="ea-name-'+i+'" placeholder="Nome e cognome atleta">'+
-    '<div style="display:flex;gap:4px">'+
-      '<select class="admin-select" id="ea-cat-'+i+'" style="flex:1">'+CAT_OPTS+'</select>'+
-      '<input type="date" id="ea-cm-'+i+'" title="Scadenza CM" style="padding:7px 6px;border-radius:8px;border:.5px solid var(--border);font-size:11px;background:var(--bg);color:var(--text)">'+
-    '</div></div>'+
-    '<button class="btn-sm btn-sm-red" onclick="removeEARow('+i+')">x</button>';
-  document.getElementById('ea-editor').appendChild(div);
-}
-
-function removeEARow(i) { var r=document.getElementById('ea-row-'+i); if(r) r.remove(); }
-
-function saveParentAthletes(uid) {
-  var athletes=[]; var cats=[]; var mv={};
-  for (var i=0; i<(window._editAthCount||0)+10; i++) {
-    var n=document.getElementById('ea-name-'+i);
-    var c=document.getElementById('ea-cat-'+i);
-    var d=document.getElementById('ea-cm-'+i);
-    if (!n||!c) continue;
-    var nm=n.value.trim(); var ct=c.value;
-    if (!nm||!ct) continue;
-    athletes.push({name:nm,category:ct});
-    if (cats.indexOf(ct)<0) cats.push(ct);
-    if (d&&d.value) mv[ct]=d.value;
-  }
-  if (!athletes.length) { var e=document.getElementById('ea-error'); if(e){e.style.display='block';e.textContent='Inserisci almeno un atleta.';} return; }
-  db.collection('users').doc(uid).update({athletes:athletes,categories:cats,medicalVisits:mv}).then(function(){
-    closeAdminModal(); switchAdminTab('parents');
-  }).catch(function(e){ alert('Errore: '+e.message); });
-}
-
-// ── COACHES TAB ───────────────────────────────────────────────────────────────
-function renderCoachesTab(el) {
-  db.collection('users').where('role','==','allenatore').get().then(function(snap) {
-    var coaches = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-    coaches.sort(function(a,b){ return (a.displayName||'').localeCompare(b.displayName||''); });
-    el.innerHTML = '<div class="admin-section">'+
-      '<div class="admin-card"><div class="admin-card-title">Crea account allenatore</div>'+
-        '<div class="field-label" style="margin-bottom:5px">Nome e cognome</div><input class="field-input" id="coach-name" placeholder="Giovanni Bianchi" style="margin-bottom:10px">'+
-        '<div class="field-label" style="margin-bottom:5px">Email</div><input class="field-input" id="coach-email" type="email" placeholder="email@esempio.it" style="margin-bottom:10px">'+
-        '<div class="field-label" style="margin-bottom:5px">Password temporanea</div><input class="field-input" id="coach-pwd" type="text" placeholder="min. 6 caratteri" style="margin-bottom:10px">'+
-        '<div class="field-label" style="margin-bottom:5px">Categoria principale</div>'+
-        '<select class="field-input" id="coach-cat" style="margin-bottom:14px">'+CAT_OPTS+'</select>'+
-        '<div class="error-msg" id="coach-error"></div>'+
-        '<button class="btn-primary" style="background:var(--teal)" onclick="createCoach()">Crea account allenatore</button>'+
-      '</div>'+
-      (coaches.length ? '<div class="admin-card"><div class="admin-card-title">Allenatori ('+coaches.length+')</div>'+
-        coaches.map(function(c) {
-          var cats=(c.categories||[c.category]).filter(Boolean).map(function(x){return CAT_LABELS[x]||x;}).join(', ');
-          var isP=c.athletes&&c.athletes.length>0;
-          return '<div class="request-row">'+
-            '<div class="request-info">'+
-              '<div class="request-name">'+(c.displayName||c.email)+'</div>'+
-              '<div class="request-detail">'+c.email+'</div>'+
-              '<div class="request-detail" style="color:var(--teal)">'+cats+(isP?' · anche genitore':'')+'</div>'+
-            '</div>'+
-            '<button class="btn-sm btn-sm-blue" data-uid="'+c.id+'" onclick="editCoach(this.dataset.uid)">Modifica</button>'+
+function renderGenitoreCalendar() {
+  db.collection('events').orderBy('date').get().then(function(snap) {
+    var events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    
+    db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
+      var userData = userSnap.data();
+      var userCats = userData.categories || [];
+      var filteredEvents = events.filter(e => selectedCategory === 'all' ? userCats.includes(e.category) : e.category === selectedCategory);
+      
+      var html = '';
+      var currentMonth = '';
+      
+      filteredEvents.forEach(function(e) {
+        var d = new Date(e.date);
+        var month = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+        
+        if (currentMonth !== month) {
+          currentMonth = month;
+          html += '<div class="month-label">' + month.charAt(0).toUpperCase() + month.slice(1) + '</div>';
+        }
+        
+        var dayNum = d.getDate();
+        var dayName = d.toLocaleDateString('it-IT', { weekday: 'short' });
+        var badgeCls = 'badge-' + (e.type || 'info');
+        
+        html += '<div class="event-card" onclick="openEventModal(this)">' +
+          '<div class="event-date"><div class="event-day-num">' + dayNum + '</div><div class="event-day-name">' + dayName + '</div></div>' +
+          '<div class="event-bar" style="background:' + (e.color || '#888') + '"></div>' +
+          '<div class="event-info">' +
+          '<div class="event-title">' + e.title + '</div>' +
+          (e.details ? '<div class="event-sub">📌 ' + e.details + '</div>' : '') +
+          '</div>' +
+          '<div class="event-badge ' + badgeCls + '">' + (CAT_LABELS[e.category] || e.category) + '</div>' +
           '</div>';
-        }).join('')+'</div>' : '')+
-    '</div>';
+      });
+      
+      if (filteredEvents.length === 0) {
+        html = '<div class="empty-state"><div class="empty-state-icon">📅</div>Nessun evento in questa categoria.</div>';
+      }
+      
+      document.getElementById('genitore-content').innerHTML = html;
+    });
   });
 }
 
-function editCoach(uid) {
-  db.collection('users').doc(uid).get().then(function(snap) {
-    var c = Object.assign({id:uid}, snap.data());
-    var cats = c.categories || (c.category ? [c.category] : []);
-    var isParent = c.athletes && c.athletes.length > 0;
-    window._ecAthCount = (c.athletes||[]).length;
-    var catChecks = ALL_CATS.map(function(cat) {
-      var chk = cats.indexOf(cat)>=0 ? 'checked' : '';
-      var label = CAT_LABELS[cat]||cat;
-      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:.5px solid var(--border)"><input type="checkbox" id="ec-cat-'+cat+'" '+chk+' style="width:16px;height:16px;cursor:pointer"><label for="ec-cat-'+cat+'" style="font-size:14px;cursor:pointer">'+label+'</label></div>';
-    }).join('');
-    var athRows = (c.athletes||[]).map(function(a,i){
-      var opts = CAT_OPTS.replace('value="'+a.category+'"','value="'+a.category+'" selected');
-      return '<div class="athlete-admin-row" id="ec-row-'+i+'"><div style="flex:1;display:flex;flex-direction:column;gap:4px"><input class="admin-input" id="ec-name-'+i+'" value="'+a.name+'" placeholder="Nome atleta"><select class="admin-select" id="ec-cat2-'+i+'">'+opts+'</select></div><button class="btn-sm btn-sm-red" onclick="removeECRow('+i+')">x</button></div>';
-    }).join('');
-    var parentChk = isParent ? 'checked' : '';
-    var secStyle = isParent ? '' : 'display:none';
-    var name = c.displayName||c.email;
-    var html = '<div style="font-size:16px;font-weight:600;margin-bottom:14px">'+name+'</div>';
-    html += '<div style="font-size:13px;font-weight:600;margin-bottom:8px">Categorie assegnate</div>';
-    html += catChecks;
-    html += '<div style="font-size:13px;font-weight:600;margin:14px 0 8px">Opzioni</div>';
-    html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0">';
-    html += '<input type="checkbox" id="ec-is-parent" '+parentChk+' style="width:16px;height:16px;cursor:pointer" onchange="toggleECSection(this)">';
-    html += '<label for="ec-is-parent" style="font-size:14px;cursor:pointer">Genitore (ha figli iscritti)</label>';
-    html += '</div>';
-    html += '<div id="ec-ath-section" style="'+secStyle+'">';
-    html += '<div style="font-size:12px;color:var(--text-sec);margin:8px 0 4px">Atleti figli</div>';
-    html += '<div id="ec-ath-editor">'+athRows+'</div>';
-    html += '<button class="btn-add-note" style="margin-top:6px" onclick="addECRow()">+ Aggiungi atleta</button>';
-    html += '</div>';
-    html += '<div style="margin-top:14px"><button class="btn-send" style="width:100%" data-uid="'+uid+'" onclick="saveCoach(this.dataset.uid)">Salva modifiche</button></div>';
-    openAdminModal(html);
-  });
-}
-
-function addECRow() {
-  var i = window._ecAthCount++;
-  var div=document.createElement('div'); div.className='athlete-admin-row'; div.id='ec-row-'+i;
-  div.innerHTML='<div style="flex:1;display:flex;flex-direction:column;gap:4px">'+
-    '<input class="admin-input" id="ec-name-'+i+'" placeholder="Nome atleta">'+
-    '<select class="admin-select" id="ec-cat2-'+i+'">'+CAT_OPTS+'</select>'+
-  '</div><button class="btn-sm btn-sm-red" onclick="removeECRow('+i+')">x</button>';
-  document.getElementById('ec-ath-editor').appendChild(div);
-}
-function removeECRow(i){var r=document.getElementById('ec-row-'+i);if(r)r.remove();}
-
-function toggleECSection(cb) {
-  var s=document.getElementById("ec-ath-section");
-  if(s) s.style.display=cb.checked?"block":"none";
-}
-
-function saveCoach(uid) {
-  var cats = ALL_CATS.filter(function(cat){ var e=document.getElementById('ec-cat-'+cat); return e&&e.checked; });
-  var isParent = document.getElementById('ec-is-parent').checked;
-  var athletes=[]; var athCats=[];
-  if (isParent) {
-    for (var i=0;i<(window._ecAthCount||0)+10;i++) {
-      var n=document.getElementById('ec-name-'+i); var c=document.getElementById('ec-cat2-'+i);
-      if(!n||!c)continue;
-      var nm=n.value.trim(); var ct=c.value;
-      if(nm&&ct){athletes.push({name:nm,category:ct});if(athCats.indexOf(ct)<0)athCats.push(ct);}
+// ============ ALLENATORE FUNCTIONS ============
+function loadAllenatoreData() {
+  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
+    var userData = snap.data();
+    var cats = userData.categories || [];
+    document.getElementById('allenatore-cat-display').textContent = cats.map(c => CAT_LABELS[c]).join(', ') || '';
+    
+    if (allenatoreTab === 'comm') {
+      renderAllenatoreCommunications();
+    } else {
+      renderAllenatoreCalendar();
     }
-  }
-  var allCats=cats.slice(); athCats.forEach(function(c){if(allCats.indexOf(c)<0)allCats.push(c);});
-  db.collection('users').doc(uid).update({categories:allCats,category:cats[0]||'',athletes:athletes}).then(function(){
-    closeAdminModal(); switchAdminTab('coaches');
-  }).catch(function(e){alert('Errore: '+e.message);});
+  });
 }
 
-function renderPending(el) {
-  db.collection('users').where('status','==','pending').get().then(function(snap) {
-    var pending = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-    if (!pending.length) { el.innerHTML = '<div class="empty-state">Nessuna richiesta pendente 🎉</div>'; return; }
-    el.innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Richieste in attesa ('+pending.length+')</div>'+
-      pending.map(function(u) {
-        var athletes = (u.athletes||[]).map(function(a){ return a.name+' · '+(CAT_LABELS[a.category]||a.category); }).join(', ') || (u.categories||[]).join(', ') || '—';
-        return '<div class="request-row"><div class="request-info"><div class="request-name">'+(u.displayName||u.email)+'</div><div class="request-detail">'+u.email+'</div><div class="request-detail">🎿 '+athletes+'</div></div>'+
-        '<div class="request-actions"><button class="btn-approve" data-uid="'+u.id+'" onclick="approveUser(this.dataset.uid)">✓ Approva</button><button class="btn-reject" data-uid="'+u.id+'" onclick="rejectUser(this.dataset.uid)">✕</button></div></div>';
-      }).join('')+'</div></div>';
+function filterAllenatoreCat(cat) {
+  selectedAllenatoreCat = cat;
+  document.querySelectorAll('#screen-allenatore .chips-row .chip').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+  loadAllenatoreData();
+}
+
+function renderAllenatoreCommunications() {
+  db.collection('communications').orderBy('createdAt', 'desc').get().then(function(snap) {
+    var comms = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    
+    db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
+      var userData = userSnap.data();
+      var userCats = userData.categories || [];
+      
+      var filteredComms = comms.filter(c => selectedAllenatoreCat === 'all' ? userCats.includes(c.category) : c.category === selectedAllenatoreCat);
+      
+      var html = '<div class="admin-section">';
+      
+      if (filteredComms.length === 0) {
+        html += '<div class="empty-state">Nessuna comunicazione.</div>';
+      } else {
+        filteredComms.forEach(function(c) {
+          var user = c.authorId || 'Sistema';
+          html += '<div class="comm-card">' +
+            '<div class="comm-header"><div class="comm-avatar" style="background:var(--blue-light);color:var(--blue-dark)">' + user.charAt(0) + '</div>' +
+            '<div><div class="comm-name">' + (c.authorName || user) + '</div><div class="comm-meta">' + new Date(c.createdAt.toDate()).toLocaleDateString('it-IT') + '</div></div></div>' +
+            '<div class="comm-text">' + c.text + '</div>' +
+            '<div class="comm-footer"><span class="cat-pill" style="background:var(--blue-light);color:var(--blue-dark)">' + (CAT_LABELS[c.category] || c.category) + '</span></div>' +
+            '</div>';
+        });
+      }
+      
+      html += '</div><div style="padding:12px"><button class="btn-primary" style="background:var(--teal)" onclick="openNewCommModal()">+ Nuova comunicazione</button></div>';
+      
+      document.getElementById('allenatore-content').innerHTML = html;
+    });
+  });
+}
+
+function renderAllenatoreCalendar() {
+  db.collection('events').orderBy('date').get().then(function(snap) {
+    var events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    
+    db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
+      var userData = userSnap.data();
+      var userCats = userData.categories || [];
+      
+      var filteredEvents = events.filter(e => selectedAllenatoreCat === 'all' ? userCats.includes(e.category) : e.category === selectedAllenatoreCat);
+      
+      var html = '';
+      var currentMonth = '';
+      
+      filteredEvents.forEach(function(e) {
+        var d = new Date(e.date);
+        var month = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+        
+        if (currentMonth !== month) {
+          currentMonth = month;
+          html += '<div class="month-label">' + month.charAt(0).toUpperCase() + month.slice(1) + '</div>';
+        }
+        
+        var dayNum = d.getDate();
+        var dayName = d.toLocaleDateString('it-IT', { weekday: 'short' });
+        var badgeCls = 'badge-' + (e.type || 'info');
+        
+        html += '<div class="event-card" onclick="openAttendanceModal(this)" data-event-id="' + e.id + '" data-category="' + e.category + '" data-date="' + e.date + '">' +
+          '<div class="event-date"><div class="event-day-num">' + dayNum + '</div><div class="event-day-name">' + dayName + '</div></div>' +
+          '<div class="event-bar" style="background:' + (e.color || '#888') + '"></div>' +
+          '<div class="event-info">' +
+          '<div class="event-title">' + e.title + '</div>' +
+          (e.details ? '<div class="event-sub">📌 ' + e.details + '</div>' : '') +
+          '</div>' +
+          '<div class="event-badge ' + badgeCls + '">' + (CAT_LABELS[e.category] || e.category) + '</div>' +
+          '</div>';
+      });
+      
+      if (filteredEvents.length === 0) {
+        html = '<div class="empty-state"><div class="empty-state-icon">📅</div>Nessun evento in questa categoria.</div>';
+      }
+      
+      document.getElementById('allenatore-content').innerHTML = html;
+    });
+  });
+}
+
+function openAttendanceModal(el) {
+  var eventId = el.dataset.eventId;
+  var category = el.dataset.category;
+  var date = el.dataset.date;
+  
+  var athletes = (importedAthletes[category] || []).slice();
+  
+  var html = '<div class="modal-header">Presenze — ' + el.querySelector('.event-title').textContent + '</div>';
+  html += '<div style="margin-bottom:16px;font-size:12px;color:var(--text-sec)">Dato: ' + new Date(date).toLocaleDateString('it-IT') + '</div>';
+  html += '<div id="attendance-list" style="display:flex;flex-direction:column;gap:0;margin-bottom:16px">';
+  
+  athletes.forEach(function(a, i) {
+    html += '<div class="attendance-item">' +
+      '<div class="attendance-checkbox" onclick="toggleAttendance(this)" data-athlete-id="' + i + '"></div>' +
+      '<div class="attendance-info">' +
+      '<div class="attendance-name">' + a.name + '</div>' +
+      '<div class="attendance-detail">' + a.surname + '</div>' +
+      '</div></div>';
+  });
+  
+  html += '</div>';
+  html += '<div class="field-label">Atleta extra</div>';
+  html += '<input class="field-input" id="extra-athlete-name" placeholder="Nome atleta" style="margin-bottom:8px">';
+  html += '<input class="field-input" id="extra-athlete-check" type="checkbox" style="width:20px;height:20px;margin-bottom:12px">';
+  html += '<label style="font-size:13px;color:var(--text-sec)">Segnare se presente</label>';
+  html += '<button class="btn-primary" style="background:var(--teal);margin-top:12px" onclick="saveAttendance(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">Salva presenze</button>';
+  
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function toggleAttendance(el) {
+  el.classList.toggle('checked');
+}
+
+function saveAttendance(eventId, category, date) {
+  var attendance = {};
+  document.querySelectorAll('.attendance-checkbox.checked').forEach(function(el) {
+    var athleteId = el.dataset.athleteId;
+    attendance[athleteId] = true;
+  });
+  
+  var extraName = document.getElementById('extra-athlete-name').value.trim();
+  var extraCheck = document.getElementById('extra-athlete-check').checked;
+  
+  if (extraName && extraCheck) {
+    attendance['extra_' + Date.now()] = { name: extraName, extra: true };
+  }
+  
+  db.collection('attendance').doc(eventId + '_' + category).set({
+    eventId: eventId,
+    category: category,
+    date: date,
+    attendance: attendance,
+    recordedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    alert('Presenze salvate!');
+    closeModal();
+    loadAllenatoreData();
+  });
+}
+
+function openNewCommModal() {
+  var html = '<div class="modal-header">Nuova comunicazione</div>' +
+    '<div class="field-label">Testo</div>' +
+    '<textarea class="field-input" id="new-comm-text" placeholder="Scrivi il messaggio..." style="min-height:120px;resize:vertical;font-family:inherit"></textarea>' +
+    '<button class="btn-primary" style="background:var(--teal);margin-top:12px" onclick="sendCommunication()">Invia</button>';
+  
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function sendCommunication() {
+  var text = document.getElementById('new-comm-text').value.trim();
+  if (!text) return;
+  
+  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
+    var userData = snap.data();
+    var cat = (userData.categories || [])[0];
+    
+    db.collection('communications').add({
+      text: text,
+      category: cat,
+      authorId: currentUser.uid,
+      authorName: userData.displayName,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+      alert('Comunicazione inviata!');
+      closeModal();
+      loadAllenatoreData();
+    });
+  });
+}
+
+// ============ ADMIN FUNCTIONS ============
+function switchAdminTab(tab) {
+  adminTab = tab;
+  document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+  renderAdminTab();
+}
+
+function renderAdminTab() {
+  if (adminTab === 'import') {
+    renderImportTab();
+  } else if (adminTab === 'atleti') {
+    renderAtletiTab();
+  } else if (adminTab === 'categorie') {
+    renderCategorieTab();
+  } else if (adminTab === 'utenti') {
+    renderUtentiTab();
+  } else if (adminTab === 'medici') {
+    renderMediciTab();
+  } else if (adminTab === 'events') {
+    renderEventsTab();
+  }
+}
+
+function renderImportTab() {
+  var html = '<div class="admin-section">' +
+    '<div class="admin-card">' +
+    '<div class="admin-card-title">📥 Importa file Excel</div>' +
+    '<div class="dropzone" ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById(\'file-input\').click()">' +
+    '<div class="dropzone-text">Trascina il file Excel qui o clicca per selezionare</div>' +
+    '<input id="file-input" type="file" accept=".xlsx,.xls" onchange="handleFileSelect(event)">' +
+    '</div>' +
+    '<div id="import-status" style="margin-top:12px;font-size:13px;color:var(--text-sec)"></div>' +
+    '</div>' +
+    '<div class="admin-card">' +
+    '<div class="admin-card-title">Atleti importati</div>' +
+    '<div id="imported-summary" style="font-size:13px;color:var(--text-sec)">Importa un file per iniziare.</div>' +
+    '</div>' +
+    '</div>';
+  
+  document.getElementById('admin-content').innerHTML = html;
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.target.closest('.dropzone').classList.add('active');
+}
+
+function handleDragLeave(e) {
+  e.target.closest('.dropzone').classList.remove('active');
+}
+
+function handleFileDrop(e) {
+  e.preventDefault();
+  e.target.closest('.dropzone').classList.remove('active');
+  var files = e.dataTransfer.files;
+  if (files.length) processFile(files[0]);
+}
+
+function handleFileSelect(e) {
+  if (e.target.files.length) processFile(e.target.files[0]);
+}
+
+function processFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = new Uint8Array(e.target.result);
+      var workbook = XLSX.read(data, { type: 'array' });
+      
+      importedAthletes = {};
+      
+      workbook.SheetNames.forEach(function(sheetName) {
+        var sheet = workbook.Sheets[sheetName];
+        var rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        
+        var catKey = sheetName.toLowerCase()
+          .replace(/\s+/g, '_')
+          .replace('super_baby', 'sbaby')
+          .replace('giovani_fisi', 'giovani_fisi');
+        
+        if (!CAT_ORDER.includes(catKey)) {
+          // Prova mappatura alternativa
+          if (sheetName === 'SUPERBABY') catKey = 'sbaby';
+          else if (sheetName === 'GIOVANI FISI') catKey = 'giovani_fisi';
+          else {
+            catKey = CAT_ORDER.find(c => CAT_LABELS[c].toLowerCase() === sheetName.toLowerCase());
+          }
+        }
+        
+        if (catKey) {
+          var athletes = [];
+          rows.forEach(function(row) {
+            if (row.COGNOME && row.NOME) {
+              athletes.push({
+                surname: row.COGNOME.trim(),
+                name: row.NOME.trim(),
+                birthDate: row['DATA DI NASCITA'] || '',
+                medicalExpiry: row['SCADENZA CM'] || ''
+              });
+            }
+          });
+          
+          if (athletes.length > 0) {
+            importedAthletes[catKey] = athletes;
+          }
+        }
+      });
+      
+      // Salva su Firestore
+      db.collection('config').doc('athletes').set({
+        athletes: importedAthletes,
+        importedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        updateImportSummary();
+        document.getElementById('import-status').innerHTML = '<div class="alert alert-success show">✓ File importato con successo!</div>';
+      });
+    } catch (err) {
+      document.getElementById('import-status').innerHTML = '<div class="alert alert-error show">✗ Errore nell\'importazione: ' + err.message + '</div>';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function updateImportSummary() {
+  var total = 0;
+  var summary = '';
+  CAT_ORDER.forEach(function(cat) {
+    var count = (importedAthletes[cat] || []).length;
+    if (count > 0) {
+      total += count;
+      summary += '<div style="padding:8px 0;border-bottom:.5px solid var(--border)">' + CAT_LABELS[cat] + ': <strong>' + count + ' atleti</strong></div>';
+    }
+  });
+  
+  if (summary) {
+    summary = '<div style="margin-bottom:8px"><strong>Totale: ' + total + ' atleti</strong></div>' + summary;
+  }
+  
+  document.getElementById('imported-summary').innerHTML = summary || 'Nessun atleta importato.';
+}
+
+function renderAtletiTab() {
+  var html = '<div class="admin-section">';
+  
+  CAT_ORDER.forEach(function(cat) {
+    var athletes = importedAthletes[cat] || [];
+    if (athletes.length > 0) {
+      html += '<div class="admin-card">' +
+        '<div class="admin-card-title">' + CAT_LABELS[cat] + ' (' + athletes.length + ')</div>';
+      
+      athletes.forEach(function(a) {
+        var medStatus = 'grigio';
+        if (a.medicalExpiry) {
+          var expiry = new Date(a.medicalExpiry);
+          var today = new Date();
+          var diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+          if (diffDays < 0) medStatus = 'rosso';
+          else if (diffDays < 30) medStatus = 'giallo';
+          else medStatus = 'verde';
+        }
+        
+        html += '<div class="request-row">' +
+          '<div class="request-info">' +
+          '<div class="request-name">' + a.name + ' ' + a.surname + '</div>' +
+          '<div class="request-detail">' + (a.medicalExpiry ? 'Scadenza: ' + new Date(a.medicalExpiry).toLocaleDateString('it-IT') : 'Data non disponibile') + '</div>' +
+          '</div>' +
+          '<span style="width:8px;height:8px;border-radius:50%;background:' + (medStatus === 'verde' ? 'var(--teal)' : medStatus === 'giallo' ? 'var(--amber-mid)' : medStatus === 'rosso' ? 'var(--red)' : 'var(--gray-400)') + '"></span>' +
+          '</div>';
+      });
+      
+      html += '</div>';
+    }
+  });
+  
+  html += '</div>';
+  document.getElementById('admin-content').innerHTML = html;
+}
+
+function renderCategorieTab() {
+  var html = '<div class="admin-section"><div class="admin-card">' +
+    '<div class="admin-card-title">🏷️ Gestione categorie</div>';
+  
+  CAT_ORDER.forEach(function(cat) {
+    html += '<div class="request-row">' +
+      '<div class="request-info"><div class="request-name">' + CAT_LABELS[cat] + '</div></div>' +
+      '<button class="btn-sm btn-sm-green">Modifica</button>' +
+      '</div>';
+  });
+  
+  html += '<div style="margin-top:16px"><button class="btn-primary" style="background:var(--teal)">+ Nuova categoria</button></div>' +
+    '</div></div>';
+  
+  document.getElementById('admin-content').innerHTML = html;
+}
+
+function renderUtentiTab() {
+  db.collection('users').get().then(function(snap) {
+    var users = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
+      .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
+    
+    var approved = users.filter(u => u.status === 'approved');
+    var pending = users.filter(u => u.status === 'pending');
+    var rejected = users.filter(u => u.status === 'rejected');
+    
+    var html = '<div class="admin-section">';
+    
+    if (approved.length > 0) {
+      html += '<div class="admin-card"><div class="admin-card-title">✓ Approvati (' + approved.length + ')</div>';
+      approved.forEach(function(u) {
+        var role = u.role === 'admin' ? 'Admin' : u.role === 'allenatore' ? 'Allenatore' : 'Genitore';
+        html += '<div class="request-row">' +
+          '<div class="request-info"><div class="request-name">' + (u.displayName || u.email) + '</div><div class="request-detail">' + role + '</div></div>' +
+          (u.role !== 'admin' ? '<button class="btn-sm btn-sm-red" onclick="suspendUser(\'' + u.id + '\')">Sospendi</button>' : '') +
+          '</div>';
+      });
+      html += '</div>';
+    }
+    
+    if (pending.length > 0) {
+      html += '<div class="admin-card"><div class="admin-card-title">⏳ In sospeso (' + pending.length + ')</div>';
+      pending.forEach(function(u) {
+        html += '<div class="request-row">' +
+          '<div class="request-info"><div class="request-name">' + (u.displayName || u.email) + '</div><div class="request-detail">' + u.email + '</div></div>' +
+          '<button class="btn-sm btn-sm-green" onclick="approveUser(\'' + u.id + '\')">Approva</button>' +
+          '</div>';
+      });
+      html += '</div>';
+    }
+    
+    if (rejected.length > 0) {
+      html += '<div class="admin-card"><div class="admin-card-title">✗ Rifiutati (' + rejected.length + ')</div>';
+      rejected.forEach(function(u) {
+        html += '<div class="request-row">' +
+          '<div class="request-info"><div class="request-name">' + (u.displayName || u.email) + '</div></div>' +
+          '<button class="btn-sm btn-sm-green" onclick="approveUser(\'' + u.id + '\')">Riattiva</button>' +
+          '</div>';
+      });
+      html += '</div>';
+    }
+    
+    html += '</div>';
+    document.getElementById('admin-content').innerHTML = html;
   });
 }
 
 function approveUser(uid) {
-  db.collection('users').doc(uid).update({status:'approved'}).then(function(){
-    document.querySelector('.admin-tab.active').click();
-  });
-}
-
-function rejectUser(uid) {
-  if (!confirm('Eliminare questa richiesta?')) return;
-  db.collection('users').doc(uid).update({status:'rejected'}).then(function(){
-    document.querySelector('.admin-tab.active').click();
-  });
-}
-
-function renderCoachForm(el) {
-  el.innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Crea account allenatore</div>'+
-    '<div class="field-label" style="margin-bottom:5px">Nome e cognome</div><input class="field-input" id="coach-name" placeholder="Giovanni Bianchi" style="margin-bottom:10px">'+
-    '<div class="field-label" style="margin-bottom:5px">Email</div><input class="field-input" id="coach-email" type="email" placeholder="email@esempio.it" style="margin-bottom:10px">'+
-    '<div class="field-label" style="margin-bottom:5px">Password temporanea</div><input class="field-input" id="coach-pwd" type="text" placeholder="min. 6 caratteri" style="margin-bottom:10px">'+
-    '<div class="field-label" style="margin-bottom:5px">Categoria</div>'+
-    '<select class="field-input" id="coach-cat" style="margin-bottom:14px"><option value="">-- Seleziona --</option>'+
-    '<option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option>'+
-    '<option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option></select>'+
-    '<div class="error-msg" id="coach-error"></div>'+
-    '<button class="btn-primary" style="background:var(--teal)" onclick="createCoach()">Crea account allenatore</button></div></div>';
-}
-
-function createCoach() {
-  var name = document.getElementById('coach-name').value.trim();
-  var email = document.getElementById('coach-email').value.trim();
-  var pwd = document.getElementById('coach-pwd').value;
-  var cat = document.getElementById('coach-cat').value;
-  var err = document.getElementById('coach-error');
-  err.style.display='none';
-  if (!name||!email||pwd.length<6||!cat) { err.style.display='block'; err.textContent='Compila tutti i campi.'; return; }
-  auth.createUserWithEmailAndPassword(email, pwd).then(function(cred) {
-    return db.collection('users').doc(cred.user.uid).set({
-      email:email, displayName:name, role:'allenatore', status:'approved',
-      category:cat, categories:[cat], createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }).then(function(){
-    alert('Account creato per '+name+'. Categoria: '+(CAT_LABELS[cat]||cat));
-    renderCoachForm(document.getElementById('admin-content'));
-  }).catch(function(e){
-    var e2=document.getElementById('coach-error');
-    if(e2){e2.style.display='block';e2.textContent=e.code==='auth/email-already-in-use'?'Email già registrata.':'Errore: '+e.message;}
-  });
-}
-
-function renderMedical(el) {
-  db.collection('users').get().then(function(snap) {
-    var users = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); })
-      .filter(function(u){ return (u.role==='genitore'||u.role==='allenatore')&&u.status==='approved'&&u.athletes&&u.athletes.length; });
-    users.sort(function(a,b){ return (a.displayName||'').localeCompare(b.displayName||''); });
-    var scad=[],warn=[],ok=[],none=[];
-    users.forEach(function(u){
-      (u.athletes||[]).forEach(function(a){
-        var vmDate=((u.medicalVisits||{})[a.category])||'';
-        var st=vmStatus(vmDate);
-        var row={u:u,a:a,vmDate:vmDate,st:st};
-        if(st.cls==='vm-scad') scad.push(row);
-        else if(st.cls==='vm-warn') warn.push(row);
-        else if(st.cls==='vm-ok') ok.push(row);
-        else none.push(row);
-      });
-    });
-    function makeRows(rows){
-      return rows.map(function(r){
-        return '<div class="request-row">'+
-          '<div class="request-info">'+
-            '<div class="request-name">'+r.a.name+'</div>'+
-            '<div class="request-detail">'+(CAT_LABELS[r.a.category]||r.a.category)+' - '+(r.u.displayName||r.u.email)+'</div>'+
-          '</div>'+
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
-            '<span class="vm-status '+r.st.cls+'">'+r.st.dot+' '+r.st.label+'</span>'+
-            '<input type="date" value="'+r.vmDate+'" data-uid="'+r.u.id+'" data-cat="'+r.a.category+'" onchange="updateMedical(this.dataset.uid,this.dataset.cat,this.value)" style="font-size:11px;border:.5px solid var(--border);border-radius:6px;padding:3px 6px;background:var(--bg);color:var(--text)">'+
-          '</div></div>';
-      }).join('');
-    }
-    var html='<div class="admin-section">';
-    if(scad.length) html+='<div class="admin-card"><div class="admin-card-title" style="color:var(--red)">Scadute ('+scad.length+')</div>'+makeRows(scad)+'</div>';
-    if(warn.length) html+='<div class="admin-card"><div class="admin-card-title" style="color:var(--amber)">In scadenza ('+warn.length+')</div>'+makeRows(warn)+'</div>';
-    if(none.length) html+='<div class="admin-card"><div class="admin-card-title" style="color:var(--gray-400)">Non inserita ('+none.length+')</div>'+makeRows(none)+'</div>';
-    if(ok.length) html+='<div class="admin-card"><div class="admin-card-title" style="color:var(--teal)">Valide ('+ok.length+')</div>'+makeRows(ok)+'</div>';
-    if(!scad.length&&!warn.length&&!none.length&&!ok.length) html+='<div class="empty-state">Nessun atleta trovato.</div>';
-    html+='</div>'; el.innerHTML=html;
-  });
-}
-
-function updateMedical(uid, cat, dateVal) {
-  var update = {}; update['medicalVisits.'+cat] = dateVal;
-  db.collection('users').doc(uid).update(update);
-}
-
-function renderUsers(el) {
-  db.collection('users').get().then(function(snap) {
-    var users=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
-    users.sort(function(a,b){return (a.displayName||a.email||'').localeCompare(b.displayName||b.email||'');});
-    var approved=users.filter(function(u){return u.status==='approved';});
-    var other=users.filter(function(u){return u.status!=='approved';});
-    el.innerHTML='<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Utenti attivi ('+approved.length+')</div>'+
-      approved.map(function(u){
-        var rl=u.role==='admin'?'Admin':u.role==='allenatore'?'Allenatore':'Genitore';
-        var cats=(u.categories||[]).map(function(c){return CAT_LABELS[c]||c;}).join(', ');
-        return '<div class="request-row">'+
-          '<div class="request-info">'+
-            '<div class="request-name">'+(u.displayName||u.email)+'</div>'+
-            '<div class="request-detail">'+rl+(cats?' - '+cats:'')+'</div>'+
-          '</div>'+
-          (u.role!=='admin'?'<button class="btn-sm btn-sm-red" data-uid="'+u.id+'" onclick="suspendUser(this.dataset.uid)">Sospendi</button>':'')+
-        '</div>';
-      }).join('')+'</div>'+
-      (other.length?'<div class="admin-card"><div class="admin-card-title" style="color:var(--text-sec)">Sospesi/Rifiutati ('+other.length+')</div>'+
-        other.map(function(u){return '<div class="request-row">'+
-          '<div class="request-info"><div class="request-name">'+(u.displayName||u.email)+'</div><div class="request-detail">'+u.email+'</div></div>'+
-          '<button class="btn-sm btn-sm-green" data-uid="'+u.id+'" onclick="approveUser(this.dataset.uid)">Riattiva</button>'+
-        '</div>';}).join('')+'</div>':'')+
-    '</div>';
+  db.collection('users').doc(uid).update({ status: 'approved' }).then(function() {
+    renderUtentiTab();
   });
 }
 
 function suspendUser(uid) {
-  if (!confirm('Sospendere questo account?')) return;
-  db.collection('users').doc(uid).update({status:'rejected'}).then(function(){ switchAdminTab('users'); });
+  if (confirm('Sospendere questo account?')) {
+    db.collection('users').doc(uid).update({ status: 'rejected' }).then(function() {
+      renderUtentiTab();
+    });
+  }
 }
+
+function renderMediciTab() {
+  var html = '<div class="admin-section"><div class="admin-card">' +
+    '<div class="admin-card-title">🏥 Certificati medici</div>' +
+    '<div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">Gestisci scadenze dei certificati medici per categoria.</div>';
+  
+  CAT_ORDER.forEach(function(cat) {
+    var athletes = importedAthletes[cat] || [];
+    var scaduti = athletes.filter(a => {
+      if (!a.medicalExpiry) return false;
+      var exp = new Date(a.medicalExpiry);
+      return exp < new Date();
+    }).length;
+    
+    var inScadenza = athletes.filter(a => {
+      if (!a.medicalExpiry) return false;
+      var exp = new Date(a.medicalExpiry);
+      var diff = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
+      return diff >= 0 && diff < 30;
+    }).length;
+    
+    html += '<div class="request-row">' +
+      '<div class="request-info">' +
+      '<div class="request-name">' + CAT_LABELS[cat] + '</div>' +
+      '<div class="request-detail">🔴 Scaduti: ' + scaduti + ' | 🟡 In scadenza: ' + inScadenza + '</div>' +
+      '</div>' +
+      '<button class="btn-sm btn-sm-green" onclick="openMediciModal(\'' + cat + '\')">Dettagli</button>' +
+      '</div>';
+  });
+  
+  html += '</div></div>';
+  document.getElementById('admin-content').innerHTML = html;
+}
+
+function openMediciModal(cat) {
+  var athletes = importedAthletes[cat] || [];
+  var html = '<div class="modal-header">' + CAT_LABELS[cat] + ' - Certificati medici</div>';
+  
+  var byStatus = { scaduti: [], inScadenza: [], validi: [], nonInseriti: [] };
+  
+  athletes.forEach(function(a) {
+    if (!a.medicalExpiry) {
+      byStatus.nonInseriti.push(a);
+    } else {
+      var exp = new Date(a.medicalExpiry);
+      var diff = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
+      if (diff < 0) byStatus.scaduti.push(a);
+      else if (diff < 30) byStatus.inScadenza.push(a);
+      else byStatus.validi.push(a);
+    }
+  });
+  
+  var sections = [
+    { title: 'Scaduti', data: byStatus.scaduti, color: 'var(--red)' },
+    { title: 'In scadenza', data: byStatus.inScadenza, color: 'var(--amber-mid)' },
+    { title: 'Validi', data: byStatus.validi, color: 'var(--teal)' },
+    { title: 'Non inseriti', data: byStatus.nonInseriti, color: 'var(--gray-400)' }
+  ];
+  
+  sections.forEach(function(sec) {
+    if (sec.data.length > 0) {
+      html += '<div style="margin-top:16px"><div style="font-size:13px;font-weight:600;color:' + sec.color + ';">' + sec.title + ' (' + sec.data.length + ')</div>';
+      sec.data.forEach(function(a) {
+        html += '<div class="request-row">' +
+          '<div class="request-info">' +
+          '<div class="request-name">' + a.name + ' ' + a.surname + '</div>' +
+          '<div class="request-detail">' + (a.medicalExpiry ? new Date(a.medicalExpiry).toLocaleDateString('it-IT') : 'N/A') + '</div>' +
+          '</div></div>';
+      });
+      html += '</div>';
+    }
+  });
+  
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function renderEventsTab() {
+  db.collection('events').orderBy('date').get().then(function(snap) {
+    var events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    
+    var html = '<div class="admin-section"><div class="admin-card">' +
+      '<div class="admin-card-title">📌 Gestione eventi</div>';
+    
+    events.forEach(function(e) {
+      html += '<div class="request-row">' +
+        '<div class="request-info">' +
+        '<div class="request-name">' + e.title + '</div>' +
+        '<div class="request-detail">' + new Date(e.date).toLocaleDateString('it-IT') + ' - ' + (CAT_LABELS[e.category] || e.category) + '</div>' +
+        '</div>' +
+        '<button class="btn-sm btn-sm-red" onclick="deleteEvent(\'' + e.id + '\')">Elimina</button>' +
+        '</div>';
+    });
+    
+    html += '<div style="margin-top:16px"><button class="btn-primary" style="background:var(--teal)" onclick="openNewEventModal()">+ Nuovo evento</button></div>' +
+      '</div></div>';
+    
+    document.getElementById('admin-content').innerHTML = html;
+  });
+}
+
+function deleteEvent(eventId) {
+  if (confirm('Eliminare questo evento?')) {
+    db.collection('events').doc(eventId).delete().then(function() {
+      renderEventsTab();
+    });
+  }
+}
+
+function openNewEventModal() {
+  var html = '<div class="modal-header">Nuovo evento</div>' +
+    '<div class="field-label">Titolo</div>' +
+    '<input class="field-input" id="new-event-title" placeholder="Nome evento">' +
+    '<div class="field-label">Data</div>' +
+    '<input class="field-input" id="new-event-date" type="date">' +
+    '<div class="field-label">Categoria</div>' +
+    '<select class="field-input" id="new-event-cat">' +
+    CAT_ORDER.map(c => '<option value="' + c + '">' + CAT_LABELS[c] + '</option>').join('') +
+    '</select>' +
+    '<div class="field-label">Tipo attività</div>' +
+    '<select class="field-input" id="new-event-type">' +
+    '<option value="sci">Sci</option><option value="atletica">Atletica</option>' +
+    '<option value="multi">Multisport</option><option value="campus">Campus</option>' +
+    '<option value="info">Info</option>' +
+    '</select>' +
+    '<button class="btn-primary" style="background:var(--teal);margin-top:12px" onclick="saveNewEvent()">Crea evento</button>';
+  
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function saveNewEvent() {
+  var title = document.getElementById('new-event-title').value.trim();
+  var date = document.getElementById('new-event-date').value;
+  var cat = document.getElementById('new-event-cat').value;
+  var type = document.getElementById('new-event-type').value;
+  
+  if (!title || !date || !cat) {
+    alert('Compila tutti i campi');
+    return;
+  }
+  
+  db.collection('events').add({
+    title: title,
+    date: date,
+    category: cat,
+    type: type,
+    color: '#888',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    alert('Evento creato!');
+    closeModal();
+    renderEventsTab();
+  });
+}
+
+// ============ MODAL FUNCTIONS ============
+function openEventModal(el) {
+  var title = el.querySelector('.event-title').textContent;
+  var html = '<div class="modal-header">' + title + '</div>' +
+    '<div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">' + el.querySelector('.event-day-num').textContent + ' ' + el.querySelector('.event-day-name').textContent + '</div>' +
+    (el.querySelector('.event-sub') ? '<div style="margin-bottom:12px">' + el.querySelector('.event-sub').textContent + '</div>' : '');
+  
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+}
+
+function showProfile() {
+  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
+    var userData = snap.data();
+    var html = '<div class="modal-header">Profilo</div>' +
+      '<div class="profile-header" style="border-bottom:.5px solid var(--border);padding-bottom:12px">' +
+      '<div class="profile-avatar">' + (userData.displayName || 'U').charAt(0) + '</div>' +
+      '<div><div class="profile-name">' + (userData.displayName || userData.email) + '</div>' +
+      '<div class="profile-email">' + userData.email + '</div></div></div>';
+    
+    if (userData.role === 'genitore') {
+      html += '<div style="margin-top:16px"><strong>Atleti</strong></div>';
+      (userData.athletes || []).forEach(function(a) {
+        html += '<div class="athlete-pill">' + a.name + ' - ' + (CAT_LABELS[a.category] || a.category) + '</div>';
+      });
+    }
+    
+    html += '<button class="btn-primary" style="margin-top:16px" onclick="logoutUser()">Esci dall\'account</button>';
+    
+    document.getElementById('profile-body').innerHTML = html;
+    document.getElementById('profile-modal').classList.add('active');
+  });
+}
+
+function closeProfile() {
+  document.getElementById('profile-modal').classList.remove('active');
+}
+
+// ============ INIT ============
+window.addEventListener('load', function() {
+  // Carica config da Firestore
+  db.collection('config').doc('athletes').get().then(function(snap) {
+    if (snap.exists) {
+      importedAthletes = snap.data().athletes || {};
+    }
+  });
+});
+
 </script>
+
 </body>
 </html>
