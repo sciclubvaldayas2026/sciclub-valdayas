@@ -156,6 +156,15 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 #register-card{display:none;flex-direction:column;gap:14px}
 .section-divider{height:1px;background:var(--border);margin:4px 0}
 .section-small-title{font-size:13px;font-weight:600;color:var(--text-sec)}
+
+.admin-input{flex:1;padding:7px 10px;border-radius:8px;border:.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);font-family:inherit;width:100%;box-sizing:border-box}
+.admin-select{flex:1;padding:7px 10px;border-radius:8px;border:.5px solid var(--border);font-size:13px;background:var(--bg);color:var(--text);width:100%}
+.btn-sm{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:500;border:none;cursor:pointer;flex-shrink:0}
+.btn-sm-blue{background:var(--blue-light);color:var(--blue-dark)}
+.btn-sm-red{background:var(--red-light);color:var(--red)}
+.btn-sm-green{background:var(--teal-light);color:var(--teal)}
+.athlete-admin-row{display:flex;align-items:flex-start;gap:6px;padding:8px 0;border-bottom:.5px solid var(--border)}
+.athlete-admin-row:last-child{border-bottom:none}
 </style>
 </head>
 <body>
@@ -329,12 +338,20 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     <button class="avatar-btn" onclick="doLogout()">↩</button>
   </div>
   <div class="admin-tabs">
-    <button class="admin-tab active" onclick="switchAdminTab('pending')">Richieste</button>
-    <button class="admin-tab" onclick="switchAdminTab('coaches')">Allenatori</button>
-    <button class="admin-tab" onclick="switchAdminTab('medical')">Visite</button>
-    <button class="admin-tab" onclick="switchAdminTab('users')">Utenti</button>
+    <button class="admin-tab active" id="atab-pending" onclick="switchAdminTab('pending')">Richieste</button>
+    <button class="admin-tab" id="atab-parents" onclick="switchAdminTab('parents')">Genitori</button>
+    <button class="admin-tab" id="atab-coaches" onclick="switchAdminTab('coaches')">Allenatori</button>
+    <button class="admin-tab" id="atab-medical" onclick="switchAdminTab('medical')">Visite CM</button>
+    <button class="admin-tab" id="atab-users" onclick="switchAdminTab('users')">Utenti</button>
   </div>
   <div class="content" id="admin-content"></div>
+
+<!-- ADMIN MODAL -->
+<div class="modal-overlay" id="modal-admin" onclick="closeAdminModal()">
+  <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto">
+    <div id="admin-modal-content"></div>
+    <button class="btn-cancel" style="width:100%;margin-top:10px" onclick="closeAdminModal()">Chiudi</button>
+  </div>
 </div>
 
 <!-- COMPOSE MODAL -->
@@ -973,17 +990,224 @@ function sendComm() {
 }
 
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
+
+var ALL_CATS = ['sbaby','baby','cuccioli','ragazzi','allievi','giovani','master','giovani_fisi'];
+var CAT_OPTS = '<option value="">-- Seleziona --</option><option value="sbaby">S.Baby</option><option value="baby">Baby</option><option value="cuccioli">Cuccioli</option><option value="ragazzi">Ragazzi</option><option value="allievi">Allievi</option><option value="giovani">Giovani</option><option value="master">Master</option><option value="giovani_fisi">Giovani FISI</option>';
+CAT_LABELS['master'] = 'Master';
+CAT_LABELS['giovani_fisi'] = 'Giovani FISI';
+
 function setupAdmin() { showScreen('screen-admin'); switchAdminTab('pending'); }
 
 function switchAdminTab(tab) {
   document.querySelectorAll('.admin-tab').forEach(function(t){ t.classList.remove('active'); });
-  event.target.classList.add('active');
+  var tabEl = document.getElementById('atab-'+tab);
+  if (tabEl) tabEl.classList.add('active');
   var el = document.getElementById('admin-content');
   el.innerHTML = '<div class="loading">Caricamento...</div>';
   if (tab==='pending') renderPending(el);
-  else if (tab==='coaches') renderCoachForm(el);
+  else if (tab==='parents') renderParents(el);
+  else if (tab==='coaches') renderCoachesTab(el);
   else if (tab==='medical') renderMedical(el);
   else if (tab==='users') renderUsers(el);
+}
+
+function closeAdminModal() { document.getElementById('modal-admin').classList.remove('open'); }
+function openAdminModal(html) {
+  document.getElementById('admin-modal-content').innerHTML = html;
+  document.getElementById('modal-admin').classList.add('open');
+}
+
+// ── PARENTS TAB ──────────────────────────────────────────────────────────────
+function renderParents(el) {
+  db.collection('users').where('role','==','genitore').where('status','==','approved').get().then(function(snap) {
+    var users = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+    users.sort(function(a,b){ return (a.displayName||'').localeCompare(b.displayName||''); });
+    if (!users.length) { el.innerHTML = '<div class="empty-state">Nessun genitore approvato.</div>'; return; }
+    el.innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Genitori ('+users.length+')</div>'+
+      users.map(function(u) {
+        var aths = (u.athletes||[]).map(function(a){ return (CAT_LABELS[a.category]||a.category)+': '+a.name; }).join(' | ') || 'Nessun atleta';
+        return '<div class="request-row">'+
+          '<div class="request-info">'+
+            '<div class="request-name">'+(u.displayName||u.email)+'</div>'+
+            '<div class="request-detail">'+u.email+'</div>'+
+            '<div class="request-detail" style="color:var(--blue-mid)">'+aths+'</div>'+
+          '</div>'+
+          '<button class="btn-sm btn-sm-blue" data-uid="'+u.id+'" onclick="editParent(this.dataset.uid)">Modifica</button>'+
+        '</div>';
+      }).join('')+'</div></div>';
+  });
+}
+
+function editParent(uid) {
+  db.collection('users').doc(uid).get().then(function(snap) {
+    var u = Object.assign({id:uid}, snap.data());
+    var athletes = u.athletes || [];
+    var mv = u.medicalVisits || {};
+    window._editUID = uid;
+    window._editAthCount = athletes.length;
+    function makeAthRow(i, name, cat, vmDate) {
+      var opts = CAT_OPTS.replace('value="'+cat+'"', 'value="'+cat+'" selected');
+      return '<div class="athlete-admin-row" id="ea-row-'+i+'">'+
+        '<div style="flex:1;display:flex;flex-direction:column;gap:4px">'+
+          '<input class="admin-input" id="ea-name-'+i+'" value="'+(name||'')+'" placeholder="Nome e cognome atleta">'+
+          '<div style="display:flex;gap:4px">'+
+            '<select class="admin-select" id="ea-cat-'+i+'" style="flex:1">'+opts+'</select>'+
+            '<input type="date" id="ea-cm-'+i+'" value="'+(vmDate||'')+'" title="Scadenza CM" style="padding:7px 6px;border-radius:8px;border:.5px solid var(--border);font-size:11px;background:var(--bg);color:var(--text)">'+
+          '</div>'+
+        '</div>'+
+        '<button class="btn-sm btn-sm-red" onclick="removeEARow('+i+')">x</button>'+
+      '</div>';
+    }
+    var rows = athletes.map(function(a,i){ return makeAthRow(i, a.name, a.category, (mv[a.category]||'')); }).join('');
+    openAdminModal(
+      '<div style="font-size:16px;font-weight:600;margin-bottom:4px">'+(u.displayName||u.email)+'</div>'+
+      '<div style="font-size:12px;color:var(--text-sec);margin-bottom:14px">'+u.email+'</div>'+
+      '<div style="font-size:13px;font-weight:600;margin-bottom:8px">Atleti (max 6)</div>'+
+      '<div id="ea-editor">'+rows+'</div>'+
+      '<button class="btn-add-note" style="margin-top:8px" onclick="addEARow()">+ Aggiungi atleta</button>'+
+      '<div style="display:flex;gap:8px;margin-top:14px">'+
+        '<button class="btn-send" style="flex:1" data-uid="'+uid+'" onclick="saveParentAthletes(this.dataset.uid)">Salva</button>'+
+      '</div>'+
+      '<div class="error-msg" id="ea-error" style="margin-top:8px"></div>'
+    );
+  });
+}
+
+function addEARow() {
+  var i = window._editAthCount++;
+  var div = document.createElement('div');
+  div.className = 'athlete-admin-row'; div.id = 'ea-row-'+i;
+  div.innerHTML = '<div style="flex:1;display:flex;flex-direction:column;gap:4px">'+
+    '<input class="admin-input" id="ea-name-'+i+'" placeholder="Nome e cognome atleta">'+
+    '<div style="display:flex;gap:4px">'+
+      '<select class="admin-select" id="ea-cat-'+i+'" style="flex:1">'+CAT_OPTS+'</select>'+
+      '<input type="date" id="ea-cm-'+i+'" title="Scadenza CM" style="padding:7px 6px;border-radius:8px;border:.5px solid var(--border);font-size:11px;background:var(--bg);color:var(--text)">'+
+    '</div></div>'+
+    '<button class="btn-sm btn-sm-red" onclick="removeEARow('+i+')">x</button>';
+  document.getElementById('ea-editor').appendChild(div);
+}
+
+function removeEARow(i) { var r=document.getElementById('ea-row-'+i); if(r) r.remove(); }
+
+function saveParentAthletes(uid) {
+  var athletes=[]; var cats=[]; var mv={};
+  for (var i=0; i<(window._editAthCount||0)+10; i++) {
+    var n=document.getElementById('ea-name-'+i);
+    var c=document.getElementById('ea-cat-'+i);
+    var d=document.getElementById('ea-cm-'+i);
+    if (!n||!c) continue;
+    var nm=n.value.trim(); var ct=c.value;
+    if (!nm||!ct) continue;
+    athletes.push({name:nm,category:ct});
+    if (cats.indexOf(ct)<0) cats.push(ct);
+    if (d&&d.value) mv[ct]=d.value;
+  }
+  if (!athletes.length) { var e=document.getElementById('ea-error'); if(e){e.style.display='block';e.textContent='Inserisci almeno un atleta.';} return; }
+  db.collection('users').doc(uid).update({athletes:athletes,categories:cats,medicalVisits:mv}).then(function(){
+    closeAdminModal(); switchAdminTab('parents');
+  }).catch(function(e){ alert('Errore: '+e.message); });
+}
+
+// ── COACHES TAB ───────────────────────────────────────────────────────────────
+function renderCoachesTab(el) {
+  db.collection('users').where('role','==','allenatore').get().then(function(snap) {
+    var coaches = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+    coaches.sort(function(a,b){ return (a.displayName||'').localeCompare(b.displayName||''); });
+    el.innerHTML = '<div class="admin-section">'+
+      '<div class="admin-card"><div class="admin-card-title">Crea account allenatore</div>'+
+        '<div class="field-label" style="margin-bottom:5px">Nome e cognome</div><input class="field-input" id="coach-name" placeholder="Giovanni Bianchi" style="margin-bottom:10px">'+
+        '<div class="field-label" style="margin-bottom:5px">Email</div><input class="field-input" id="coach-email" type="email" placeholder="email@esempio.it" style="margin-bottom:10px">'+
+        '<div class="field-label" style="margin-bottom:5px">Password temporanea</div><input class="field-input" id="coach-pwd" type="text" placeholder="min. 6 caratteri" style="margin-bottom:10px">'+
+        '<div class="field-label" style="margin-bottom:5px">Categoria principale</div>'+
+        '<select class="field-input" id="coach-cat" style="margin-bottom:14px">'+CAT_OPTS+'</select>'+
+        '<div class="error-msg" id="coach-error"></div>'+
+        '<button class="btn-primary" style="background:var(--teal)" onclick="createCoach()">Crea account allenatore</button>'+
+      '</div>'+
+      (coaches.length ? '<div class="admin-card"><div class="admin-card-title">Allenatori ('+coaches.length+')</div>'+
+        coaches.map(function(c) {
+          var cats=(c.categories||[c.category]).filter(Boolean).map(function(x){return CAT_LABELS[x]||x;}).join(', ');
+          var isP=c.athletes&&c.athletes.length>0;
+          return '<div class="request-row">'+
+            '<div class="request-info">'+
+              '<div class="request-name">'+(c.displayName||c.email)+'</div>'+
+              '<div class="request-detail">'+c.email+'</div>'+
+              '<div class="request-detail" style="color:var(--teal)">'+cats+(isP?' · anche genitore':'')+'</div>'+
+            '</div>'+
+            '<button class="btn-sm btn-sm-blue" data-uid="'+c.id+'" onclick="editCoach(this.dataset.uid)">Modifica</button>'+
+          '</div>';
+        }).join('')+'</div>' : '')+
+    '</div>';
+  });
+}
+
+function editCoach(uid) {
+  db.collection('users').doc(uid).get().then(function(snap) {
+    var c = Object.assign({id:uid}, snap.data());
+    var cats = c.categories || (c.category ? [c.category] : []);
+    var isParent = c.athletes && c.athletes.length > 0;
+    window._ecAthCount = (c.athletes||[]).length;
+    var catChecks = ALL_CATS.map(function(cat) {
+      var chk = cats.indexOf(cat)>=0 ? 'checked' : '';
+      var label = CAT_LABELS[cat]||cat;
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:.5px solid var(--border)"><input type="checkbox" id="ec-cat-'+cat+'" '+chk+' style="width:16px;height:16px;cursor:pointer"><label for="ec-cat-'+cat+'" style="font-size:14px;cursor:pointer">'+label+'</label></div>';
+    }).join('');
+    var athRows = (c.athletes||[]).map(function(a,i){
+      var opts = CAT_OPTS.replace('value="'+a.category+'"','value="'+a.category+'" selected');
+      return '<div class="athlete-admin-row" id="ec-row-'+i+'"><div style="flex:1;display:flex;flex-direction:column;gap:4px"><input class="admin-input" id="ec-name-'+i+'" value="'+a.name+'" placeholder="Nome atleta"><select class="admin-select" id="ec-cat2-'+i+'">'+opts+'</select></div><button class="btn-sm btn-sm-red" onclick="removeECRow('+i+')">x</button></div>';
+    }).join('');
+    var parentChk = isParent ? 'checked' : '';
+    var secStyle = isParent ? '' : 'display:none';
+    var name = c.displayName||c.email;
+    var html = '<div style="font-size:16px;font-weight:600;margin-bottom:14px">'+name+'</div>';
+    html += '<div style="font-size:13px;font-weight:600;margin-bottom:8px">Categorie assegnate</div>';
+    html += catChecks;
+    html += '<div style="font-size:13px;font-weight:600;margin:14px 0 8px">Opzioni</div>';
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0">';
+    html += '<input type="checkbox" id="ec-is-parent" '+parentChk+' style="width:16px;height:16px;cursor:pointer" onchange="toggleECSection(this)">';
+    html += '<label for="ec-is-parent" style="font-size:14px;cursor:pointer">Genitore (ha figli iscritti)</label>';
+    html += '</div>';
+    html += '<div id="ec-ath-section" style="'+secStyle+'">';
+    html += '<div style="font-size:12px;color:var(--text-sec);margin:8px 0 4px">Atleti figli</div>';
+    html += '<div id="ec-ath-editor">'+athRows+'</div>';
+    html += '<button class="btn-add-note" style="margin-top:6px" onclick="addECRow()">+ Aggiungi atleta</button>';
+    html += '</div>';
+    html += '<div style="margin-top:14px"><button class="btn-send" style="width:100%" data-uid="'+uid+'" onclick="saveCoach(this.dataset.uid)">Salva modifiche</button></div>';
+    openAdminModal(html);
+  });
+}
+
+function addECRow() {
+  var i = window._ecAthCount++;
+  var div=document.createElement('div'); div.className='athlete-admin-row'; div.id='ec-row-'+i;
+  div.innerHTML='<div style="flex:1;display:flex;flex-direction:column;gap:4px">'+
+    '<input class="admin-input" id="ec-name-'+i+'" placeholder="Nome atleta">'+
+    '<select class="admin-select" id="ec-cat2-'+i+'">'+CAT_OPTS+'</select>'+
+  '</div><button class="btn-sm btn-sm-red" onclick="removeECRow('+i+')">x</button>';
+  document.getElementById('ec-ath-editor').appendChild(div);
+}
+function removeECRow(i){var r=document.getElementById('ec-row-'+i);if(r)r.remove();}
+
+function toggleECSection(cb) {
+  var s=document.getElementById("ec-ath-section");
+  if(s) s.style.display=cb.checked?"block":"none";
+}
+
+function saveCoach(uid) {
+  var cats = ALL_CATS.filter(function(cat){ var e=document.getElementById('ec-cat-'+cat); return e&&e.checked; });
+  var isParent = document.getElementById('ec-is-parent').checked;
+  var athletes=[]; var athCats=[];
+  if (isParent) {
+    for (var i=0;i<(window._ecAthCount||0)+10;i++) {
+      var n=document.getElementById('ec-name-'+i); var c=document.getElementById('ec-cat2-'+i);
+      if(!n||!c)continue;
+      var nm=n.value.trim(); var ct=c.value;
+      if(nm&&ct){athletes.push({name:nm,category:ct});if(athCats.indexOf(ct)<0)athCats.push(ct);}
+    }
+  }
+  var allCats=cats.slice(); athCats.forEach(function(c){if(allCats.indexOf(c)<0)allCats.push(c);});
+  db.collection('users').doc(uid).update({categories:allCats,category:cats[0]||'',athletes:athletes}).then(function(){
+    closeAdminModal(); switchAdminTab('coaches');
+  }).catch(function(e){alert('Errore: '+e.message);});
 }
 
 function renderPending(el) {
@@ -1049,20 +1273,41 @@ function createCoach() {
 
 function renderMedical(el) {
   db.collection('users').get().then(function(snap) {
-    var users = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); }).filter(function(u){ return u.role==='genitore'&&u.status==='approved'; });
-    var rows = '';
-    users.forEach(function(u) {
-      (u.athletes||[]).forEach(function(a) {
-        var vmDate = ((u.medicalVisits||{})[a.category])||'';
-        var st = vmStatus(vmDate);
-        rows += '<div class="request-row"><div class="request-info"><div class="request-name">'+(a.name||u.displayName||u.email)+'</div><div class="request-detail">'+(CAT_LABELS[a.category]||a.category||'')+'</div></div>'+
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">'+
-          '<span class="vm-status '+st.cls+'">'+st.dot+' '+st.label+'</span>'+
-        '<input type="date" value="'+vmDate+'" data-uid="'+u.id+'" data-cat="'+a.category+'" onchange="updateMedical(this.dataset.uid,this.dataset.cat,this.value)" style="font-size:11px;border:.5px solid var(--border);border-radius:6px;padding:3px 6px;background:var(--bg);color:var(--text)">'+
-          '</div></div>';
+    var users = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); })
+      .filter(function(u){ return (u.role==='genitore'||u.role==='allenatore')&&u.status==='approved'&&u.athletes&&u.athletes.length; });
+    users.sort(function(a,b){ return (a.displayName||'').localeCompare(b.displayName||''); });
+    var scad=[],warn=[],ok=[],none=[];
+    users.forEach(function(u){
+      (u.athletes||[]).forEach(function(a){
+        var vmDate=((u.medicalVisits||{})[a.category])||'';
+        var st=vmStatus(vmDate);
+        var row={u:u,a:a,vmDate:vmDate,st:st};
+        if(st.cls==='vm-scad') scad.push(row);
+        else if(st.cls==='vm-warn') warn.push(row);
+        else if(st.cls==='vm-ok') ok.push(row);
+        else none.push(row);
       });
     });
-    el.innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Visite mediche atleti</div>'+(rows||'<div style="font-size:13px;color:var(--text-sec)">Nessun atleta trovato.</div>')+'</div></div>';
+    function makeRows(rows){
+      return rows.map(function(r){
+        return '<div class="request-row">'+
+          '<div class="request-info">'+
+            '<div class="request-name">'+r.a.name+'</div>'+
+            '<div class="request-detail">'+(CAT_LABELS[r.a.category]||r.a.category)+' - '+(r.u.displayName||r.u.email)+'</div>'+
+          '</div>'+
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
+            '<span class="vm-status '+r.st.cls+'">'+r.st.dot+' '+r.st.label+'</span>'+
+            '<input type="date" value="'+r.vmDate+'" data-uid="'+r.u.id+'" data-cat="'+r.a.category+'" onchange="updateMedical(this.dataset.uid,this.dataset.cat,this.value)" style="font-size:11px;border:.5px solid var(--border);border-radius:6px;padding:3px 6px;background:var(--bg);color:var(--text)">'+
+          '</div></div>';
+      }).join('');
+    }
+    var html='<div class="admin-section">';
+    if(scad.length) html+='<div class="admin-card"><div class="admin-card-title" style="color:var(--red)">Scadute ('+scad.length+')</div>'+makeRows(scad)+'</div>';
+    if(warn.length) html+='<div class="admin-card"><div class="admin-card-title" style="color:var(--amber)">In scadenza ('+warn.length+')</div>'+makeRows(warn)+'</div>';
+    if(none.length) html+='<div class="admin-card"><div class="admin-card-title" style="color:var(--gray-400)">Non inserita ('+none.length+')</div>'+makeRows(none)+'</div>';
+    if(ok.length) html+='<div class="admin-card"><div class="admin-card-title" style="color:var(--teal)">Valide ('+ok.length+')</div>'+makeRows(ok)+'</div>';
+    if(!scad.length&&!warn.length&&!none.length&&!ok.length) html+='<div class="empty-state">Nessun atleta trovato.</div>';
+    html+='</div>'; el.innerHTML=html;
   });
 }
 
@@ -1073,13 +1318,34 @@ function updateMedical(uid, cat, dateVal) {
 
 function renderUsers(el) {
   db.collection('users').get().then(function(snap) {
-    var users = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); }).filter(function(u){ return u.status==='approved'; });
-    el.innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Utenti attivi ('+users.length+')</div>'+
-      users.map(function(u){ return '<div class="request-row"><div class="request-info"><div class="request-name">'+(u.displayName||u.email)+'</div>'+
-        '<div class="request-detail">'+u.email+' · '+(u.role==='admin'?'Admin':u.role==='allenatore'?'Allenatore':'Genitore')+'</div>'+
-        '<div class="request-detail">'+(u.categories||[]).map(function(c){ return CAT_LABELS[c]||c; }).join(', ')+'</div></div></div>'; }).join('')+
-      '</div></div>';
+    var users=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    users.sort(function(a,b){return (a.displayName||a.email||'').localeCompare(b.displayName||b.email||'');});
+    var approved=users.filter(function(u){return u.status==='approved';});
+    var other=users.filter(function(u){return u.status!=='approved';});
+    el.innerHTML='<div class="admin-section"><div class="admin-card"><div class="admin-card-title">Utenti attivi ('+approved.length+')</div>'+
+      approved.map(function(u){
+        var rl=u.role==='admin'?'Admin':u.role==='allenatore'?'Allenatore':'Genitore';
+        var cats=(u.categories||[]).map(function(c){return CAT_LABELS[c]||c;}).join(', ');
+        return '<div class="request-row">'+
+          '<div class="request-info">'+
+            '<div class="request-name">'+(u.displayName||u.email)+'</div>'+
+            '<div class="request-detail">'+rl+(cats?' - '+cats:'')+'</div>'+
+          '</div>'+
+          (u.role!=='admin'?'<button class="btn-sm btn-sm-red" data-uid="'+u.id+'" onclick="suspendUser(this.dataset.uid)">Sospendi</button>':'')+
+        '</div>';
+      }).join('')+'</div>'+
+      (other.length?'<div class="admin-card"><div class="admin-card-title" style="color:var(--text-sec)">Sospesi/Rifiutati ('+other.length+')</div>'+
+        other.map(function(u){return '<div class="request-row">'+
+          '<div class="request-info"><div class="request-name">'+(u.displayName||u.email)+'</div><div class="request-detail">'+u.email+'</div></div>'+
+          '<button class="btn-sm btn-sm-green" data-uid="'+u.id+'" onclick="approveUser(this.dataset.uid)">Riattiva</button>'+
+        '</div>';}).join('')+'</div>':'')+
+    '</div>';
   });
+}
+
+function suspendUser(uid) {
+  if (!confirm('Sospendere questo account?')) return;
+  db.collection('users').doc(uid).update({status:'rejected'}).then(function(){ switchAdminTab('users'); });
 }
 </script>
 </body>
