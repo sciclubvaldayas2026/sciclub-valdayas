@@ -545,7 +545,12 @@ function renderGenitoreCalendar() {
     db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
       var userData = userSnap.data();
       var userCats = userData.categories || [];
-      var filteredEvents = events.filter(e => selectedCategory === 'all' ? userCats.includes(e.category) : e.category === selectedCategory);
+      // Filtra: se "all" mostra solo categorie dell'utente, altrimenti filtra per categoria scelta (se appartiene all'utente)
+      var filteredEvents = events.filter(e => {
+        if (!userCats.includes(e.category)) return false; // Escludi categorie non dell'utente
+        if (selectedCategory === 'all') return true;
+        return e.category === selectedCategory;
+      });
       
       var html = '';
       var currentMonth = '';
