@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sci Club Val d'Ayas">
 <meta name="theme-color" content="#0C447C">
-<title>Sci Club Val d'Ayas v2.1</title>
+<title>Sci Club Val d'Ayas v2.2</title>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -311,7 +311,7 @@ input[type="file"]{display:none}
   </div>
 
   <!-- MODAL -->
-  <div id="modal-overlay" class="modal-overlay">
+  <div id="modal-overlay" class="modal-overlay" onclick="if(event.target.id === 'modal-overlay') closeModal()">
     <div class="modal-content" id="modal-content">
       <button class="modal-close" onclick="closeModal()">×</button>
       <div id="modal-body"></div>
@@ -319,7 +319,7 @@ input[type="file"]{display:none}
   </div>
 
   <!-- PROFILE MODAL -->
-  <div id="profile-modal" class="modal-overlay">
+  <div id="profile-modal" class="modal-overlay" onclick="if(event.target.id === 'profile-modal') closeProfile()">
     <div class="modal-content" id="profile-content">
       <button class="modal-close" onclick="closeProfile()">×</button>
       <div id="profile-body"></div>
@@ -358,7 +358,7 @@ const CAT_LABELS = {
   'cuccioli': 'Cuccioli',
   'ragazzi': 'Ragazzi',
   'allievi': 'Allievi',
-  'giovani': 'Giovani',
+  'giovani': 'Giovani FIS',
   'master': 'Master',
   'giovani_fisi': 'Giovani FISI'
 };
@@ -488,6 +488,13 @@ function registerUser() {
     });
 }
 
+function switchUserRole(newRole) {
+  closeProfile();
+  // Simula un logout+login con il nuovo ruolo nella sessione
+  userRole = newRole;
+  loadUserAndShowScreen();
+}
+
 function logoutUser() {
   auth.signOut();
 }
@@ -527,6 +534,16 @@ function loadGenitoreData() {
     var userData = snap.data();
     var cats = userData.categories || [];
     document.getElementById('genitore-cat-display').textContent = cats.map(c => CAT_LABELS[c]).join(', ') || '';
+    
+    // Aggiorna i chips: mostra solo le categorie dell'utente
+    var chipsContainer = document.querySelector('#screen-genitore .chips-row');
+    var chipsHtml = '<button class="chip active" onclick="filterCategory(\'all\')">Tutto</button>';
+    cats.forEach(function(cat) {
+      var isActive = selectedCategory === cat ? ' active' : '';
+      chipsHtml += '<button class="chip' + isActive + '" onclick="filterCategory(\'' + cat + '\')">' + CAT_LABELS[cat] + '</button>';
+    });
+    chipsContainer.innerHTML = chipsHtml;
+    
     renderGenitoreCalendar();
   });
 }
@@ -594,6 +611,15 @@ function loadAllenatoreData() {
     var userData = snap.data();
     var cats = userData.categories || [];
     document.getElementById('allenatore-cat-display').textContent = cats.map(c => CAT_LABELS[c]).join(', ') || '';
+    
+    // Aggiorna i chips: mostra solo le categorie dell'allenatore
+    var chipsContainer = document.querySelector('#screen-allenatore .chips-row');
+    var chipsHtml = '<button class="chip active" onclick="filterAllenatoreCat(\'all\')">Tutte</button>';
+    cats.forEach(function(cat) {
+      var isActive = selectedAllenatoreCat === cat ? ' active' : '';
+      chipsHtml += '<button class="chip' + isActive + '" onclick="filterAllenatoreCat(\'' + cat + '\')">' + CAT_LABELS[cat] + '</button>';
+    });
+    chipsContainer.innerHTML = chipsHtml;
     
     if (allenatoreTab === 'comm') {
       renderAllenatoreCommunications();
@@ -1219,6 +1245,8 @@ function saveNewEvent() {
 }
 
 // ============ MODAL FUNCTIONS ============
+let modalTimeout = null;
+
 function openEventModal(el) {
   var title = el.querySelector('.event-title').textContent;
   var html = '<div class="modal-header">' + title + '</div>' +
@@ -1227,10 +1255,14 @@ function openEventModal(el) {
   
   document.getElementById('modal-body').innerHTML = html;
   document.getElementById('modal-overlay').classList.add('active');
+  
+  clearTimeout(modalTimeout);
+  modalTimeout = setTimeout(() => closeModal(), 5000);
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('active');
+  clearTimeout(modalTimeout);
 }
 
 function showProfile() {
@@ -1249,15 +1281,26 @@ function showProfile() {
       });
     }
     
+    // Aggiungi switch ruolo se l'utente è sia genitore che allenatore
+    if (userData.role === 'genitore') {
+      html += '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="switchUserRole(\'allenatore\')">Passa ad Allenatore</button>';
+    } else if (userData.role === 'allenatore') {
+      html += '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="switchUserRole(\'genitore\')">Passa a Genitore</button>';
+    }
+    
     html += '<button class="btn-primary" style="margin-top:16px" onclick="logoutUser()">Esci dall\'account</button>';
     
     document.getElementById('profile-body').innerHTML = html;
     document.getElementById('profile-modal').classList.add('active');
+    
+    clearTimeout(modalTimeout);
+    modalTimeout = setTimeout(() => closeProfile(), 8000);
   });
 }
 
 function closeProfile() {
   document.getElementById('profile-modal').classList.remove('active');
+  clearTimeout(modalTimeout);
 }
 
 // ============ INIT ============ 
