@@ -1274,7 +1274,10 @@ function openAttendanceModal(eventId, category, date) {
       });
       
       html += '</div>' +
-        '<button class="btn-primary" style="background:var(--teal)" onclick="saveAttendance(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">✅ Salva presenze</button>';
+        '<div style="display:flex;gap:10px">' +
+        '<button class="btn-primary" style="flex:1;background:var(--teal)" onclick="saveAttendance(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">✅ Salva presenze</button>' +
+        '<button class="btn-primary" style="flex:1;background:var(--amber-mid)" onclick="exportAttendanceCSV(\'' + eventId + '\', \'' + category + '\')">📥 Export CSV</button>' +
+        '</div>';
       
       document.getElementById('modal-body').innerHTML = html;
       clearTimeout(modalTimeout);
@@ -1305,6 +1308,50 @@ function saveAttendance(eventId, category, date) {
     closeModal();
   }).catch(function(err) {
     alert('❌ Errore: ' + err.message);
+  });
+}
+
+function exportAttendanceCSV(eventId, category) {
+  db.collection('config').doc('athletes').get().then(function(snap) {
+    if (!snap.exists) return;
+    
+    var allAthletes = snap.data().athletes || {};
+    var athletes = (allAthletes[category] || []).slice();
+    
+    db.collection('attendance').doc(eventId + '_' + category).get().then(function(attSnap) {
+      var savedAttendance = attSnap.exists ? (attSnap.data().attendance || {}) : {};
+      
+      // Carica evento per il nome
+      db.collection('events').doc(eventId).get().then(function(eventSnap) {
+        var eventName = eventSnap.exists ? eventSnap.data().title : 'Evento';
+        var eventDate = eventSnap.exists ? eventSnap.data().date : '';
+        
+        // Genera CSV
+        var csv = 'Evento,Data,Categoria,Atleta,Presente\n';
+        csv += eventName + ',' + eventDate + ',' + CAT_LABELS[category] + ',';
+        var header = csv;
+        
+        athletes.forEach(function(a, i) {
+          var isPresent = savedAttendance[i] ? 'Si' : 'No';
+          csv += a.name + ' ' + a.surname + ',' + (isPresent) + '\n';
+        });
+        
+        // Download CSV
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        var url = URL.createObjectURL(blob);
+        var filename = 'presenze_' + eventId + '_' + category + '_' + new Date().toISOString().split('T')[0] + '.csv';
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        alert('✅ CSV scaricato: ' + filename);
+      });
+    });
   });
 }
 
