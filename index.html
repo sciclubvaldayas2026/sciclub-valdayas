@@ -410,18 +410,65 @@ function loadUserAndShowScreen() {
   db.collection('users').doc(currentUser.uid).get().then(function(snap) {
     if (snap.exists) {
       var userData = snap.data();
-      if (userData.role === 'admin') {
-        showScreen('admin');
-        switchAdminTab('import');
-      } else if (userData.role === 'allenatore') {
-        showScreen('allenatore');
-        loadAllenatoreData();
-      } else {
-        showScreen('genitore');
-        loadGenitoreData();
+      var role = userData.role;
+      
+      // Se è solo genitore o solo allenatore, entra direttamente
+      if (role === 'genitore' || role === 'allenatore' || role === 'admin') {
+        userRole = role;
+        showRoleScreen();
+      }
+      // Se ha attributo multiRole (significa può essere sia genitore che allenatore)
+      else if (userData.multiRole && userData.multiRole.length > 1) {
+        showRoleSelectionModal(userData.multiRole);
       }
     }
   });
+}
+
+function showRoleSelectionModal(availableRoles) {
+  var html = '<div style="text-align:center;padding:20px">' +
+    '<div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:20px">Scegli ruolo</div>' +
+    '<div style="display:flex;flex-direction:column;gap:10px">';
+  
+  if (availableRoles.includes('genitore')) {
+    html += '<button class="btn-primary" style="background:var(--blue)" onclick="setUserRole(\'genitore\')">👨‍👩‍👧 Accedi come Genitore</button>';
+  }
+  if (availableRoles.includes('allenatore')) {
+    html += '<button class="btn-primary" style="background:var(--teal)" onclick="setUserRole(\'allenatore\')">🎿 Accedi come Allenatore</button>';
+  }
+  if (availableRoles.includes('admin')) {
+    html += '<button class="btn-primary" style="background:#2C2C2A" onclick="setUserRole(\'admin\')">⚙️ Accedi come Admin</button>';
+  }
+  
+  html += '</div></div>';
+  
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function setUserRole(role) {
+  userRole = role;
+  
+  // Salva la preferenza nel DB
+  db.collection('users').doc(currentUser.uid).update({
+    preferredRole: role
+  });
+  
+  closeModal();
+  showRoleScreen();
+}
+
+function showRoleScreen() {
+  if (userRole === 'admin') {
+    showScreen('admin');
+    switchAdminTab('import');
+  } else if (userRole === 'allenatore') {
+    showScreen('allenatore');
+    loadAllenatoreData();
+  } else {
+    showScreen('genitore');
+    loadGenitoreData();
+  }
 }
 
 function switchToRegister() {
@@ -1310,16 +1357,30 @@ function showProfile() {
       '<div><div class="profile-name">' + (userData.displayName || userData.email) + '</div>' +
       '<div class="profile-email">' + userData.email + '</div></div></div>';
     
-    if (userData.role === 'genitore') {
+    // Mostra atleti se genitore
+    if (userRole === 'genitore') {
       html += '<div style="margin-top:16px"><strong>Atleti</strong></div>';
       (userData.athletes || []).forEach(function(a) {
         html += '<div class="athlete-pill">' + a.name + ' - ' + (CAT_LABELS[a.category] || a.category) + '</div>';
       });
     }
     
-    // Switch ruolo solo se sei allenatore
-    if (userData.role === 'allenatore') {
-      html += '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="switchToGenitore()">👨‍👩‍👧 Passa a Genitore</button>';
+    // Mostra categorie se allenatore
+    if (userRole === 'allenatore') {
+      var cats = userData.categories || [];
+      html += '<div style="margin-top:16px"><strong>Categorie</strong></div>';
+      cats.forEach(function(c) {
+        html += '<div class="athlete-pill">' + (CAT_LABELS[c] || c) + '</div>';
+      });
+    }
+    
+    // Switch ruolo: mostra bottone se ha multiRole
+    if (userData.multiRole && userData.multiRole.length > 1) {
+      if (userRole === 'allenatore') {
+        html += '<button class="btn-primary" style="margin-top:16px;background:var(--blue)" onclick="setUserRole(\'genitore\')">👨‍👩‍👧 Passa a Genitore</button>';
+      } else if (userRole === 'genitore') {
+        html += '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="setUserRole(\'allenatore\')">🎿 Passa ad Allenatore</button>';
+      }
     }
     
     html += '<button class="btn-primary" style="margin-top:16px" onclick="logoutUser()">🚪 Esci dall\'account</button>';
@@ -1332,12 +1393,6 @@ function showProfile() {
   });
 }
 
-function switchToGenitore() {
-  closeProfile();
-  userRole = 'genitore';
-  selectedCategory = 'all';
-  loadUserAndShowScreen();
-}
 
 function closeProfile() {
   document.getElementById('profile-modal').classList.remove('active');
