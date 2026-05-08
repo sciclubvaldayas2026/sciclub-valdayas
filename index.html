@@ -596,7 +596,9 @@ function renderGenitoreCalendar() {
     
     db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
       var userData = userSnap.data();
-      var userCats = userData.categories || [];
+      // Leggi stringhe separate da virgola
+      var catsStr = userData.categoriesAsGenitore || userData.categories || '';
+      var userCats = catsStr.split(',').map(c => c.trim()).filter(c => c);
       // Filtra: se "all" mostra solo categorie dell'utente, altrimenti filtra per categoria scelta (se appartiene all'utente)
       var filteredEvents = events.filter(e => {
         if (!userCats.includes(e.category)) return false; // Escludi categorie non dell'utente
@@ -620,7 +622,7 @@ function renderGenitoreCalendar() {
         var dayName = d.toLocaleDateString('it-IT', { weekday: 'short' });
         var badgeCls = 'badge-' + (e.type || 'info');
         
-        html += '<div class="event-card" onclick="openEventModal(this)">' +
+        html += '<div class="event-card" onclick="openEventModal(this)" data-event-id="' + e.id + '" data-category="' + e.category + '" data-date="' + e.date + '">' +
           '<div class="event-date"><div class="event-day-num">' + dayNum + '</div><div class="event-day-name">' + dayName + '</div></div>' +
           '<div class="event-bar" style="background:' + (e.color || '#888') + '"></div>' +
           '<div class="event-info">' +
