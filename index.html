@@ -695,7 +695,7 @@ function renderAllenatoreCalendar() {
         var dayName = d.toLocaleDateString('it-IT', { weekday: 'short' });
         var badgeCls = 'badge-' + (e.type || 'info');
         
-        html += '<div class="event-card" onclick="openAttendanceModal(this)" data-event-id="' + e.id + '" data-category="' + e.category + '" data-date="' + e.date + '">' +
+        html += '<div class="event-card" onclick="openEventModal(this)" data-event-id="' + e.id + '" data-category="' + e.category + '" data-date="' + e.date + '">' +
           '<div class="event-date"><div class="event-day-num">' + dayNum + '</div><div class="event-day-name">' + dayName + '</div></div>' +
           '<div class="event-bar" style="background:' + (e.color || '#888') + '"></div>' +
           '<div class="event-info">' +
@@ -715,99 +715,6 @@ function renderAllenatoreCalendar() {
   });
 }
 
-function openAttendanceModal(el) {
-  var eventId = el.dataset.eventId;
-  var category = el.dataset.category;
-  var date = el.dataset.date;
-  
-  var athletes = (importedAthletes[category] || []).slice();
-  
-  var html = '<div class="modal-header">Presenze — ' + el.querySelector('.event-title').textContent + '</div>';
-  html += '<div style="margin-bottom:16px;font-size:12px;color:var(--text-sec)">Dato: ' + new Date(date).toLocaleDateString('it-IT') + '</div>';
-  html += '<div id="attendance-list" style="display:flex;flex-direction:column;gap:0;margin-bottom:16px">';
-  
-  athletes.forEach(function(a, i) {
-    html += '<div class="attendance-item">' +
-      '<div class="attendance-checkbox" onclick="toggleAttendance(this)" data-athlete-id="' + i + '"></div>' +
-      '<div class="attendance-info">' +
-      '<div class="attendance-name">' + a.name + '</div>' +
-      '<div class="attendance-detail">' + a.surname + '</div>' +
-      '</div></div>';
-  });
-  
-  html += '</div>';
-  html += '<div class="field-label">Atleta extra</div>';
-  html += '<input class="field-input" id="extra-athlete-name" placeholder="Nome atleta" style="margin-bottom:8px">';
-  html += '<input class="field-input" id="extra-athlete-check" type="checkbox" style="width:20px;height:20px;margin-bottom:12px">';
-  html += '<label style="font-size:13px;color:var(--text-sec)">Segnare se presente</label>';
-  html += '<button class="btn-primary" style="background:var(--teal);margin-top:12px" onclick="saveAttendance(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">Salva presenze</button>';
-  
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-overlay').classList.add('active');
-}
-
-function toggleAttendance(el) {
-  el.classList.toggle('checked');
-}
-
-function saveAttendance(eventId, category, date) {
-  var attendance = {};
-  document.querySelectorAll('.attendance-checkbox.checked').forEach(function(el) {
-    var athleteId = el.dataset.athleteId;
-    attendance[athleteId] = true;
-  });
-  
-  var extraName = document.getElementById('extra-athlete-name').value.trim();
-  var extraCheck = document.getElementById('extra-athlete-check').checked;
-  
-  if (extraName && extraCheck) {
-    attendance['extra_' + Date.now()] = { name: extraName, extra: true };
-  }
-  
-  db.collection('attendance').doc(eventId + '_' + category).set({
-    eventId: eventId,
-    category: category,
-    date: date,
-    attendance: attendance,
-    recordedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function() {
-    alert('Presenze salvate!');
-    closeModal();
-    loadAllenatoreData();
-  });
-}
-
-function openNewCommModal() {
-  var html = '<div class="modal-header">Nuova comunicazione</div>' +
-    '<div class="field-label">Testo</div>' +
-    '<textarea class="field-input" id="new-comm-text" placeholder="Scrivi il messaggio..." style="min-height:120px;resize:vertical;font-family:inherit"></textarea>' +
-    '<button class="btn-primary" style="background:var(--teal);margin-top:12px" onclick="sendCommunication()">Invia</button>';
-  
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-overlay').classList.add('active');
-}
-
-function sendCommunication() {
-  var text = document.getElementById('new-comm-text').value.trim();
-  if (!text) return;
-  
-  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
-    var userData = snap.data();
-    var cat = (userData.categories || [])[0];
-    
-    db.collection('communications').add({
-      text: text,
-      category: cat,
-      authorId: currentUser.uid,
-      authorName: userData.displayName,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function() {
-      alert('Comunicazione inviata!');
-      closeModal();
-      loadAllenatoreData();
-    });
-  });
-}
 
 // ============ ADMIN FUNCTIONS ============
 function switchAdminTab(tab) {
@@ -1248,16 +1155,162 @@ function saveNewEvent() {
 let modalTimeout = null;
 
 function openEventModal(el) {
+  var eventId = el.dataset.eventId;
+  var category = el.dataset.category;
+  var date = el.dataset.date;
   var title = el.querySelector('.event-title').textContent;
-  var html = '<div class="modal-header">' + title + '</div>' +
-    '<div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">' + el.querySelector('.event-day-num').textContent + ' ' + el.querySelector('.event-day-name').textContent + '</div>' +
-    (el.querySelector('.event-sub') ? '<div style="margin-bottom:12px">' + el.querySelector('.event-sub').textContent + '</div>' : '');
+  var dayInfo = el.querySelector('.event-day-num').textContent + ' ' + el.querySelector('.event-day-name').textContent;
   
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-overlay').classList.add('active');
+  // Se è allenatore E ha questa categoria, mostra 2 bottoni
+  db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
+    var userData = userSnap.data();
+    var userCats = userData.categories || [];
+    var isAllenatore = userData.role === 'allenatore';
+    var hasCategory = userCats.includes(category);
+    
+    var html = '<div class="modal-header">' + title + '</div>' +
+      '<div style="font-size:13px;color:var(--text-sec);margin-bottom:16px">' + dayInfo + '</div>';
+    
+    // Se allenatore della categoria: mostra 2 opzioni
+    if (isAllenatore && hasCategory) {
+      html += '<div style="display:flex;gap:10px;margin-bottom:16px">' +
+        '<button class="btn-primary" style="flex:1;background:var(--teal)" onclick="openAttendanceModal(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">📋 Segna presenze</button>' +
+        '<button class="btn-primary" style="flex:1;background:var(--amber-mid)" onclick="openMessageModal(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">✉️ Scrivi messaggio</button>' +
+        '</div>';
+    }
+    
+    // Carica e mostra messaggio se esiste
+    db.collection('eventMessages').doc(eventId + '_' + category).get().then(function(msgSnap) {
+      if (msgSnap.exists) {
+        var msgData = msgSnap.data();
+        html += '<div style="background:var(--blue-light);padding:12px;border-radius:8px;margin-top:12px">' +
+          '<div style="font-weight:600;color:var(--blue-dark);font-size:12px">Messaggio allenatore</div>' +
+          '<div style="margin-top:6px;font-size:13px;color:var(--text)">' + (msgData.text || '') + '</div>' +
+          '<div style="font-size:11px;color:var(--text-sec);margin-top:4px">' + (msgData.authorName || 'Allenatore') + ' - ' + new Date(msgData.createdAt.toDate()).toLocaleDateString('it-IT') + '</div>' +
+          '</div>';
+      }
+      
+      document.getElementById('modal-body').innerHTML = html;
+      document.getElementById('modal-overlay').classList.add('active');
+      
+      clearTimeout(modalTimeout);
+      modalTimeout = setTimeout(() => closeModal(), 8000);
+    });
+  });
+}
+
+function openAttendanceModal(eventId, category, date) {
+  // Carica atleti dalla categoria
+  db.collection('config').doc('athletes').get().then(function(snap) {
+    if (!snap.exists) {
+      alert('Atleti non caricati');
+      return;
+    }
+    
+    var allAthletes = snap.data().athletes || {};
+    var athletes = (allAthletes[category] || []).slice();
+    
+    // Carica presenze già salvate
+    db.collection('attendance').doc(eventId + '_' + category).get().then(function(attSnap) {
+      var savedAttendance = {};
+      if (attSnap.exists) {
+        savedAttendance = attSnap.data().attendance || {};
+      }
+      
+      var html = '<div class="modal-header">Presenze — ' + (athletes.length > 0 ? athletes[0].name : 'Categoria') + '</div>' +
+        '<div style="margin-bottom:16px;font-size:12px;color:var(--text-sec)">Data: ' + new Date(date).toLocaleDateString('it-IT') + ' | ' + athletes.length + ' atleti</div>' +
+        '<div id="attendance-list" style="display:flex;flex-direction:column;gap:0;margin-bottom:16px;max-height:300px;overflow-y:auto">';
+      
+      athletes.forEach(function(a, i) {
+        var isChecked = savedAttendance[i] ? ' checked' : '';
+        html += '<div class="attendance-item">' +
+          '<input type="checkbox" class="attendance-checkbox" data-athlete-id="' + i + '"' + isChecked + ' onchange="toggleAttendance(this)">' +
+          '<div class="attendance-info">' +
+          '<div class="attendance-name">' + a.name + '</div>' +
+          '<div class="attendance-detail">' + a.surname + '</div>' +
+          '</div></div>';
+      });
+      
+      html += '</div>' +
+        '<button class="btn-primary" style="background:var(--teal)" onclick="saveAttendance(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">✅ Salva presenze</button>';
+      
+      document.getElementById('modal-body').innerHTML = html;
+      clearTimeout(modalTimeout);
+      modalTimeout = setTimeout(() => closeModal(), 15000);
+    });
+  });
+}
+
+function toggleAttendance(el) {
+  el.classList.toggle('checked');
+}
+
+function saveAttendance(eventId, category, date) {
+  var attendance = {};
+  document.querySelectorAll('.attendance-checkbox:checked').forEach(function(el) {
+    var athleteId = el.dataset.athleteId;
+    attendance[athleteId] = true;
+  });
   
-  clearTimeout(modalTimeout);
-  modalTimeout = setTimeout(() => closeModal(), 5000);
+  db.collection('attendance').doc(eventId + '_' + category).set({
+    eventId: eventId,
+    category: category,
+    date: date,
+    attendance: attendance,
+    recordedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    alert('✅ Presenze salvate!');
+    closeModal();
+  }).catch(function(err) {
+    alert('❌ Errore: ' + err.message);
+  });
+}
+
+function openMessageModal(eventId, category, date) {
+  // Carica messaggio esistente
+  db.collection('eventMessages').doc(eventId + '_' + category).get().then(function(snap) {
+    var existingText = '';
+    if (snap.exists) {
+      existingText = snap.data().text || '';
+    }
+    
+    var html = '<div class="modal-header">Messaggio per i genitori</div>' +
+      '<div style="font-size:12px;color:var(--text-sec);margin-bottom:12px">Data: ' + new Date(date).toLocaleDateString('it-IT') + '</div>' +
+      '<div class="field-label">Testo messaggio</div>' +
+      '<textarea class="field-input" id="event-message" placeholder="Scrivi il messaggio per i genitori..." style="min-height:120px;resize:vertical;font-family:inherit">' + existingText + '</textarea>' +
+      '<button class="btn-primary" style="background:var(--amber-mid);margin-top:12px" onclick="saveEventMessage(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">📤 Invia messaggio</button>';
+    
+    document.getElementById('modal-body').innerHTML = html;
+    clearTimeout(modalTimeout);
+    modalTimeout = setTimeout(() => closeModal(), 15000);
+  });
+}
+
+function saveEventMessage(eventId, category, date) {
+  var text = document.getElementById('event-message').value.trim();
+  if (!text) {
+    alert('Scrivi un messaggio');
+    return;
+  }
+  
+  db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
+    var userData = userSnap.data();
+    
+    db.collection('eventMessages').doc(eventId + '_' + category).set({
+      eventId: eventId,
+      category: category,
+      date: date,
+      text: text,
+      authorId: currentUser.uid,
+      authorName: userData.displayName,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+      alert('✅ Messaggio inviato!');
+      closeModal();
+    }).catch(function(err) {
+      alert('❌ Errore: ' + err.message);
+    });
+  });
 }
 
 function closeModal() {
@@ -1281,20 +1334,23 @@ function showProfile() {
       });
     }
     
-    // Aggiungi switch ruolo se l'utente è sia genitore che allenatore
-    if (userData.role === 'genitore') {
-      html += '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="switchUserRole(\'allenatore\')">Passa ad Allenatore</button>';
-    } else if (userData.role === 'allenatore') {
-      html += '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="switchUserRole(\'genitore\')">Passa a Genitore</button>';
+    // Switch ruolo solo se hai ENTRAMBI i ruoli (allenatore + genitore)
+    // Questo lo verifichiamo dal fatto che hai sia role='allenatore' che sei genitore di qualcuno
+    if (userData.role === 'allenatore') {
+      // Potrebbe essere anche genitore, controlla nella UI
+      html += '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="switchUserRole(\'genitore\')">👨‍👩‍👧 Passa a Genitore</button>';
+    } else if (userData.role === 'genitore') {
+      // Per ora non mostriamo switch da genitore, solo da allenatore
+      // Se vuoi che un genitore possa passare ad allenatore, aggiungi la logica qui
     }
     
-    html += '<button class="btn-primary" style="margin-top:16px" onclick="logoutUser()">Esci dall\'account</button>';
+    html += '<button class="btn-primary" style="margin-top:16px" onclick="logoutUser()">🚪 Esci dall\'account</button>';
     
     document.getElementById('profile-body').innerHTML = html;
     document.getElementById('profile-modal').classList.add('active');
     
     clearTimeout(modalTimeout);
-    modalTimeout = setTimeout(() => closeProfile(), 8000);
+    modalTimeout = setTimeout(() => closeProfile(), 10000);
   });
 }
 
