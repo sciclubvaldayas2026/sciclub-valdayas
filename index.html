@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sci Club Val d'Ayas">
 <meta name="theme-color" content="#0C447C">
-<title>Sci Club Val d'Ayas v2.2</title>
+<title>Sci Club Val d'Ayas v2.8</title>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -564,7 +564,10 @@ function addAthleteField() {
 function loadGenitoreData() {
   db.collection('users').doc(currentUser.uid).get().then(function(snap) {
     var userData = snap.data();
-    var cats = userData.categoriesAsGenitore || userData.categories || [];
+    // Leggi stringhe separate da virgola
+    var catsStr = userData.categoriesAsGenitore || userData.categories || '';
+    var cats = catsStr.split(',').map(c => c.trim()).filter(c => c);
+    
     document.getElementById('genitore-cat-display').textContent = cats.map(c => CAT_LABELS[c]).join(', ') || '';
     
     // Aggiorna i chips: mostra solo le categorie dell'utente
@@ -641,7 +644,10 @@ function renderGenitoreCalendar() {
 function loadAllenatoreData() {
   db.collection('users').doc(currentUser.uid).get().then(function(snap) {
     var userData = snap.data();
-    var cats = userData.categoriesAsAllenatore || userData.categories || [];
+    // Leggi stringhe separate da virgola
+    var catsStr = userData.categoriesAsAllenatore || userData.categories || '';
+    var cats = catsStr.split(',').map(c => c.trim()).filter(c => c);
+    
     document.getElementById('allenatore-cat-display').textContent = cats.map(c => CAT_LABELS[c]).join(', ') || '';
     
     // Aggiorna i chips: mostra solo le categorie dell'allenatore
@@ -1196,7 +1202,9 @@ function openEventModal(el) {
   // Se è allenatore E ha questa categoria, mostra 2 bottoni
   db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
     var userData = userSnap.data();
-    var userCats = (userRole === 'allenatore') ? (userData.categoriesAsAllenatore || userData.categories || []) : (userData.categoriesAsGenitore || userData.categories || []);
+    // Leggi stringhe separate da virgola
+    var catsStr = (userRole === 'allenatore') ? (userData.categoriesAsAllenatore || userData.categories || '') : (userData.categoriesAsGenitore || userData.categories || '');
+    var userCats = catsStr.split(',').map(c => c.trim()).filter(c => c);
     var isAllenatore = userData.multiRole && userData.multiRole.includes('allenatore') && userRole === 'allenatore';
     var hasCategory = userCats.includes(category);
     
@@ -1366,16 +1374,20 @@ function showProfile() {
         html += '<div class="athlete-pill">' + a.name + ' - ' + (CAT_LABELS[a.category] || a.category) + '</div>';
       });
       
+      var catsStr = userData.categoriesAsGenitore || userData.categories || '';
+      var cats = catsStr.split(',').map(c => c.trim()).filter(c => c);
       html += '<div style="margin-top:16px"><strong>Categorie figli</strong></div>';
-      (userData.categoriesAsGenitore || userData.categories || []).forEach(function(c) {
+      cats.forEach(function(c) {
         html += '<div class="athlete-pill">' + (CAT_LABELS[c] || c) + '</div>';
       });
     }
     
     // Mostra categorie se allenatore
     if (userRole === 'allenatore') {
+      var catsStr = userData.categoriesAsAllenatore || userData.categories || '';
+      var cats = catsStr.split(',').map(c => c.trim()).filter(c => c);
       html += '<div style="margin-top:16px"><strong>Categorie allegate</strong></div>';
-      (userData.categoriesAsAllenatore || userData.categories || []).forEach(function(c) {
+      cats.forEach(function(c) {
         html += '<div class="athlete-pill">' + (CAT_LABELS[c] || c) + '</div>';
       });
     }
