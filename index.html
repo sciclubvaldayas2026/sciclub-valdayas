@@ -488,13 +488,6 @@ function registerUser() {
     });
 }
 
-function switchUserRole(newRole) {
-  closeProfile();
-  // Simula un logout+login con il nuovo ruolo nella sessione
-  userRole = newRole;
-  loadUserAndShowScreen();
-}
-
 function logoutUser() {
   auth.signOut();
 }
@@ -1334,14 +1327,9 @@ function showProfile() {
       });
     }
     
-    // Switch ruolo solo se hai ENTRAMBI i ruoli (allenatore + genitore)
-    // Questo lo verifichiamo dal fatto che hai sia role='allenatore' che sei genitore di qualcuno
+    // Switch ruolo solo se sei allenatore
     if (userData.role === 'allenatore') {
-      // Potrebbe essere anche genitore, controlla nella UI
-      html += '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="switchUserRole(\'genitore\')">👨‍👩‍👧 Passa a Genitore</button>';
-    } else if (userData.role === 'genitore') {
-      // Per ora non mostriamo switch da genitore, solo da allenatore
-      // Se vuoi che un genitore possa passare ad allenatore, aggiungi la logica qui
+      html += '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="switchToGenitore()">👨‍👩‍👧 Passa a Genitore</button>';
     }
     
     html += '<button class="btn-primary" style="margin-top:16px" onclick="logoutUser()">🚪 Esci dall\'account</button>';
@@ -1352,6 +1340,13 @@ function showProfile() {
     clearTimeout(modalTimeout);
     modalTimeout = setTimeout(() => closeProfile(), 10000);
   });
+}
+
+function switchToGenitore() {
+  closeProfile();
+  userRole = 'genitore';
+  selectedCategory = 'all';
+  loadUserAndShowScreen();
 }
 
 function closeProfile() {
