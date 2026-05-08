@@ -8,8 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sci Club Val d'Ayas">
 <meta name="theme-color" content="#0C447C">
-<title>Sci Club Val d'Ayas v2</title>
-<link rel="manifest" href="manifest.json">
+<title>Sci Club Val d'Ayas v2.1</title>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -51,8 +50,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 /* LOGIN */
 #screen-login{background:var(--blue-dark);justify-content:flex-end}
 .login-hero{padding:60px 24px 32px;text-align:center}
-.login-logo{width:72px;height:72px;border-radius:20px;overflow:hidden;margin:0 auto 16px}
-.login-logo img{width:100%;height:100%;object-fit:cover}
+.login-logo{width:72px;height:72px;border-radius:20px;overflow:hidden;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:48px}
 .login-title{color:white;font-size:22px;font-weight:600}
 .login-sub{color:rgba(255,255,255,.6);font-size:14px;margin-top:4px}
 .login-card{background:var(--bg-card);border-radius:24px 24px 0 0;padding:28px 20px calc(28px + var(--safe-bottom));display:flex;flex-direction:column;gap:16px}
@@ -165,6 +163,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* FILE INPUT */
 input[type="file"]{display:none}
+
+/* DEBUG */
+.debug-info{font-size:11px;background:var(--gray-50);padding:8px;border-radius:var(--radius-sm);margin:8px 0;color:var(--text-sec);border-left:3px solid var(--blue-mid)}
 
 </style>
 
@@ -363,6 +364,18 @@ const CAT_LABELS = {
 };
 
 const CAT_ORDER = ['sbaby', 'baby', 'cuccioli', 'ragazzi', 'allievi', 'giovani', 'master', 'giovani_fisi'];
+
+// Mappatura nomi sheet Excel → chiavi categoria
+const SHEET_MAPPING = {
+  'GIOVANI': 'giovani',
+  'ALLIEVI': 'allievi',
+  'RAGAZZI': 'ragazzi',
+  'CUCCIOLI': 'cuccioli',
+  'BABY': 'baby',
+  'SUPERBABY': 'sbaby',
+  'MASTER': 'master',
+  'GIOVANI FISI': 'giovani_fisi'
+};
 
 // ============ AUTH ============
 auth.onAuthStateChanged(function(user) {
@@ -836,41 +849,60 @@ function processFile(file) {
       var workbook = XLSX.read(data, { type: 'array' });
       
       importedAthletes = {};
+      var debugInfo = [];
       
       workbook.SheetNames.forEach(function(sheetName) {
         var sheet = workbook.Sheets[sheetName];
-        var rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
         
-        var catKey = sheetName.toLowerCase()
-          .replace(/\s+/g, '_')
-          .replace('super_baby', 'sbaby')
-          .replace('giovani_fisi', 'giovani_fisi');
+        // Leggi tutte le righe
+        var allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
         
-        if (!CAT_ORDER.includes(catKey)) {
-          // Prova mappatura alternativa
-          if (sheetName === 'SUPERBABY') catKey = 'sbaby';
-          else if (sheetName === 'GIOVANI FISI') catKey = 'giovani_fisi';
-          else {
-            catKey = CAT_ORDER.find(c => CAT_LABELS[c].toLowerCase() === sheetName.toLowerCase());
+        // La riga 2 (indice 1) contiene i headers reali: COGNOME, NOME, DATA DI NASCITA, SCADENZA CM, etc.
+        // I dati iniziano dalla riga 3 (indice 2) in poi
+        if (allRows.length < 3) {
+          debugInfo.push(sheetName + ': too few rows');
+          return;
+        }
+        
+        // Estrai headers dalla riga 2
+        var headerRow = allRows[1]; // indice 1 = riga 2
+        var cognomeIdx = headerRow.indexOf('COGNOME');
+        var nomeIdx = headerRow.indexOf('NOME');
+        var dataIdx = headerRow.indexOf('DATA DI NASCITA');
+        var scadenzaIdx = headerRow.indexOf('SCADENZA CM');
+        
+        if (cognomeIdx === -1 || nomeIdx === -1) {
+          debugInfo.push(sheetName + ': headers not found');
+          return;
+        }
+        
+        // Mappa sheet name → categoria
+        var catKey = SHEET_MAPPING[sheetName];
+        if (!catKey) {
+          debugInfo.push(sheetName + ': unmapped');
+          return;
+        }
+        
+        // Leggi dati da riga 3 in poi
+        var athletes = [];
+        for (var i = 2; i < allRows.length; i++) {
+          var row = allRows[i];
+          var surname = (row[cognomeIdx] || '').toString().trim();
+          var name = (row[nomeIdx] || '').toString().trim();
+          
+          if (surname && name) {
+            athletes.push({
+              surname: surname,
+              name: name,
+              birthDate: row[dataIdx] || '',
+              medicalExpiry: row[scadenzaIdx] || ''
+            });
           }
         }
         
-        if (catKey) {
-          var athletes = [];
-          rows.forEach(function(row) {
-            if (row.COGNOME && row.NOME) {
-              athletes.push({
-                surname: row.COGNOME.trim(),
-                name: row.NOME.trim(),
-                birthDate: row['DATA DI NASCITA'] || '',
-                medicalExpiry: row['SCADENZA CM'] || ''
-              });
-            }
-          });
-          
-          if (athletes.length > 0) {
-            importedAthletes[catKey] = athletes;
-          }
+        if (athletes.length > 0) {
+          importedAthletes[catKey] = athletes;
+          debugInfo.push(sheetName + ' → ' + catKey + ': ' + athletes.length + ' atleti');
         }
       });
       
@@ -880,10 +912,11 @@ function processFile(file) {
         importedAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function() {
         updateImportSummary();
-        document.getElementById('import-status').innerHTML = '<div class="alert alert-success show">✓ File importato con successo!</div>';
+        var msg = '✓ File importato! ' + Object.values(importedAthletes).reduce((a, b) => a + b.length, 0) + ' atleti totali.';
+        document.getElementById('import-status').innerHTML = '<div class="alert alert-success show">' + msg + '</div>';
       });
     } catch (err) {
-      document.getElementById('import-status').innerHTML = '<div class="alert alert-error show">✗ Errore nell\'importazione: ' + err.message + '</div>';
+      document.getElementById('import-status').innerHTML = '<div class="alert alert-error show">✗ Errore: ' + err.message + '</div>';
     }
   };
   reader.readAsArrayBuffer(file);
