@@ -913,70 +913,140 @@ async function syncProgrammaFromDrive() {
     
     // Mappa colori a attività
     const colorActivityMap = {
-      'FFC000': { activity: 'sci', title: 'SCI', color: '#FFC000' },           // Giallo
-      '00B050': { activity: 'atletica', title: 'ATLETICA', color: '#00B050' },  // Verde
-      '00B0F0': { activity: 'acrobatica', title: 'ACROBATICA', color: '#00B0F0' }, // Azzurro
-      'FF7F00': { activity: 'multisport', title: 'MULTISPORT', color: '#FF7F00' } // Arancione
+      'FFFF00': 'sci',           // Giallo = SCI
+      'FFFF99': 'sci',           // Giallo chiaro = SCI
+      'FFC000': 'sci',           // Arancione-giallo = SCI
+      '00B050': 'atletica',      // Verde = ATLETICA
+      '00B0F0': 'acrobatica',    // Azzurro = ACROBATICA
+      'FF7F00': 'multisport',    // Arancione = MULTISPORT
     };
     
     const events = [];
-    let eventCounter = 0;
-    
-    // Leggi il primo sheet (dovrebbe contenere la griglia)
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
     
-    // Riga 3 (indice 2) contiene i nomi delle categorie
+    // Riga 1 (indice 0): Mesi
+    const monthRow = allRows[0] || [];
+    // Riga 3 (indice 2): Categorie
     const categoryRow = allRows[2] || [];
     
-    // Itera su colonne e righe per trovare celle con contenuto
-    for (let colIdx = 0; colIdx < categoryRow.length; colIdx++) {
-      const category = (categoryRow[colIdx] || '').toString().toLowerCase();
-      if (!ALL_CATEGORIES.includes(category)) continue;
-      
-      // Per ogni categoria, leggi i giorni (righe successive)
-      for (let rowIdx = 3; rowIdx < allRows.length; rowIdx++) {
-        const row = allRows[rowIdx];
-        const cellValue = row[colIdx] ? (row[colIdx] || '').toString().trim() : '';
-        
-        if (!cellValue) continue;
-        
-        // Tenta di estrarre il giorno dalla riga
-        // Di solito è nella prima colonna dopo una colonna con il numero
-        const dayCell = row[0] ? (row[0] || '').toString().trim() : '';
-        const monthCell = row[1] ? (row[1] || '').toString().trim() : '';
-        
-        // Se non hai la data diretta, prova a ricavare da pattern
-        // Per ora, registra l'attività trovata
-        if (cellValue && cellValue !== '' && cellValue !== 'R') {
-          // cellValue contiene il tipo di attività (SCI, ATLETICA, ACROBATICA, VIAGGIO, SNOWHALL, CERVINIA, CAMPUS)
-          // Mappa il testo a colore/tipo
-          let activity = cellValue.toLowerCase();
-          let activityData = null;
-          
-          if (activity.includes('sci')) {
-            activityData = { activity: 'sci', title: cellValue, color: '#FFC000' };
-          } else if (activity.includes('atletica')) {
-            activityData = { activity: 'atletica', title: cellValue, color: '#00B050' };
-          } else if (activity.includes('acrobatica') || activity.includes('campus')) {
-            activityData = { activity: 'acrobatica', title: cellValue, color: '#00B0F0' };
-          } else if (activity.includes('viaggio') || activity.includes('snowhall') || activity.includes('cervinia')) {
-            // Questi potrebbero essere sottotipo di sci
-            activityData = { activity: 'sci', title: cellValue, color: '#FFC000' };
-          } else {
-            activityData = { activity: 'altro', title: cellValue, color: '#999999' };
-          }
-          
-          eventCounter++;
+    // Estrai i mesi e le loro colonne di inizio
+    const months = [];
+    let currentMonth = null;
+    let monthStartCol = 0;
+    
+    for (let colIdx = 0; colIdx < monthRow.length; colIdx++) {
+      const monthCell = (monthRow[colIdx] || '').toString().trim().toUpperCase();
+      if (monthCell && monthCell.length > 0 && ['GENNAIO', 'FEBBRAIO', 'MARZO', 'APRILE', 'MAGGIO', 'GIUGNO', 'LUGLIO', 'AGOSTO', 'SETTEMBRE', 'OTTOBRE', 'NOVEMBRE', 'DICEMBRE'].includes(monthCell)) {
+        if (currentMonth) {
+          currentMonth.endCol = colIdx - 1;
+          months.push(currentMonth);
         }
+        currentMonth = { name: monthCell, startCol: colIdx, endCol: colIdx };
       }
     }
+    if (currentMonth) {
+      currentMonth.endCol = monthRow.length - 1;
+      months.push(currentMonth);
+    }
     
-    // Nota: il parsing completo della griglia richiede logica più sofisticata
-    // per mappare riga→giorno e colonna→categoria. Per ora, mostra un'anteprima.
-    statusEl.innerHTML = '<div style="background:var(--blue-light);color:var(--blue-dark);padding:10px;border-radius:var(--radius-sm);font-size:13px">📊 Programma scaricato (analizzato ' + eventCounter + ' celle). Parser in progress - contattami per mapping completo data/categoria!</div>';
+    // Per ogni mese, leggi le attività
+    months.forEach(monthData => {
+      const monthName = monthData.name.toLowerCase();
+      const monthNum = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'].indexOf(monthName) + 1;
+      const year = 2026; // Puoi renderlo dinamico se necessario
+      
+      // Estrai categorie per questo mese (dalla riga 3, colonne rilevanti)
+      const monthCategories = [];
+      for (let colIdx = monthData.startCol; colIdx <= monthData.endCol; colIdx++) {
+        const catCell = (categoryRow[colIdx] || '').toString().trim().toUpperCase();
+        if (catCell && ALL_CATEGORIES.includes(catCell.toLowerCase())) {
+          monthCategories.push({
+            col: colIdx,
+            name: catCell.toLowerCase()
+          });
+        }
+      }
+      
+      // Leggi attività per ogni categoria (righe 11-41, indici 10-40)
+      for (let rowIdx = 10; rowIdx <= 40 && rowIdx < allRows.length; rowIdx++) {
+        const row = allRows[rowIdx] || [];
+        
+        // Leggi il giorno dalla colonna A o B del mese (dovrebbe essere in monthData.startCol e startCol+1)
+        const dayNumCell = (row[monthData.startCol] || '').toString().trim();
+        const dayNameCell = (row[monthData.startCol + 1] || '').toString().trim();
+        
+        // Se non c'è numero di giorno, salta questa riga
+        const dayNum = parseInt(dayNumCell);
+        if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) continue;
+        
+        // Crea la data
+        const dateStr = String(year) + '-' + String(monthNum).padStart(2, '0') + '-' + String(dayNum).padStart(2, '0');
+        
+        // Per ogni categoria, leggi l'attività
+        monthCategories.forEach(catInfo => {
+          const activityCell = (row[catInfo.col] || '').toString().trim();
+          
+          if (activityCell && activityCell.length > 0 && activityCell !== 'R') {
+            // Determina il tipo e colore
+            let activityType = 'sci'; // default
+            let color = '#FFC000'; // default giallo
+            
+            const cellUpper = activityCell.toUpperCase();
+            if (cellUpper.includes('ATLETICA')) {
+              activityType = 'atletica';
+              color = '#00B050'; // Verde
+            } else if (cellUpper.includes('ACROBATICA') || cellUpper.includes('CAMPUS')) {
+              activityType = 'acrobatica';
+              color = '#00B0F0'; // Azzurro
+            } else if (cellUpper.includes('MULTISPORT')) {
+              activityType = 'multisport';
+              color = '#FF7F00'; // Arancione
+            } else {
+              activityType = 'sci';
+              color = '#FFC000'; // Giallo
+            }
+            
+            events.push({
+              date: dateStr,
+              category: catInfo.name,
+              title: activityCell,
+              type: activityType,
+              color: color,
+              createdAt: new Date()
+            });
+          }
+        });
+      }
+    });
+    
+    // Salva gli eventi in Firestore
+    if (events.length > 0) {
+      // Elimina gli eventi vecchi
+      const deletePromises = [];
+      const existingEventsSnap = await db.collection('events').get();
+      existingEventsSnap.forEach(doc => {
+        deletePromises.push(doc.ref.delete());
+      });
+      
+      await Promise.all(deletePromises);
+      
+      // Salva i nuovi eventi
+      const batch = db.batch();
+      events.forEach((event, idx) => {
+        const docRef = db.collection('events').doc(String(idx));
+        batch.set(docRef, event);
+      });
+      
+      await batch.commit();
+      
+      statusEl.innerHTML = '<div style="background:var(--teal-light);color:var(--teal);padding:10px;border-radius:var(--radius-sm);font-size:13px">✅ ' + events.length + ' eventi del programma sincronizzati da Google Drive!</div>';
+    } else {
+      statusEl.innerHTML = '<div style="background:var(--amber-light);color:var(--amber);padding:10px;border-radius:var(--radius-sm);font-size:13px">⚠️ Nessun evento trovato nel programma</div>';
+    }
     
   } catch (err) {
+    console.error('Errore parsing programma:', err);
     statusEl.innerHTML = '<div style="background:var(--red-light);color:var(--red);padding:10px;border-radius:var(--radius-sm);font-size:13px">❌ Errore: ' + err.message + '</div>';
   }
 }
