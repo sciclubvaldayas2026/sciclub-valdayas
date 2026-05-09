@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sci Club Val d'Ayas">
 <meta name="theme-color" content="#0C447C">
-<title>Sci Club Val d'Ayas v2.8</title>
+<title>Sci Club Val d'Ayas v3.0</title>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -17,6 +17,9 @@
 
 <!-- SheetJS for xlsx parsing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- Google Drive API per scaricare file pubblici -->
+<script async defer src="https://apis.google.com/js/api.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -38,8 +41,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .topbar{background:var(--blue-dark);color:white;padding:52px 16px 14px;display:flex;align-items:flex-end;justify-content:space-between;flex-shrink:0}
 .topbar-title{font-size:20px;font-weight:600}
 .topbar-sub{font-size:12px;opacity:.65;margin-top:2px}
-.topbar-green{background:var(--teal)}
-.topbar-dark{background:#2C2C2A}
 .avatar-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer;border:none;color:white;flex-shrink:0}
 .navbar{display:flex;background:var(--bg-card);border-top:.5px solid var(--border);padding:8px 0;padding-bottom:calc(8px + var(--safe-bottom));flex-shrink:0}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--text-sec);cursor:pointer;padding:4px 0;border:none;background:none}
@@ -54,9 +55,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .login-title{color:white;font-size:22px;font-weight:600}
 .login-sub{color:rgba(255,255,255,.6);font-size:14px;margin-top:4px}
 .login-card{background:var(--bg-card);border-radius:24px 24px 0 0;padding:28px 20px calc(28px + var(--safe-bottom));display:flex;flex-direction:column;gap:16px}
-.role-tabs{display:flex;gap:8px}
-.role-tab{flex:1;padding:10px;border-radius:var(--radius-sm);border:.5px solid var(--border);font-size:13px;font-weight:500;cursor:pointer;text-align:center;color:var(--text-sec);background:var(--bg)}
-.role-tab.active{background:var(--blue-light);color:var(--blue-dark);border-color:var(--blue-mid)}
 .field-label{font-size:12px;color:var(--text-sec);margin-bottom:5px}
 .field-input{width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:.5px solid var(--border);font-size:15px;background:var(--bg);color:var(--text);outline:none;font-family:inherit}
 .field-input:focus{border-color:var(--blue-mid);background:white}
@@ -74,9 +72,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 /* EVENTS */
 .month-label{padding:14px 14px 4px;font-size:13px;font-weight:600;color:var(--text-sec)}
 .event-card{margin:0 12px 8px;background:var(--bg-card);border-radius:var(--radius);border:.5px solid var(--border);padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer}
-.event-card.group-start{border-radius:var(--radius) var(--radius) 0 0;margin-bottom:0;border-bottom:none}
-.event-card.group-mid{border-radius:0;margin:0 12px;border-top:.5px solid var(--gray-100);border-bottom:none}
-.event-card.group-end{border-radius:0 0 var(--radius) var(--radius);margin-bottom:8px;border-top:.5px solid var(--gray-100)}
 .event-date{width:42px;text-align:center;flex-shrink:0}
 .event-day-num{font-size:22px;font-weight:600;color:var(--text);line-height:1}
 .event-day-name{font-size:10px;color:var(--text-sec);margin-top:2px;text-transform:uppercase;letter-spacing:.3px}
@@ -85,244 +80,132 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .event-title{font-size:15px;font-weight:500;color:var(--text)}
 .event-sub{font-size:12px;color:var(--text-sec);margin-top:2px}
 .event-badge{font-size:10px;padding:3px 9px;border-radius:10px;font-weight:500;flex-shrink:0}
-.c-sci{background:#E6B800}.c-atletica{background:var(--teal-mid)}.c-multi{background:#E8760A}.c-campus{background:#4AAED9}.c-info{background:var(--gray-400)}
-.badge-sci{background:#FFF8CC;color:#7A5500}.badge-atletica{background:var(--teal-light);color:var(--teal)}.badge-multi{background:#FFF0E0;color:#8A3D00}.badge-campus{background:#E0F4FF;color:#1A6A99}.badge-info{background:var(--bg);color:var(--text-sec);border:.5px solid var(--border)}
-
-/* COMM */
-.comm-card{margin:0 12px 10px;background:var(--bg-card);border-radius:var(--radius);border:.5px solid var(--border);padding:14px}
-.comm-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.comm-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
-.comm-name{font-size:13px;font-weight:600;color:var(--text)}
-.comm-meta{font-size:11px;color:var(--text-sec);margin-top:1px}
-.comm-text{font-size:14px;color:var(--text);line-height:1.5}
-.comm-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
-.cat-pill{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:500}
-.unread-dot{width:8px;height:8px;border-radius:50%;background:var(--blue-mid);flex-shrink:0}
-
-/* PROFILE */
-.profile-section{padding:12px;display:flex;flex-direction:column;gap:10px}
-.profile-card{background:var(--bg-card);border-radius:var(--radius);border:.5px solid var(--border);padding:16px}
-.profile-header{display:flex;align-items:center;gap:14px;margin-bottom:16px}
-.profile-avatar{width:56px;height:56px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:var(--blue-dark);flex-shrink:0}
-.profile-name{font-size:17px;font-weight:600;color:var(--text)}
-.profile-email{font-size:12px;color:var(--text-sec);margin-top:2px}
-.profile-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:.5px solid var(--border);font-size:14px}
-.profile-row:last-child{border-bottom:none}
-.profile-row-label{color:var(--text-sec)}
-.profile-row-val{font-weight:500;color:var(--text)}
-.athlete-pill{display:inline-flex;align-items:center;gap:5px;background:var(--blue-light);color:var(--blue-dark);border-radius:10px;padding:4px 10px;font-size:12px;font-weight:500;margin:2px}
-
-/* ADMIN STYLES */
-.admin-topbar{display:flex;gap:8px;padding:14px;overflow-x:auto;scrollbar-width:none}
-.admin-topbar::-webkit-scrollbar{display:none}
-.admin-tab{padding:8px 16px;border-radius:8px;background:var(--bg);color:var(--text-sec);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;border:.5px solid var(--border)}
-.admin-tab.active{background:var(--blue-dark);color:white;border-color:var(--blue-dark)}
-.admin-section{padding:12px;display:flex;flex-direction:column;gap:12px}
-.admin-card{background:var(--bg-card);border-radius:var(--radius);border:.5px solid var(--border);padding:14px}
-.admin-card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px}
-.request-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:.5px solid var(--border)}
-.request-row:last-child{border-bottom:none}
-.request-info{flex:1}
-.request-name{font-size:14px;font-weight:500;color:var(--text)}
-.request-detail{font-size:12px;color:var(--text-sec);margin-top:2px}
-.btn-sm{padding:8px 12px;border-radius:6px;border:none;font-size:12px;font-weight:500;cursor:pointer}
-.btn-sm-green{background:var(--teal-light);color:var(--teal)}
-.btn-sm-red{background:var(--red-light);color:var(--red)}
-
-/* DROP ZONE */
-.dropzone{border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;background:var(--bg);cursor:pointer;transition:all 0.2s}
-.dropzone.active{border-color:var(--blue-mid);background:var(--blue-light)}
-.dropzone-text{font-size:13px;color:var(--text-sec);margin-bottom:8px}
-.dropzone-file{font-size:12px;color:var(--blue-mid);font-weight:500}
+.badge-info{background:var(--gray-400)}
 
 /* MODAL */
-.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:flex-end}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:1000}
 .modal-overlay.active{display:flex}
-.modal-content{background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;padding:24px 20px;padding-bottom:calc(24px + var(--safe-bottom))}
-.modal-header{font-size:18px;font-weight:600;color:var(--text);margin-bottom:16px}
-.modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;background:var(--bg);border:.5px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-sec)}
+.modal-card{background:white;border-radius:var(--radius);padding:24px;max-width:90vw;max-height:80vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:var(--gray-50);border:none;cursor:pointer;font-size:16px}
 
-/* ATTENDANCE */
-.attendance-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:.5px solid var(--border)}
-.attendance-item:last-child{border-bottom:none}
-.attendance-checkbox{width:20px;height:20px;border:.5px solid var(--border);border-radius:4px;cursor:pointer;flex-shrink:0}
-.attendance-checkbox.checked{background:var(--blue-dark);border-color:var(--blue-dark)}
-.attendance-info{flex:1}
-.attendance-name{font-size:14px;font-weight:500;color:var(--text)}
-.attendance-detail{font-size:12px;color:var(--text-sec);margin-top:2px}
+/* ADMIN */
+.admin-tabs{display:flex;gap:4px;padding:12px 14px;overflow-x:auto;scrollbar-width:none;border-bottom:.5px solid var(--border)}
+.admin-tabs::-webkit-scrollbar{display:none}
+.admin-tab{padding:10px 14px;border-radius:var(--radius-sm);border:.5px solid var(--border);font-size:13px;font-weight:500;cursor:pointer;background:var(--bg-card);color:var(--text-sec);white-space:nowrap}
+.admin-tab.active{background:var(--blue-dark);color:white;border-color:var(--blue-dark)}
+.admin-section{padding:14px}
+.admin-card{background:var(--bg-card);border-radius:var(--radius);border:.5px solid var(--border);padding:16px;margin-bottom:12px}
+.admin-card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px}
+.btn-sm{padding:10px 14px;border-radius:var(--radius-sm);border:.5px solid var(--border);font-size:13px;background:var(--bg-card);color:var(--text);cursor:pointer}
+.btn-sm.green{background:var(--teal);color:white;border-color:var(--teal)}
+.dropzone{border:2px dashed var(--gray-100);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;background:var(--bg)}
+.dropzone.active{background:var(--blue-light);border-color:var(--blue-mid)}
+.dropzone-text{font-size:14px;color:var(--text-sec)}
+#file-input{display:none}
 
 /* EMPTY STATE */
-.empty-state{text-align:center;padding:32px 24px;color:var(--text-sec)}
-.empty-state-icon{font-size:32px;margin-bottom:12px}
+.empty-state{padding:60px 20px;text-align:center;color:var(--text-sec)}
+.empty-state-icon{font-size:48px;margin-bottom:12px}
 
-/* ALERT */
-.alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:12px;display:none}
-.alert.show{display:block}
-.alert-success{background:#E1F5EE;color:var(--teal)}
-.alert-error{background:var(--red-light);color:var(--red)}
-
-/* FILE INPUT */
-input[type="file"]{display:none}
-
-/* DEBUG */
-.debug-info{font-size:11px;background:var(--gray-50);padding:8px;border-radius:var(--radius-sm);margin:8px 0;color:var(--text-sec);border-left:3px solid var(--blue-mid)}
-
+/* UTILITY */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--gray-100);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{text-align:center;padding:20px;color:var(--text-sec);font-size:13px}
+.sync-status{background:var(--blue-light);color:var(--blue-dark);padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:12px;font-size:13px}
 </style>
 
 </head>
 <body>
 
 <div id="app">
-  <!-- LOGIN -->
+  <!-- LOGIN SCREEN -->
   <div id="screen-login" class="screen active">
     <div class="login-hero">
-      <div class="login-logo">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" alt="Sci Club" style="width:100%;height:100%">
-      </div>
-      <div class="login-title">⛷️ Sci Club Val d'Ayas</div>
-      <div class="login-sub">App ufficiale — Stagione 2026/27</div>
+      <div class="login-logo">⛷️</div>
+      <div class="login-title">Sci Club Val d'Ayas</div>
+      <div class="login-sub">v3.0 - Google Drive Sync</div>
     </div>
     <div class="login-card">
-      <div class="field-label">Email</div>
-      <input class="field-input" id="login-email" type="email" placeholder="email@esempio.it">
-      <div class="field-label">Password</div>
-      <input class="field-input" id="login-pwd" type="password" placeholder="••••••">
-      <div class="error-msg" id="login-error"></div>
-      <button class="btn-primary" onclick="loginUser()">Accedi</button>
-      <div class="btn-link" style="margin-top:8px">
-        Non hai un account? <span onclick="switchToRegister()">Registrati</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- REGISTER -->
-  <div id="screen-register" class="screen">
-    <div class="topbar">
       <div>
-        <div class="topbar-title">Registrazione</div>
+        <div class="field-label">Email</div>
+        <input id="login-email" class="field-input" type="email" placeholder="tu@example.com">
       </div>
-      <button class="avatar-btn" onclick="switchToLogin()" style="background:rgba(255,255,255,.1)">←</button>
-    </div>
-    <div class="content" style="padding:16px;display:flex;flex-direction:column;gap:12px">
-      <div class="field-label">Nome e cognome</div>
-      <input class="field-input" id="reg-name" placeholder="Giovanni Bianchi">
-      <div class="field-label">Email</div>
-      <input class="field-input" id="reg-email" type="email" placeholder="email@esempio.it">
-      <div class="field-label">Password (min. 6 caratteri)</div>
-      <input class="field-input" id="reg-pwd" type="password" placeholder="••••••">
-      <div class="field-label">Categoria atleta</div>
-      <select class="field-input" id="reg-cat">
-        <option value="">-- Seleziona categoria --</option>
-        <option value="sbaby">S.Baby</option>
-        <option value="baby">Baby</option>
-        <option value="cuccioli">Cuccioli</option>
-        <option value="ragazzi">Ragazzi</option>
-        <option value="allievi">Allievi</option>
-        <option value="giovani">Giovani</option>
-        <option value="master">Master</option>
-        <option value="giovani_fisi">Giovani FISI</option>
-      </select>
-      <div id="athletes-container" style="display:flex;flex-direction:column;gap:8px"></div>
-      <button class="btn-primary" style="background:var(--gray-400);margin-top:8px" onclick="addAthleteField()">+ Aggiungi atleta</button>
-      <div class="error-msg" id="reg-error"></div>
-      <button class="btn-primary" onclick="registerUser()">Invia richiesta</button>
+      <div>
+        <div class="field-label">Password</div>
+        <input id="login-password" class="field-input" type="password" placeholder="••••••••">
+      </div>
+      <div id="login-error" class="error-msg"></div>
+      <button class="btn-primary" onclick="login()">Accedi</button>
     </div>
   </div>
 
-  <!-- GENITORE -->
+  <!-- GENITORE SCREEN -->
   <div id="screen-genitore" class="screen">
     <div class="topbar">
       <div>
-        <div class="topbar-title">Calendario</div>
-        <div class="topbar-sub" id="genitore-cat-display"></div>
+        <div class="topbar-title">📅 Calendario</div>
+        <div class="topbar-sub" id="genitore-sub">Genitore</div>
       </div>
       <button class="avatar-btn" onclick="showProfile()">👤</button>
     </div>
-    <div class="chips-row">
-      <button class="chip active" onclick="filterCategory('all')">Tutto</button>
-      <button class="chip" onclick="filterCategory('sbaby')">S.Baby</button>
-      <button class="chip" onclick="filterCategory('baby')">Baby</button>
-      <button class="chip" onclick="filterCategory('cuccioli')">Cuccioli</button>
-      <button class="chip" onclick="filterCategory('ragazzi')">Ragazzi</button>
-      <button class="chip" onclick="filterCategory('allievi')">Allievi</button>
-      <button class="chip" onclick="filterCategory('giovani')">Giovani</button>
-      <button class="chip" onclick="filterCategory('master')">Master</button>
-      <button class="chip" onclick="filterCategory('giovani_fisi')">G. FISI</button>
-    </div>
+    <div class="chips-row" id="genitore-chips"></div>
     <div class="content" id="genitore-content"></div>
-    <div class="navbar">
-      <button class="nav-item active" onclick="switchScreen('genitore')"><div class="nav-icon">📅</div><div>Calendario</div></button>
-      <button class="nav-item" onclick="switchScreen('comm')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-      <button class="nav-item" onclick="showProfile()"><div class="nav-icon">👤</div><div>Profilo</div></button>
-    </div>
   </div>
 
-  <!-- ALLENATORE -->
+  <!-- ALLENATORE SCREEN -->
   <div id="screen-allenatore" class="screen">
     <div class="topbar">
       <div>
-        <div class="topbar-title">Allenatore</div>
-        <div class="topbar-sub" id="allenatore-cat-display"></div>
+        <div class="topbar-title">⚙️ Allenatore</div>
+        <div class="topbar-sub" id="allenatore-sub">Allenatore</div>
       </div>
       <button class="avatar-btn" onclick="showProfile()">👤</button>
     </div>
-    <div class="chips-row">
-      <button class="chip active" onclick="filterAllenatoreCat('all')">Tutte</button>
-      <button class="chip" onclick="filterAllenatoreCat('sbaby')">S.Baby</button>
-      <button class="chip" onclick="filterAllenatoreCat('baby')">Baby</button>
-      <button class="chip" onclick="filterAllenatoreCat('cuccioli')">Cuccioli</button>
-      <button class="chip" onclick="filterAllenatoreCat('ragazzi')">Ragazzi</button>
-      <button class="chip" onclick="filterAllenatoreCat('allievi')">Allievi</button>
-      <button class="chip" onclick="filterAllenatoreCat('giovani')">Giovani</button>
-      <button class="chip" onclick="filterAllenatoreCat('master')">Master</button>
-      <button class="chip" onclick="filterAllenatoreCat('giovani_fisi')">G. FISI</button>
-    </div>
+    <div class="chips-row" id="allenatore-chips"></div>
     <div class="content" id="allenatore-content"></div>
-    <div class="navbar">
-      <button class="nav-item active" onclick="switchAllenatoreTab('comm')"><div class="nav-icon">💬</div><div>Comunicazioni</div></button>
-      <button class="nav-item" onclick="switchAllenatoreTab('calendario')"><div class="nav-icon">📅</div><div>Calendario</div></button>
-      <button class="nav-item" onclick="showProfile()"><div class="nav-icon">👤</div><div>Profilo</div></button>
-    </div>
   </div>
 
-  <!-- ADMIN -->
+  <!-- ADMIN SCREEN -->
   <div id="screen-admin" class="screen">
-    <div class="topbar topbar-dark">
+    <div class="topbar">
       <div>
-        <div class="topbar-title">⚙️ Amministrazione</div>
+        <div class="topbar-title">⚡ Admin</div>
+        <div class="topbar-sub">Gestione</div>
       </div>
-      <button class="avatar-btn" onclick="logoutUser()">Esci</button>
+      <button class="avatar-btn" onclick="showProfile()">👤</button>
     </div>
-    <div class="admin-topbar">
-      <button class="admin-tab active" onclick="switchAdminTab('import')">📥 Importa</button>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchAdminTab('drive')">🔄 Drive Sync</button>
+      <button class="admin-tab" onclick="switchAdminTab('import')">📥 Import</button>
       <button class="admin-tab" onclick="switchAdminTab('atleti')">👥 Atleti</button>
-      <button class="admin-tab" onclick="switchAdminTab('categorie')">🏷️ Categorie</button>
-      <button class="admin-tab" onclick="switchAdminTab('utenti')">🔑 Utenti</button>
-      <button class="admin-tab" onclick="switchAdminTab('medici')">🏥 Medici</button>
-      <button class="admin-tab" onclick="switchAdminTab('events')">📌 Eventi</button>
     </div>
     <div class="content" id="admin-content"></div>
-    <div class="navbar">
-      <button class="nav-item" onclick="logoutUser()"><div class="nav-icon">🚪</div><div>Esci</div></button>
-    </div>
   </div>
 
-  <!-- MODAL -->
-  <div id="modal-overlay" class="modal-overlay" onclick="if(event.target.id === 'modal-overlay') closeModal()">
-    <div class="modal-content" id="modal-content">
-      <button class="modal-close" onclick="closeModal()">×</button>
-      <div id="modal-body"></div>
-    </div>
-  </div>
+</div>
 
-  <!-- PROFILE MODAL -->
-  <div id="profile-modal" class="modal-overlay" onclick="if(event.target.id === 'profile-modal') closeProfile()">
-    <div class="modal-content" id="profile-content">
-      <button class="modal-close" onclick="closeProfile()">×</button>
-      <div id="profile-body"></div>
-    </div>
+<!-- PROFILE MODAL -->
+<div id="profile-modal" class="modal-overlay">
+  <div class="modal-card">
+    <button class="modal-close" onclick="hideProfile()">✕</button>
+    <div id="profile-content" style="padding-top:20px"></div>
   </div>
+</div>
 
+<!-- EVENT MODAL -->
+<div id="event-modal" class="modal-overlay">
+  <div class="modal-card">
+    <button class="modal-close" onclick="hideEventModal()">✕</button>
+    <div id="event-modal-content"></div>
+  </div>
+</div>
+
+<!-- PRESENZE MODAL -->
+<div id="presenze-modal" class="modal-overlay">
+  <div class="modal-card">
+    <button class="modal-close" onclick="hidePresenzeModal()">✕</button>
+    <div id="presenze-modal-content"></div>
+  </div>
 </div>
 
 <script>
@@ -340,195 +223,119 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// ============ GLOBAL STATE ============
+// ============ GOOGLE DRIVE CONFIG ============
+const GOOGLE_DRIVE_FOLDER_ID = '1PPhFjNiPr2nMhekTd6WLhQRFUGDMq1-g';
+const PRESENZE_FOLDER_NAME = 'Presenze';
+
+// ============ GLOBALS ============
 let currentUser = null;
-let userRole = 'genitore';
-let selectedCategory = 'all';
-let selectedAllenatoreCat = 'all';
-let allenatoreTab = 'comm';
-let adminTab = 'import';
+let currentRole = null;
 let importedAthletes = {};
+let googleDrivePresenzeFolderId = null;
+let selectedGenitoreChip = 'all';
+let selectedAllenatoreChip = 'all';
+let adminTab = 'drive';
 
 const CAT_LABELS = {
-  'sbaby': 'S.Baby',
-  'baby': 'Baby',
-  'cuccioli': 'Cuccioli',
-  'ragazzi': 'Ragazzi',
-  'allievi': 'Allievi',
-  'giovani': 'Giovani FIS',
-  'master': 'Master',
-  'giovani_fisi': 'Giovani FISI'
+  sbaby: 'S.Baby',
+  baby: 'Baby',
+  cuccioli: 'Cuccioli',
+  ragazzi: 'Ragazzi',
+  allievi: 'Allievi',
+  giovani: 'Giovani FIS',
+  giovani_fisi: 'Giovani FISI',
+  master: 'Master'
 };
 
-const CAT_ORDER = ['sbaby', 'baby', 'cuccioli', 'ragazzi', 'allievi', 'giovani', 'master', 'giovani_fisi'];
-
-// Mappatura nomi sheet Excel → chiavi categoria
-const SHEET_MAPPING = {
-  'GIOVANI': 'giovani',
-  'ALLIEVI': 'allievi',
-  'RAGAZZI': 'ragazzi',
-  'CUCCIOLI': 'cuccioli',
-  'BABY': 'baby',
-  'SUPERBABY': 'sbaby',
-  'MASTER': 'master',
-  'GIOVANI FISI': 'giovani_fisi'
-};
+const ALL_CATEGORIES = ['sbaby', 'baby', 'cuccioli', 'ragazzi', 'allievi', 'giovani', 'giovani_fisi', 'master'];
 
 // ============ AUTH ============
-auth.onAuthStateChanged(function(user) {
-  if (user) {
-    currentUser = user;
-    loadUserAndShowScreen();
-  } else {
-    showScreen('login');
-  }
-});
-
-
-function loginUser() {
-  var email = document.getElementById('login-email').value.trim();
-  var pwd = document.getElementById('login-pwd').value;
-  var err = document.getElementById('login-error');
-  err.style.display = 'none';
+function login() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
   
-  if (!email || !pwd) {
-    err.style.display = 'block';
-    err.textContent = 'Compila email e password.';
+  if (!email || !password) {
+    showLoginError('Email e password obbligatori');
     return;
   }
   
-  auth.signInWithEmailAndPassword(email, pwd)
-    .then(function(cred) {
-      currentUser = cred.user;
-      loadUserAndShowScreen();
+  auth.signInWithEmailAndPassword(email, password)
+    .then(function(userCred) {
+      currentUser = userCred.user;
+      loadUserData();
+      syncGoogleDriveStructure();
     })
-    .catch(function(e) {
-      err.style.display = 'block';
-      err.textContent = 'Email o password errate.';
+    .catch(function(err) {
+      showLoginError(err.message);
     });
 }
 
-function loadUserAndShowScreen() {
+function logout() {
+  auth.signOut().then(function() {
+    currentUser = null;
+    currentRole = null;
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-password').value = '';
+    showScreen('login');
+    hideProfile();
+  });
+}
+
+function showLoginError(msg) {
+  const errorEl = document.getElementById('login-error');
+  errorEl.textContent = msg;
+  errorEl.style.display = 'block';
+  setTimeout(() => errorEl.style.display = 'none', 5000);
+}
+
+function loadUserData() {
   db.collection('users').doc(currentUser.uid).get().then(function(snap) {
-    if (snap.exists) {
-      var userData = snap.data();
-      var role = userData.role;
-      
-      // Se è solo genitore o solo allenatore, entra direttamente
-      if (role === 'genitore' || role === 'allenatore' || role === 'admin') {
-        userRole = role;
-        showRoleScreen();
-      }
-      // Se ha attributo multiRole (significa può essere sia genitore che allenatore)
-      else if (userData.multiRole && userData.multiRole.length > 1) {
-        showRoleSelectionModal(userData.multiRole);
-      }
+    if (!snap.exists) {
+      showLoginError('Utente non trovato nel database');
+      return;
+    }
+    
+    const userData = snap.data();
+    
+    // Se multiRole, chiedi quale ruolo usare
+    if (userData.multiRole && userData.multiRole.length > 1) {
+      showRoleSelector(userData);
+    } else {
+      currentRole = userData.multiRole ? userData.multiRole[0] : 'genitore';
+      showHomeScreen();
     }
   });
 }
 
-function showRoleSelectionModal(availableRoles) {
-  var html = '<div style="text-align:center;padding:20px">' +
-    '<div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:20px">Scegli ruolo</div>' +
-    '<div style="display:flex;flex-direction:column;gap:10px">';
-  
-  if (availableRoles.includes('genitore')) {
-    html += '<button class="btn-primary" style="background:var(--blue)" onclick="setUserRole(\'genitore\')">👨‍👩‍👧 Accedi come Genitore</button>';
-  }
-  if (availableRoles.includes('allenatore')) {
-    html += '<button class="btn-primary" style="background:var(--teal)" onclick="setUserRole(\'allenatore\')">🎿 Accedi come Allenatore</button>';
-  }
-  if (availableRoles.includes('admin')) {
-    html += '<button class="btn-primary" style="background:#2C2C2A" onclick="setUserRole(\'admin\')">⚙️ Accedi come Admin</button>';
-  }
-  
-  html += '</div></div>';
-  
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-overlay').classList.add('active');
+function showRoleSelector(userData) {
+  let html = '<div style="text-align:center;padding:20px"><div style="font-size:16px;font-weight:600;margin-bottom:20px">Scegli il tuo ruolo</div>';
+  userData.multiRole.forEach(role => {
+    html += '<button class="btn-primary" style="margin-bottom:10px" onclick="setUserRole(\'' + role + '\')">' + 
+      (role === 'genitore' ? '👨‍👩‍👧‍👦 Genitore' : '⛷️ Allenatore') + '</button>';
+  });
+  html += '</div>';
+  document.getElementById('event-modal-content').innerHTML = html;
+  document.getElementById('event-modal').classList.add('active');
 }
 
 function setUserRole(role) {
-  userRole = role;
-  
-  // Salva la preferenza nel DB
-  db.collection('users').doc(currentUser.uid).update({
-    preferredRole: role
-  });
-  
-  closeModal();
-  showRoleScreen();
+  currentRole = role;
+  db.collection('users').doc(currentUser.uid).update({ preferredRole: role });
+  hideEventModal();
+  showHomeScreen();
 }
 
-function showRoleScreen() {
-  if (userRole === 'admin') {
-    showScreen('admin');
-    switchAdminTab('import');
-  } else if (userRole === 'allenatore') {
-    showScreen('allenatore');
-    loadAllenatoreData();
-  } else {
-    showScreen('genitore');
+function showHomeScreen() {
+  const screen = currentRole === 'admin' ? 'admin' : (currentRole === 'allenatore' ? 'allenatore' : 'genitore');
+  showScreen(screen);
+  
+  if (screen === 'genitore') {
     loadGenitoreData();
+  } else if (screen === 'allenatore') {
+    loadAllenatoreData();
+  } else if (screen === 'admin') {
+    renderAdminTab();
   }
-}
-
-function switchToRegister() {
-  showScreen('register');
-}
-
-function switchToLogin() {
-  showScreen('login');
-  document.getElementById('login-email').value = '';
-  document.getElementById('login-pwd').value = '';
-}
-
-function registerUser() {
-  var name = document.getElementById('reg-name').value.trim();
-  var email = document.getElementById('reg-email').value.trim();
-  var pwd = document.getElementById('reg-pwd').value;
-  var cat = document.getElementById('reg-cat').value;
-  var err = document.getElementById('reg-error');
-  err.style.display = 'none';
-  
-  if (!name || !email || pwd.length < 6 || !cat) {
-    err.style.display = 'block';
-    err.textContent = 'Compila tutti i campi.';
-    return;
-  }
-  
-  auth.createUserWithEmailAndPassword(email, pwd)
-    .then(function(cred) {
-      var athletes = [];
-      document.querySelectorAll('.athlete-input-name').forEach(function(el) {
-        var aname = el.value.trim();
-        if (aname) {
-          athletes.push({ name: aname, category: cat });
-        }
-      });
-      
-      return db.collection('users').doc(cred.user.uid).set({
-        email: email,
-        displayName: name,
-        role: 'genitore',
-        status: 'pending',
-        categories: [cat],
-        athletes: athletes,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    })
-    .then(function() {
-      alert('Registrazione inviata! Attendi l\'approvazione dell\'amministratore.');
-      switchToLogin();
-    })
-    .catch(function(e) {
-      err.style.display = 'block';
-      err.textContent = e.code === 'auth/email-already-in-use' ? 'Email già registrata.' : 'Errore: ' + e.message;
-    });
-}
-
-function logoutUser() {
-  auth.signOut();
 }
 
 function showScreen(screenId) {
@@ -536,227 +343,459 @@ function showScreen(screenId) {
   document.getElementById('screen-' + screenId).classList.add('active');
 }
 
-function switchScreen(screenId) {
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  event.target.closest('.nav-item').classList.add('active');
+// ============ GOOGLE DRIVE FUNCTIONS ============
+function syncGoogleDriveStructure() {
+  // Crea cartella "Presenze" se non esiste
+  console.log('🔄 Sincronizzazione struttura Google Drive...');
+  // Per ora, solo logging - l'app scarica file pubblici
+}
+
+async function downloadFileFromGoogleDrive(fileId) {
+  try {
+    const url = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Download fallito');
+    return await response.arrayBuffer();
+  } catch (err) {
+    console.error('Errore download:', err);
+    return null;
+  }
+}
+
+async function findFileInGoogleDrive(fileName) {
+  try {
+    // Usa Google Drive REST API per cercare file per nome
+    // Questa funzione ricerca il file nella cartella pubblica
+    const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${fileName}' and '${GOOGLE_DRIVE_FOLDER_ID}' in parents and trashed=false&fields=files(id,name,webContentLink)&key=AIzaSyAb7GSGVmfDEgoRlv6-sx5JHZv3GNfsToU`;
+    
+    const response = await fetch(searchUrl);
+    if (!response.ok) throw new Error('Ricerca fallita');
+    
+    const data = await response.json();
+    return data.files && data.files.length > 0 ? data.files[0] : null;
+  } catch (err) {
+    console.error('Errore ricerca file:', err);
+    return null;
+  }
+}
+
+// ============ GENITORE ============
+function loadGenitoreData() {
+  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
+    const userData = snap.data();
+    
+    // Parsa categorie da stringa (es. "cuccioli,giovani")
+    const catsStr = userData.categoriesAsGenitore || '';
+    const userCats = catsStr.split(',').map(c => c.trim()).filter(c => c && ALL_CATEGORIES.includes(c));
+    
+    // Chips
+    let chipsHtml = '<button class="chip ' + (selectedGenitoreChip === 'all' ? 'active' : '') + '" onclick="selectGenitoreChip(\'all\')">Tutto</button>';
+    userCats.forEach(cat => {
+      chipsHtml += '<button class="chip ' + (selectedGenitoreChip === cat ? 'active' : '') + '" onclick="selectGenitoreChip(\'' + cat + '\')">' + CAT_LABELS[cat] + '</button>';
+    });
+    document.getElementById('genitore-chips').innerHTML = chipsHtml;
+    
+    // Carica e filtra eventi
+    renderGenitoreCalendar(userCats);
+  });
+}
+
+function selectGenitoreChip(cat) {
+  selectedGenitoreChip = cat;
+  document.querySelectorAll('#genitore-chips .chip').forEach((el, i) => {
+    el.classList.remove('active');
+  });
+  event.target.classList.add('active');
   loadGenitoreData();
 }
 
-function switchAllenatoreTab(tab) {
-  allenatoreTab = tab;
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  event.target.closest('.nav-item').classList.add('active');
-  loadAllenatoreData();
-}
-
-function addAthleteField() {
-  var container = document.getElementById('athletes-container');
-  var field = document.createElement('div');
-  field.style.display = 'flex';
-  field.style.gap = '8px';
-  field.innerHTML = 
-    '<input class="field-input athlete-input-name" placeholder="Nome atleta" style="flex:1">' +
-    '<button class="btn-sm btn-sm-red" style="width:40px;padding:8px 0" onclick="this.parentElement.remove()">×</button>';
-  container.appendChild(field);
-}
-
-// ============ GENITORE FUNCTIONS ============
-function loadGenitoreData() {
-  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
-    var userData = snap.data();
-    // Leggi stringhe separate da virgola
-    var catsStr = userData.categoriesAsGenitore || userData.categories || '';
-    var cats = catsStr.split(',').map(c => c.trim()).filter(c => c);
-    
-    document.getElementById('genitore-cat-display').textContent = cats.map(c => CAT_LABELS[c]).join(', ') || '';
-    
-    // Aggiorna i chips: mostra solo le categorie dell'utente
-    var chipsContainer = document.querySelector('#screen-genitore .chips-row');
-    var chipsHtml = '<button class="chip active" onclick="filterCategory(\'all\')">Tutto</button>';
-    cats.forEach(function(cat) {
-      var isActive = selectedCategory === cat ? ' active' : '';
-      chipsHtml += '<button class="chip' + isActive + '" onclick="filterCategory(\'' + cat + '\')">' + CAT_LABELS[cat] + '</button>';
-    });
-    chipsContainer.innerHTML = chipsHtml;
-    
-    renderGenitoreCalendar();
-  });
-}
-
-function filterCategory(cat) {
-  selectedCategory = cat;
-  document.querySelectorAll('#screen-genitore .chips-row .chip').forEach(el => el.classList.remove('active'));
-  event.target.classList.add('active');
-  renderGenitoreCalendar();
-}
-
-function renderGenitoreCalendar() {
+function renderGenitoreCalendar(userCats) {
   db.collection('events').orderBy('date').get().then(function(snap) {
-    var events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    const events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
     
-    db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
-      var userData = userSnap.data();
-      // Leggi stringhe separate da virgola
-      var catsStr = userData.categoriesAsGenitore || userData.categories || '';
-      var userCats = catsStr.split(',').map(c => c.trim()).filter(c => c);
-      // Filtra: se "all" mostra solo categorie dell'utente, altrimenti filtra per categoria scelta (se appartiene all'utente)
-      var filteredEvents = events.filter(e => {
-        if (!userCats.includes(e.category)) return false; // Escludi categorie non dell'utente
-        if (selectedCategory === 'all') return true;
-        return e.category === selectedCategory;
-      });
+    const filtered = selectedGenitoreChip === 'all' 
+      ? events.filter(e => userCats.includes(e.category))
+      : events.filter(e => e.category === selectedGenitoreChip);
+    
+    let html = '';
+    let currentMonth = '';
+    
+    filtered.forEach(e => {
+      const d = new Date(e.date);
+      const month = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
       
-      var html = '';
-      var currentMonth = '';
-      
-      filteredEvents.forEach(function(e) {
-        var d = new Date(e.date);
-        var month = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
-        
-        if (currentMonth !== month) {
-          currentMonth = month;
-          html += '<div class="month-label">' + month.charAt(0).toUpperCase() + month.slice(1) + '</div>';
-        }
-        
-        var dayNum = d.getDate();
-        var dayName = d.toLocaleDateString('it-IT', { weekday: 'short' });
-        var badgeCls = 'badge-' + (e.type || 'info');
-        
-        html += '<div class="event-card" onclick="openEventModal(this)" data-event-id="' + e.id + '" data-category="' + e.category + '" data-date="' + e.date + '">' +
-          '<div class="event-date"><div class="event-day-num">' + dayNum + '</div><div class="event-day-name">' + dayName + '</div></div>' +
-          '<div class="event-bar" style="background:' + (e.color || '#888') + '"></div>' +
-          '<div class="event-info">' +
-          '<div class="event-title">' + e.title + '</div>' +
-          (e.details ? '<div class="event-sub">📌 ' + e.details + '</div>' : '') +
-          '</div>' +
-          '<div class="event-badge ' + badgeCls + '">' + (CAT_LABELS[e.category] || e.category) + '</div>' +
-          '</div>';
-      });
-      
-      if (filteredEvents.length === 0) {
-        html = '<div class="empty-state"><div class="empty-state-icon">📅</div>Nessun evento in questa categoria.</div>';
+      if (currentMonth !== month) {
+        currentMonth = month;
+        html += '<div class="month-label">' + month.charAt(0).toUpperCase() + month.slice(1) + '</div>';
       }
       
-      document.getElementById('genitore-content').innerHTML = html;
+      const dayNum = d.getDate();
+      const dayName = d.toLocaleDateString('it-IT', { weekday: 'short' });
+      
+      html += '<div class="event-card" onclick="openEventModal(this)" data-event-id="' + e.id + '" data-category="' + e.category + '">' +
+        '<div class="event-date"><div class="event-day-num">' + dayNum + '</div><div class="event-day-name">' + dayName + '</div></div>' +
+        '<div class="event-bar" style="background:' + (e.color || '#888') + '"></div>' +
+        '<div class="event-info">' +
+        '<div class="event-title">' + e.title + '</div>' +
+        (e.details ? '<div class="event-sub">📌 ' + e.details + '</div>' : '') +
+        '</div>' +
+        '<div class="event-badge badge-info">' + CAT_LABELS[e.category] + '</div>' +
+        '</div>';
     });
+    
+    if (filtered.length === 0) {
+      html = '<div class="empty-state"><div class="empty-state-icon">📅</div>Nessun evento per questa categoria.</div>';
+    }
+    
+    document.getElementById('genitore-content').innerHTML = html;
   });
 }
 
-// ============ ALLENATORE FUNCTIONS ============
+// ============ ALLENATORE ============
 function loadAllenatoreData() {
   db.collection('users').doc(currentUser.uid).get().then(function(snap) {
-    var userData = snap.data();
-    // Leggi stringhe separate da virgola
-    var catsStr = userData.categoriesAsAllenatore || userData.categories || '';
-    var cats = catsStr.split(',').map(c => c.trim()).filter(c => c);
+    const userData = snap.data();
     
-    document.getElementById('allenatore-cat-display').textContent = cats.map(c => CAT_LABELS[c]).join(', ') || '';
+    // Parsa categorie da stringa
+    const catsStr = userData.categoriesAsAllenatore || '';
+    const userCats = catsStr.split(',').map(c => c.trim()).filter(c => c && ALL_CATEGORIES.includes(c));
     
-    // Aggiorna i chips: mostra solo le categorie dell'allenatore
-    var chipsContainer = document.querySelector('#screen-allenatore .chips-row');
-    var chipsHtml = '<button class="chip active" onclick="filterAllenatoreCat(\'all\')">Tutte</button>';
-    cats.forEach(function(cat) {
-      var isActive = selectedAllenatoreCat === cat ? ' active' : '';
-      chipsHtml += '<button class="chip' + isActive + '" onclick="filterAllenatoreCat(\'' + cat + '\')">' + CAT_LABELS[cat] + '</button>';
+    // Chips
+    let chipsHtml = '<button class="chip ' + (selectedAllenatoreChip === 'all' ? 'active' : '') + '" onclick="selectAllenatoreChip(\'all\')">Tutto</button>';
+    userCats.forEach(cat => {
+      chipsHtml += '<button class="chip ' + (selectedAllenatoreChip === cat ? 'active' : '') + '" onclick="selectAllenatoreChip(\'' + cat + '\')">' + CAT_LABELS[cat] + '</button>';
     });
-    chipsContainer.innerHTML = chipsHtml;
+    document.getElementById('allenatore-chips').innerHTML = chipsHtml;
     
-    if (allenatoreTab === 'comm') {
-      renderAllenatoreCommunications();
-    } else {
-      renderAllenatoreCalendar();
-    }
+    renderAllenatoreCalendar(userCats);
   });
 }
 
-function filterAllenatoreCat(cat) {
-  selectedAllenatoreCat = cat;
-  document.querySelectorAll('#screen-allenatore .chips-row .chip').forEach(el => el.classList.remove('active'));
+function selectAllenatoreChip(cat) {
+  selectedAllenatoreChip = cat;
+  document.querySelectorAll('#allenatore-chips .chip').forEach(el => el.classList.remove('active'));
   event.target.classList.add('active');
   loadAllenatoreData();
 }
 
-function renderAllenatoreCommunications() {
-  db.collection('communications').orderBy('createdAt', 'desc').get().then(function(snap) {
-    var comms = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+function renderAllenatoreCalendar(userCats) {
+  db.collection('events').orderBy('date').get().then(function(snap) {
+    const events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
     
-    db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
-      var userData = userSnap.data();
-      var userCats = userData.categories || [];
+    const filtered = selectedAllenatoreChip === 'all'
+      ? events.filter(e => userCats.includes(e.category))
+      : events.filter(e => e.category === selectedAllenatoreChip);
+    
+    let html = '';
+    let currentMonth = '';
+    
+    filtered.forEach(e => {
+      const d = new Date(e.date);
+      const month = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
       
-      var filteredComms = comms.filter(c => selectedAllenatoreCat === 'all' ? userCats.includes(c.category) : c.category === selectedAllenatoreCat);
-      
-      var html = '<div class="admin-section">';
-      
-      if (filteredComms.length === 0) {
-        html += '<div class="empty-state">Nessuna comunicazione.</div>';
-      } else {
-        filteredComms.forEach(function(c) {
-          var user = c.authorId || 'Sistema';
-          html += '<div class="comm-card">' +
-            '<div class="comm-header"><div class="comm-avatar" style="background:var(--blue-light);color:var(--blue-dark)">' + user.charAt(0) + '</div>' +
-            '<div><div class="comm-name">' + (c.authorName || user) + '</div><div class="comm-meta">' + new Date(c.createdAt.toDate()).toLocaleDateString('it-IT') + '</div></div></div>' +
-            '<div class="comm-text">' + c.text + '</div>' +
-            '<div class="comm-footer"><span class="cat-pill" style="background:var(--blue-light);color:var(--blue-dark)">' + (CAT_LABELS[c.category] || c.category) + '</span></div>' +
-            '</div>';
-        });
+      if (currentMonth !== month) {
+        currentMonth = month;
+        html += '<div class="month-label">' + month.charAt(0).toUpperCase() + month.slice(1) + '</div>';
       }
       
-      html += '</div><div style="padding:12px"><button class="btn-primary" style="background:var(--teal)" onclick="openNewCommModal()">+ Nuova comunicazione</button></div>';
+      const dayNum = d.getDate();
+      const dayName = d.toLocaleDateString('it-IT', { weekday: 'short' });
       
-      document.getElementById('allenatore-content').innerHTML = html;
+      html += '<div class="event-card" onclick="openEventModal(this)" data-event-id="' + e.id + '" data-category="' + e.category + '">' +
+        '<div class="event-date"><div class="event-day-num">' + dayNum + '</div><div class="event-day-name">' + dayName + '</div></div>' +
+        '<div class="event-bar" style="background:' + (e.color || '#888') + '"></div>' +
+        '<div class="event-info">' +
+        '<div class="event-title">' + e.title + '</div>' +
+        (e.details ? '<div class="event-sub">📌 ' + e.details + '</div>' : '') +
+        '</div>' +
+        '<div class="event-badge badge-info">' + CAT_LABELS[e.category] + '</div>' +
+        '</div>';
     });
+    
+    if (filtered.length === 0) {
+      html = '<div class="empty-state"><div class="empty-state-icon">📅</div>Nessun evento per questa categoria.</div>';
+    }
+    
+    document.getElementById('allenatore-content').innerHTML = html;
   });
 }
 
-function renderAllenatoreCalendar() {
-  db.collection('events').orderBy('date').get().then(function(snap) {
-    var events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+// ============ EVENT MODAL ============
+function openEventModal(el) {
+  const eventId = el.getAttribute('data-event-id');
+  const category = el.getAttribute('data-category');
+  
+  db.collection('events').doc(eventId).get().then(function(snap) {
+    const event = Object.assign({ id: snap.id }, snap.data());
     
-    db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
-      var userData = userSnap.data();
-      var userCats = userData.categories || [];
+    let html = '<div style="margin-bottom:20px">' +
+      '<div style="font-size:18px;font-weight:600;margin-bottom:4px">' + event.title + '</div>' +
+      '<div style="font-size:13px;color:var(--text-sec)">' + new Date(event.date).toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + '</div>' +
+      (event.details ? '<div style="font-size:13px;color:var(--text-sec);margin-top:8px">📌 ' + event.details + '</div>' : '') +
+      '</div>';
+    
+    // Se allenatore, mostra bottoni per presenze e messaggio
+    if (currentRole === 'allenatore') {
+      html += '<div style="display:flex;gap:10px;margin-bottom:20px">' +
+        '<button class="btn-primary" style="flex:1;background:var(--teal)" onclick="openPresenzeModal(\'' + eventId + '\', \'' + category + '\')">📋 Presenze</button>' +
+        '<button class="btn-primary" style="flex:1;background:var(--amber-mid)" onclick="openMessageModal(\'' + eventId + '\', \'' + category + '\')">✉️ Messaggio</button>' +
+        '</div>';
+    }
+    
+    // Mostra messaggio se esiste
+    db.collection('eventMessages').doc(eventId + '_' + category).get().then(function(msgSnap) {
+      if (msgSnap.exists) {
+        const msg = msgSnap.data();
+        html += '<div style="background:var(--blue-light);padding:12px;border-radius:var(--radius-sm);margin-bottom:12px">' +
+          '<div style="font-size:12px;color:var(--blue);font-weight:600">📨 Messaggio da ' + (msg.authorName || 'Allenatore') + '</div>' +
+          '<div style="font-size:13px;color:var(--text);margin-top:6px">' + msg.text + '</div>' +
+          '<div style="font-size:11px;color:var(--text-sec);margin-top:6px">' + new Date(msg.createdAt.toDate()).toLocaleString('it-IT') + '</div>' +
+          '</div>';
+      }
+      document.getElementById('event-modal-content').innerHTML = html;
+    });
+  });
+  
+  document.getElementById('event-modal').classList.add('active');
+}
+
+function hideEventModal() {
+  document.getElementById('event-modal').classList.remove('active');
+}
+
+// ============ PRESENZE MODAL ============
+function openPresenzeModal(eventId, category) {
+  document.getElementById('event-modal').classList.remove('active');
+  
+  // Carica atleti per categoria
+  db.collection('config/athletes').doc('athletes').get().then(function(snap) {
+    if (!snap.exists) {
+      showPresenzeError('Atleti non trovati. Importa un file XLSX.');
+      return;
+    }
+    
+    const athletes = snap.data().athletes[category] || [];
+    
+    if (athletes.length === 0) {
+      showPresenzeError('Nessun atleta in questa categoria.');
+      return;
+    }
+    
+    // Carica presenze salvate
+    db.collection('attendance').doc(eventId + '_' + category).get().then(function(attSnap) {
+      const attendance = attSnap.exists ? attSnap.data().attendance : {};
       
-      var filteredEvents = events.filter(e => selectedAllenatoreCat === 'all' ? userCats.includes(e.category) : e.category === selectedAllenatoreCat);
+      let html = '<div style="margin-bottom:16px">' +
+        '<div style="font-size:16px;font-weight:600;margin-bottom:4px">📋 Segnare Presenze</div>' +
+        '<div style="font-size:12px;color:var(--text-sec)">Categoria: ' + CAT_LABELS[category] + '</div>' +
+        '</div>' +
+        '<div>';
       
-      var html = '';
-      var currentMonth = '';
-      
-      filteredEvents.forEach(function(e) {
-        var d = new Date(e.date);
-        var month = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
-        
-        if (currentMonth !== month) {
-          currentMonth = month;
-          html += '<div class="month-label">' + month.charAt(0).toUpperCase() + month.slice(1) + '</div>';
-        }
-        
-        var dayNum = d.getDate();
-        var dayName = d.toLocaleDateString('it-IT', { weekday: 'short' });
-        var badgeCls = 'badge-' + (e.type || 'info');
-        
-        html += '<div class="event-card" onclick="openEventModal(this)" data-event-id="' + e.id + '" data-category="' + e.category + '" data-date="' + e.date + '">' +
-          '<div class="event-date"><div class="event-day-num">' + dayNum + '</div><div class="event-day-name">' + dayName + '</div></div>' +
-          '<div class="event-bar" style="background:' + (e.color || '#888') + '"></div>' +
-          '<div class="event-info">' +
-          '<div class="event-title">' + e.title + '</div>' +
-          (e.details ? '<div class="event-sub">📌 ' + e.details + '</div>' : '') +
-          '</div>' +
-          '<div class="event-badge ' + badgeCls + '">' + (CAT_LABELS[e.category] || e.category) + '</div>' +
+      athletes.forEach((athlete, idx) => {
+        const isPresent = attendance[idx] === true;
+        const athleteName = athlete.surname + ' ' + athlete.name;
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border)">' +
+          '<input type="checkbox" id="presence-' + idx + '" ' + (isPresent ? 'checked' : '') + '>' +
+          '<label for="presence-' + idx + '" style="flex:1;cursor:pointer;font-size:14px">' + athleteName + '</label>' +
           '</div>';
       });
       
-      if (filteredEvents.length === 0) {
-        html = '<div class="empty-state"><div class="empty-state-icon">📅</div>Nessun evento in questa categoria.</div>';
-      }
+      html += '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:20px">' +
+        '<button class="btn-primary" style="flex:1;background:var(--teal)" onclick="saveAttendance(\'' + eventId + '\', \'' + category + '\', ' + athletes.length + ')">✅ Salva</button>' +
+        '<button class="btn-primary" style="flex:1;background:var(--amber-mid)" onclick="exportPresenze(\'' + eventId + '\', \'' + category + '\', ' + athletes.length + ')">📥 Export CSV</button>' +
+        '</div>';
       
-      document.getElementById('allenatore-content').innerHTML = html;
+      document.getElementById('presenze-modal-content').innerHTML = html;
+      document.getElementById('presenze-modal').classList.add('active');
     });
   });
 }
 
+function saveAttendance(eventId, category, athleteCount) {
+  const attendance = {};
+  for (let i = 0; i < athleteCount; i++) {
+    const checkbox = document.getElementById('presence-' + i);
+    if (checkbox && checkbox.checked) {
+      attendance[i] = true;
+    }
+  }
+  
+  db.collection('attendance').doc(eventId + '_' + category).set({
+    eventId: eventId,
+    category: category,
+    attendance: attendance,
+    recordedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    showPresenzeSuccess('✅ Presenze salvate!');
+  }).catch(err => {
+    showPresenzeError('Errore: ' + err.message);
+  });
+}
 
-// ============ ADMIN FUNCTIONS ============
+function exportPresenze(eventId, category, athleteCount) {
+  db.collection('config/athletes').doc('athletes').get().then(function(snap) {
+    if (!snap.exists) {
+      showPresenzeError('Atleti non trovati.');
+      return;
+    }
+    
+    const athletes = snap.data().athletes[category] || [];
+    const attendance = {};
+    
+    for (let i = 0; i < athleteCount; i++) {
+      const checkbox = document.getElementById('presence-' + i);
+      if (checkbox) attendance[i] = checkbox.checked;
+    }
+    
+    // Genera CSV
+    let csv = 'Evento,Data,Categoria,Atleta,Presente\n';
+    
+    db.collection('events').doc(eventId).get().then(function(eventSnap) {
+      const event = eventSnap.data();
+      
+      athletes.forEach((athlete, idx) => {
+        const isPresent = attendance[idx] === true ? 'Si' : 'No';
+        const athleteName = athlete.surname + ' ' + athlete.name;
+        csv += `"${event.title}","${event.date}","${CAT_LABELS[category]}","${athleteName}","${isPresent}"\n`;
+      });
+      
+      // Salva su Google Drive (simulato per ora - vedi funzione uploadToGoogleDrive)
+      uploadPresenceToGoogleDrive(eventId, category, csv);
+      
+      // Scarica localmente
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Presenze_${event.date}_${category}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  });
+}
+
+function uploadPresenceToGoogleDrive(eventId, category, csvContent) {
+  // Per ora, loggiamo solo
+  // In produzione, usereste un backend per caricare su Drive
+  console.log('📤 Upload presenze su Google Drive:', eventId, category);
+  console.log('CSV:', csvContent);
+  // TODO: implementare upload via backend
+}
+
+function showPresenzeError(msg) {
+  const contentEl = document.getElementById('presenze-modal-content');
+  contentEl.innerHTML = '<div style="background:var(--red-light);color:var(--red);padding:12px;border-radius:var(--radius-sm);font-size:13px">' + msg + '</div>';
+}
+
+function showPresenzeSuccess(msg) {
+  const contentEl = document.getElementById('presenze-modal-content');
+  const currentHtml = contentEl.innerHTML;
+  const successDiv = '<div style="background:var(--teal-light);color:var(--teal);padding:12px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:12px">' + msg + '</div>';
+  contentEl.innerHTML = successDiv + currentHtml;
+}
+
+function hidePresenzeModal() {
+  document.getElementById('presenze-modal').classList.remove('active');
+}
+
+// ============ MESSAGE MODAL ============
+function openMessageModal(eventId, category) {
+  let html = '<div style="margin-bottom:16px">' +
+    '<div style="font-size:16px;font-weight:600;margin-bottom:4px">✉️ Scrivi Messaggio</div>' +
+    '<div style="font-size:12px;color:var(--text-sec)">Categoria: ' + CAT_LABELS[category] + '</div>' +
+    '</div>' +
+    '<textarea id="message-text" style="width:100%;min-height:120px;padding:10px;border-radius:var(--radius-sm);border:.5px solid var(--border);font-family:inherit;resize:none" placeholder="Scrivi il messaggio per i genitori..."></textarea>' +
+    '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="sendMessage(\'' + eventId + '\', \'' + category + '\')">📨 Invia</button>';
+  
+  document.getElementById('event-modal-content').innerHTML = html;
+}
+
+function sendMessage(eventId, category) {
+  const messageText = document.getElementById('message-text').value.trim();
+  
+  if (!messageText) {
+    alert('Scrivi un messaggio');
+    return;
+  }
+  
+  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
+    const authorName = snap.data().displayName || 'Allenatore';
+    
+    db.collection('eventMessages').doc(eventId + '_' + category).set({
+      eventId: eventId,
+      category: category,
+      text: messageText,
+      authorName: authorName,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      hideEventModal();
+      alert('✅ Messaggio inviato!');
+    }).catch(err => {
+      alert('Errore: ' + err.message);
+    });
+  });
+}
+
+// ============ PROFILE MODAL ============
+function showProfile() {
+  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
+    const user = snap.data();
+    
+    let html = '<div style="text-align:center;margin-bottom:20px">' +
+      '<div style="font-size:28px;margin-bottom:8px">' + (user.displayName ? user.displayName.charAt(0).toUpperCase() : '👤') + '</div>' +
+      '<div style="font-size:16px;font-weight:600">' + user.displayName + '</div>' +
+      '<div style="font-size:13px;color:var(--text-sec)">' + user.email + '</div>' +
+      '</div>';
+    
+    // Mostra categorie in base al ruolo
+    if (currentRole === 'genitore' && user.categoriesAsGenitore) {
+      const cats = user.categoriesAsGenitore.split(',').map(c => c.trim()).filter(c => c);
+      html += '<div style="margin-bottom:16px">' +
+        '<div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:8px">Categorie</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+      cats.forEach(cat => {
+        html += '<div style="background:var(--blue-light);color:var(--blue-dark);padding:4px 10px;border-radius:8px;font-size:12px">' + CAT_LABELS[cat] + '</div>';
+      });
+      html += '</div></div>';
+    }
+    
+    if (currentRole === 'allenatore' && user.categoriesAsAllenatore) {
+      const cats = user.categoriesAsAllenatore.split(',').map(c => c.trim()).filter(c => c);
+      html += '<div style="margin-bottom:16px">' +
+        '<div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:8px">Categorie Allegate</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+      cats.forEach(cat => {
+        html += '<div style="background:var(--teal-light);color:var(--teal);padding:4px 10px;border-radius:8px;font-size:12px">' + CAT_LABELS[cat] + '</div>';
+      });
+      html += '</div></div>';
+    }
+    
+    // Switch ruolo se multiRole
+    if (user.multiRole && user.multiRole.length > 1) {
+      html += '<div style="margin-bottom:16px;padding:12px;background:var(--blue-light);border-radius:var(--radius-sm)">' +
+        '<div style="font-size:12px;color:var(--blue-dark);font-weight:600;margin-bottom:10px">Passa a un altro ruolo</div>';
+      user.multiRole.forEach(role => {
+        if (role !== currentRole) {
+          html += '<button class="btn-sm" style="width:100%;margin-bottom:8px" onclick="setUserRole(\'' + role + '\')">' + 
+            (role === 'genitore' ? '👨‍👩‍👧‍👦 Genitore' : '⛷️ Allenatore') + '</button>';
+        }
+      });
+      html += '</div>';
+    }
+    
+    html += '<button class="btn-primary" style="background:var(--red)" onclick="logout()">🚪 Logout</button>';
+    
+    document.getElementById('profile-content').innerHTML = html;
+    document.getElementById('profile-modal').classList.add('active');
+  });
+}
+
+function hideProfile() {
+  document.getElementById('profile-modal').classList.remove('active');
+}
+
+// ============ ADMIN ============
 function switchAdminTab(tab) {
   adminTab = tab;
   document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
@@ -765,37 +804,114 @@ function switchAdminTab(tab) {
 }
 
 function renderAdminTab() {
-  if (adminTab === 'import') {
+  if (adminTab === 'drive') {
+    renderDriveTab();
+  } else if (adminTab === 'import') {
     renderImportTab();
   } else if (adminTab === 'atleti') {
     renderAtletiTab();
-  } else if (adminTab === 'categorie') {
-    renderCategorieTab();
-  } else if (adminTab === 'utenti') {
-    renderUtentiTab();
-  } else if (adminTab === 'medici') {
-    renderMediciTab();
-  } else if (adminTab === 'events') {
-    renderEventsTab();
+  }
+}
+
+function renderDriveTab() {
+  let html = '<div class="admin-section">' +
+    '<div class="admin-card">' +
+    '<div class="admin-card-title">🔄 Google Drive Sync</div>' +
+    '<div class="sync-status">Cartella: 1PPhFjNiPr2nMhekTd6WLhQRFUGDMq1-g</div>' +
+    '<button class="btn-sm green" onclick="syncAtletiFromDrive()" style="width:100%;margin-bottom:8px">⬇️ Sincronizza ATLETI</button>' +
+    '<button class="btn-sm green" onclick="syncProgrammaFromDrive()" style="width:100%;margin-bottom:8px">⬇️ Sincronizza PROGRAMMA</button>' +
+    '<div id="sync-status" style="margin-top:12px;font-size:13px;color:var(--text-sec)"></div>' +
+    '</div>' +
+    '</div>';
+  document.getElementById('admin-content').innerHTML = html;
+}
+
+async function syncAtletiFromDrive() {
+  const statusEl = document.getElementById('sync-status');
+  statusEl.innerHTML = '<div class="loading-msg"><div class="spinner"></div> Scaricando atleti...</div>';
+  
+  try {
+    // Cerca il file "CONTATTI ATLETI 26-27.xlsx"
+    const file = await findFileInGoogleDrive('CONTATTI ATLETI 26-27.xlsx');
+    if (!file) throw new Error('File non trovato in Google Drive');
+    
+    const arrayBuffer = await downloadFileFromGoogleDrive(file.id);
+    if (!arrayBuffer) throw new Error('Errore nel download');
+    
+    // Parsa XLSX come nella funzione importa
+    const data = new Uint8Array(arrayBuffer);
+    const workbook = XLSX.read(data, { type: 'array' });
+    
+    const athletes = {};
+    ALL_CATEGORIES.forEach(cat => athletes[cat] = []);
+    
+    workbook.SheetNames.forEach(function(sheetName) {
+      const sheet = workbook.Sheets[sheetName];
+      const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      
+      if (allRows.length < 3) return;
+      
+      const headerRow = allRows[1];
+      const cognomeIdx = headerRow.indexOf('COGNOME');
+      const nomeIdx = headerRow.indexOf('NOME');
+      
+      if (cognomeIdx < 0 || nomeIdx < 0) return;
+      
+      const category = sheetName.toLowerCase();
+      if (!ALL_CATEGORIES.includes(category)) return;
+      
+      for (let i = 2; i < allRows.length; i++) {
+        const row = allRows[i];
+        const cognome = (row[cognomeIdx] || '').trim();
+        const nome = (row[nomeIdx] || '').trim();
+        
+        if (cognome || nome) {
+          athletes[category].push({
+            name: nome,
+            surname: cognome,
+            category: category
+          });
+        }
+      }
+    });
+    
+    // Salva su Firestore
+    await db.collection('config/athletes').doc('athletes').set({ athletes: athletes });
+    statusEl.innerHTML = '<div style="background:var(--teal-light);color:var(--teal);padding:10px;border-radius:var(--radius-sm);font-size:13px">✅ ' + Object.values(athletes).reduce((a, b) => a + b.length, 0) + ' atleti sincronizzati da Google Drive!</div>';
+  } catch (err) {
+    statusEl.innerHTML = '<div style="background:var(--red-light);color:var(--red);padding:10px;border-radius:var(--radius-sm);font-size:13px">❌ Errore: ' + err.message + '</div>';
+  }
+}
+
+async function syncProgrammaFromDrive() {
+  const statusEl = document.getElementById('sync-status');
+  statusEl.innerHTML = '<div class="loading-msg"><div class="spinner"></div> Scaricando programma...</div>';
+  
+  try {
+    const file = await findFileInGoogleDrive('PROGRAMMA ALLENAMENTI 26-27.xlsx');
+    if (!file) throw new Error('File non trovato in Google Drive');
+    
+    const arrayBuffer = await downloadFileFromGoogleDrive(file.id);
+    if (!arrayBuffer) throw new Error('Errore nel download');
+    
+    // TODO: Implementare parsing griglia mensile e creazione eventi
+    statusEl.innerHTML = '<div style="background:var(--amber-light);color:var(--amber);padding:10px;border-radius:var(--radius-sm);font-size:13px">⏳ Funzione in sviluppo...</div>';
+  } catch (err) {
+    statusEl.innerHTML = '<div style="background:var(--red-light);color:var(--red);padding:10px;border-radius:var(--radius-sm);font-size:13px">❌ Errore: ' + err.message + '</div>';
   }
 }
 
 function renderImportTab() {
-  var html = '<div class="admin-section">' +
+  let html = '<div class="admin-section">' +
     '<div class="admin-card">' +
-    '<div class="admin-card-title">📥 Importa file Excel</div>' +
+    '<div class="admin-card-title">📥 Importa file Excel (locale)</div>' +
     '<div class="dropzone" ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById(\'file-input\').click()">' +
     '<div class="dropzone-text">Trascina il file Excel qui o clicca per selezionare</div>' +
     '<input id="file-input" type="file" accept=".xlsx,.xls" onchange="handleFileSelect(event)">' +
     '</div>' +
     '<div id="import-status" style="margin-top:12px;font-size:13px;color:var(--text-sec)"></div>' +
     '</div>' +
-    '<div class="admin-card">' +
-    '<div class="admin-card-title">Atleti importati</div>' +
-    '<div id="imported-summary" style="font-size:13px;color:var(--text-sec)">Importa un file per iniziare.</div>' +
-    '</div>' +
     '</div>';
-  
   document.getElementById('admin-content').innerHTML = html;
 }
 
@@ -811,8 +927,7 @@ function handleDragLeave(e) {
 function handleFileDrop(e) {
   e.preventDefault();
   e.target.closest('.dropzone').classList.remove('active');
-  var files = e.dataTransfer.files;
-  if (files.length) processFile(files[0]);
+  if (e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]);
 }
 
 function handleFileSelect(e) {
@@ -820,662 +935,89 @@ function handleFileSelect(e) {
 }
 
 function processFile(file) {
-  var reader = new FileReader();
+  const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      var data = new Uint8Array(e.target.result);
-      var workbook = XLSX.read(data, { type: 'array' });
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
       
-      importedAthletes = {};
-      var debugInfo = [];
+      const athletes = {};
+      ALL_CATEGORIES.forEach(cat => athletes[cat] = []);
       
       workbook.SheetNames.forEach(function(sheetName) {
-        var sheet = workbook.Sheets[sheetName];
+        const sheet = workbook.Sheets[sheetName];
+        const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
         
-        // Leggi tutte le righe
-        var allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        if (allRows.length < 3) return;
         
-        // La riga 2 (indice 1) contiene i headers reali: COGNOME, NOME, DATA DI NASCITA, SCADENZA CM, etc.
-        // I dati iniziano dalla riga 3 (indice 2) in poi
-        if (allRows.length < 3) {
-          debugInfo.push(sheetName + ': too few rows');
-          return;
-        }
+        const headerRow = allRows[1];
+        const cognomeIdx = headerRow.indexOf('COGNOME');
+        const nomeIdx = headerRow.indexOf('NOME');
         
-        // Estrai headers dalla riga 2
-        var headerRow = allRows[1]; // indice 1 = riga 2
-        var cognomeIdx = headerRow.indexOf('COGNOME');
-        var nomeIdx = headerRow.indexOf('NOME');
-        var dataIdx = headerRow.indexOf('DATA DI NASCITA');
-        var scadenzaIdx = headerRow.indexOf('SCADENZA CM');
+        if (cognomeIdx < 0 || nomeIdx < 0) return;
         
-        if (cognomeIdx === -1 || nomeIdx === -1) {
-          debugInfo.push(sheetName + ': headers not found');
-          return;
-        }
+        const category = sheetName.toLowerCase();
+        if (!ALL_CATEGORIES.includes(category)) return;
         
-        // Mappa sheet name → categoria
-        var catKey = SHEET_MAPPING[sheetName];
-        if (!catKey) {
-          debugInfo.push(sheetName + ': unmapped');
-          return;
-        }
-        
-        // Leggi dati da riga 3 in poi
-        var athletes = [];
-        for (var i = 2; i < allRows.length; i++) {
-          var row = allRows[i];
-          var surname = (row[cognomeIdx] || '').toString().trim();
-          var name = (row[nomeIdx] || '').toString().trim();
+        for (let i = 2; i < allRows.length; i++) {
+          const row = allRows[i];
+          const cognome = (row[cognomeIdx] || '').trim();
+          const nome = (row[nomeIdx] || '').trim();
           
-          if (surname && name) {
-            athletes.push({
-              surname: surname,
-              name: name,
-              birthDate: row[dataIdx] || '',
-              medicalExpiry: row[scadenzaIdx] || ''
+          if (cognome || nome) {
+            athletes[category].push({
+              name: nome,
+              surname: cognome,
+              category: category
             });
           }
         }
-        
-        if (athletes.length > 0) {
-          importedAthletes[catKey] = athletes;
-          debugInfo.push(sheetName + ' → ' + catKey + ': ' + athletes.length + ' atleti');
-        }
       });
       
-      // Salva su Firestore
-      db.collection('config').doc('athletes').set({
-        athletes: importedAthletes,
-        importedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function() {
-        updateImportSummary();
-        var msg = '✓ File importato! ' + Object.values(importedAthletes).reduce((a, b) => a + b.length, 0) + ' atleti totali.';
-        document.getElementById('import-status').innerHTML = '<div class="alert alert-success show">' + msg + '</div>';
+      db.collection('config/athletes').doc('athletes').set({ athletes: athletes }).then(() => {
+        const totalAthletes = Object.values(athletes).reduce((a, b) => a + b.length, 0);
+        document.getElementById('import-status').innerHTML = '<div style="background:var(--teal-light);color:var(--teal);padding:10px;border-radius:var(--radius-sm);font-size:13px">✅ ' + totalAthletes + ' atleti importati!</div>';
       });
     } catch (err) {
-      document.getElementById('import-status').innerHTML = '<div class="alert alert-error show">✗ Errore: ' + err.message + '</div>';
+      document.getElementById('import-status').innerHTML = '<div style="background:var(--red-light);color:var(--red);padding:10px;border-radius:var(--radius-sm);font-size:13px">❌ Errore: ' + err.message + '</div>';
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
-function updateImportSummary() {
-  var total = 0;
-  var summary = '';
-  CAT_ORDER.forEach(function(cat) {
-    var count = (importedAthletes[cat] || []).length;
-    if (count > 0) {
-      total += count;
-      summary += '<div style="padding:8px 0;border-bottom:.5px solid var(--border)">' + CAT_LABELS[cat] + ': <strong>' + count + ' atleti</strong></div>';
-    }
-  });
-  
-  if (summary) {
-    summary = '<div style="margin-bottom:8px"><strong>Totale: ' + total + ' atleti</strong></div>' + summary;
-  }
-  
-  document.getElementById('imported-summary').innerHTML = summary || 'Nessun atleta importato.';
-}
-
 function renderAtletiTab() {
-  var html = '<div class="admin-section">';
+  document.getElementById('admin-content').innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">👥 Atleti Importati</div><div id="atleti-list" style="font-size:13px;color:var(--text-sec)">Caricamento...</div></div></div>';
   
-  CAT_ORDER.forEach(function(cat) {
-    var athletes = importedAthletes[cat] || [];
-    if (athletes.length > 0) {
-      html += '<div class="admin-card">' +
-        '<div class="admin-card-title">' + CAT_LABELS[cat] + ' (' + athletes.length + ')</div>';
-      
-      athletes.forEach(function(a) {
-        var medStatus = 'grigio';
-        if (a.medicalExpiry) {
-          var expiry = new Date(a.medicalExpiry);
-          var today = new Date();
-          var diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-          if (diffDays < 0) medStatus = 'rosso';
-          else if (diffDays < 30) medStatus = 'giallo';
-          else medStatus = 'verde';
-        }
-        
-        html += '<div class="request-row">' +
-          '<div class="request-info">' +
-          '<div class="request-name">' + a.name + ' ' + a.surname + '</div>' +
-          '<div class="request-detail">' + (a.medicalExpiry ? 'Scadenza: ' + new Date(a.medicalExpiry).toLocaleDateString('it-IT') : 'Data non disponibile') + '</div>' +
-          '</div>' +
-          '<span style="width:8px;height:8px;border-radius:50%;background:' + (medStatus === 'verde' ? 'var(--teal)' : medStatus === 'giallo' ? 'var(--amber-mid)' : medStatus === 'rosso' ? 'var(--red)' : 'var(--gray-400)') + '"></span>' +
-          '</div>';
-      });
-      
-      html += '</div>';
-    }
-  });
-  
-  html += '</div>';
-  document.getElementById('admin-content').innerHTML = html;
-}
-
-function renderCategorieTab() {
-  var html = '<div class="admin-section"><div class="admin-card">' +
-    '<div class="admin-card-title">🏷️ Gestione categorie</div>';
-  
-  CAT_ORDER.forEach(function(cat) {
-    html += '<div class="request-row">' +
-      '<div class="request-info"><div class="request-name">' + CAT_LABELS[cat] + '</div></div>' +
-      '<button class="btn-sm btn-sm-green">Modifica</button>' +
-      '</div>';
-  });
-  
-  html += '<div style="margin-top:16px"><button class="btn-primary" style="background:var(--teal)">+ Nuova categoria</button></div>' +
-    '</div></div>';
-  
-  document.getElementById('admin-content').innerHTML = html;
-}
-
-function renderUtentiTab() {
-  db.collection('users').get().then(function(snap) {
-    var users = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
-      .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
-    
-    var approved = users.filter(u => u.status === 'approved');
-    var pending = users.filter(u => u.status === 'pending');
-    var rejected = users.filter(u => u.status === 'rejected');
-    
-    var html = '<div class="admin-section">';
-    
-    if (approved.length > 0) {
-      html += '<div class="admin-card"><div class="admin-card-title">✓ Approvati (' + approved.length + ')</div>';
-      approved.forEach(function(u) {
-        var role = u.role === 'admin' ? 'Admin' : u.role === 'allenatore' ? 'Allenatore' : 'Genitore';
-        html += '<div class="request-row">' +
-          '<div class="request-info"><div class="request-name">' + (u.displayName || u.email) + '</div><div class="request-detail">' + role + '</div></div>' +
-          (u.role !== 'admin' ? '<button class="btn-sm btn-sm-red" onclick="suspendUser(\'' + u.id + '\')">Sospendi</button>' : '') +
-          '</div>';
-      });
-      html += '</div>';
-    }
-    
-    if (pending.length > 0) {
-      html += '<div class="admin-card"><div class="admin-card-title">⏳ In sospeso (' + pending.length + ')</div>';
-      pending.forEach(function(u) {
-        html += '<div class="request-row">' +
-          '<div class="request-info"><div class="request-name">' + (u.displayName || u.email) + '</div><div class="request-detail">' + u.email + '</div></div>' +
-          '<button class="btn-sm btn-sm-green" onclick="approveUser(\'' + u.id + '\')">Approva</button>' +
-          '</div>';
-      });
-      html += '</div>';
-    }
-    
-    if (rejected.length > 0) {
-      html += '<div class="admin-card"><div class="admin-card-title">✗ Rifiutati (' + rejected.length + ')</div>';
-      rejected.forEach(function(u) {
-        html += '<div class="request-row">' +
-          '<div class="request-info"><div class="request-name">' + (u.displayName || u.email) + '</div></div>' +
-          '<button class="btn-sm btn-sm-green" onclick="approveUser(\'' + u.id + '\')">Riattiva</button>' +
-          '</div>';
-      });
-      html += '</div>';
-    }
-    
-    html += '</div>';
-    document.getElementById('admin-content').innerHTML = html;
-  });
-}
-
-function approveUser(uid) {
-  db.collection('users').doc(uid).update({ status: 'approved' }).then(function() {
-    renderUtentiTab();
-  });
-}
-
-function suspendUser(uid) {
-  if (confirm('Sospendere questo account?')) {
-    db.collection('users').doc(uid).update({ status: 'rejected' }).then(function() {
-      renderUtentiTab();
-    });
-  }
-}
-
-function renderMediciTab() {
-  var html = '<div class="admin-section"><div class="admin-card">' +
-    '<div class="admin-card-title">🏥 Certificati medici</div>' +
-    '<div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">Gestisci scadenze dei certificati medici per categoria.</div>';
-  
-  CAT_ORDER.forEach(function(cat) {
-    var athletes = importedAthletes[cat] || [];
-    var scaduti = athletes.filter(a => {
-      if (!a.medicalExpiry) return false;
-      var exp = new Date(a.medicalExpiry);
-      return exp < new Date();
-    }).length;
-    
-    var inScadenza = athletes.filter(a => {
-      if (!a.medicalExpiry) return false;
-      var exp = new Date(a.medicalExpiry);
-      var diff = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
-      return diff >= 0 && diff < 30;
-    }).length;
-    
-    html += '<div class="request-row">' +
-      '<div class="request-info">' +
-      '<div class="request-name">' + CAT_LABELS[cat] + '</div>' +
-      '<div class="request-detail">🔴 Scaduti: ' + scaduti + ' | 🟡 In scadenza: ' + inScadenza + '</div>' +
-      '</div>' +
-      '<button class="btn-sm btn-sm-green" onclick="openMediciModal(\'' + cat + '\')">Dettagli</button>' +
-      '</div>';
-  });
-  
-  html += '</div></div>';
-  document.getElementById('admin-content').innerHTML = html;
-}
-
-function openMediciModal(cat) {
-  var athletes = importedAthletes[cat] || [];
-  var html = '<div class="modal-header">' + CAT_LABELS[cat] + ' - Certificati medici</div>';
-  
-  var byStatus = { scaduti: [], inScadenza: [], validi: [], nonInseriti: [] };
-  
-  athletes.forEach(function(a) {
-    if (!a.medicalExpiry) {
-      byStatus.nonInseriti.push(a);
-    } else {
-      var exp = new Date(a.medicalExpiry);
-      var diff = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
-      if (diff < 0) byStatus.scaduti.push(a);
-      else if (diff < 30) byStatus.inScadenza.push(a);
-      else byStatus.validi.push(a);
-    }
-  });
-  
-  var sections = [
-    { title: 'Scaduti', data: byStatus.scaduti, color: 'var(--red)' },
-    { title: 'In scadenza', data: byStatus.inScadenza, color: 'var(--amber-mid)' },
-    { title: 'Validi', data: byStatus.validi, color: 'var(--teal)' },
-    { title: 'Non inseriti', data: byStatus.nonInseriti, color: 'var(--gray-400)' }
-  ];
-  
-  sections.forEach(function(sec) {
-    if (sec.data.length > 0) {
-      html += '<div style="margin-top:16px"><div style="font-size:13px;font-weight:600;color:' + sec.color + ';">' + sec.title + ' (' + sec.data.length + ')</div>';
-      sec.data.forEach(function(a) {
-        html += '<div class="request-row">' +
-          '<div class="request-info">' +
-          '<div class="request-name">' + a.name + ' ' + a.surname + '</div>' +
-          '<div class="request-detail">' + (a.medicalExpiry ? new Date(a.medicalExpiry).toLocaleDateString('it-IT') : 'N/A') + '</div>' +
-          '</div></div>';
-      });
-      html += '</div>';
-    }
-  });
-  
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-overlay').classList.add('active');
-}
-
-function renderEventsTab() {
-  db.collection('events').orderBy('date').get().then(function(snap) {
-    var events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
-    
-    var html = '<div class="admin-section"><div class="admin-card">' +
-      '<div class="admin-card-title">📌 Gestione eventi</div>';
-    
-    events.forEach(function(e) {
-      html += '<div class="request-row">' +
-        '<div class="request-info">' +
-        '<div class="request-name">' + e.title + '</div>' +
-        '<div class="request-detail">' + new Date(e.date).toLocaleDateString('it-IT') + ' - ' + (CAT_LABELS[e.category] || e.category) + '</div>' +
-        '</div>' +
-        '<button class="btn-sm btn-sm-red" onclick="deleteEvent(\'' + e.id + '\')">Elimina</button>' +
-        '</div>';
-    });
-    
-    html += '<div style="margin-top:16px"><button class="btn-primary" style="background:var(--teal)" onclick="openNewEventModal()">+ Nuovo evento</button></div>' +
-      '</div></div>';
-    
-    document.getElementById('admin-content').innerHTML = html;
-  });
-}
-
-function deleteEvent(eventId) {
-  if (confirm('Eliminare questo evento?')) {
-    db.collection('events').doc(eventId).delete().then(function() {
-      renderEventsTab();
-    });
-  }
-}
-
-function openNewEventModal() {
-  var html = '<div class="modal-header">Nuovo evento</div>' +
-    '<div class="field-label">Titolo</div>' +
-    '<input class="field-input" id="new-event-title" placeholder="Nome evento">' +
-    '<div class="field-label">Data</div>' +
-    '<input class="field-input" id="new-event-date" type="date">' +
-    '<div class="field-label">Categoria</div>' +
-    '<select class="field-input" id="new-event-cat">' +
-    CAT_ORDER.map(c => '<option value="' + c + '">' + CAT_LABELS[c] + '</option>').join('') +
-    '</select>' +
-    '<div class="field-label">Tipo attività</div>' +
-    '<select class="field-input" id="new-event-type">' +
-    '<option value="sci">Sci</option><option value="atletica">Atletica</option>' +
-    '<option value="multi">Multisport</option><option value="campus">Campus</option>' +
-    '<option value="info">Info</option>' +
-    '</select>' +
-    '<button class="btn-primary" style="background:var(--teal);margin-top:12px" onclick="saveNewEvent()">Crea evento</button>';
-  
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-overlay').classList.add('active');
-}
-
-function saveNewEvent() {
-  var title = document.getElementById('new-event-title').value.trim();
-  var date = document.getElementById('new-event-date').value;
-  var cat = document.getElementById('new-event-cat').value;
-  var type = document.getElementById('new-event-type').value;
-  
-  if (!title || !date || !cat) {
-    alert('Compila tutti i campi');
-    return;
-  }
-  
-  db.collection('events').add({
-    title: title,
-    date: date,
-    category: cat,
-    type: type,
-    color: '#888',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function() {
-    alert('Evento creato!');
-    closeModal();
-    renderEventsTab();
-  });
-}
-
-// ============ MODAL FUNCTIONS ============
-let modalTimeout = null;
-
-function openEventModal(el) {
-  var eventId = el.dataset.eventId;
-  var category = el.dataset.category;
-  var date = el.dataset.date;
-  var title = el.querySelector('.event-title').textContent;
-  var dayInfo = el.querySelector('.event-day-num').textContent + ' ' + el.querySelector('.event-day-name').textContent;
-  
-  // Se è allenatore E ha questa categoria, mostra 2 bottoni
-  db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
-    var userData = userSnap.data();
-    // Leggi stringhe separate da virgola
-    var catsStr = (userRole === 'allenatore') ? (userData.categoriesAsAllenatore || userData.categories || '') : (userData.categoriesAsGenitore || userData.categories || '');
-    var userCats = catsStr.split(',').map(c => c.trim()).filter(c => c);
-    var isAllenatore = userData.multiRole && userData.multiRole.includes('allenatore') && userRole === 'allenatore';
-    var hasCategory = userCats.includes(category);
-    
-    var html = '<div class="modal-header">' + title + '</div>' +
-      '<div style="font-size:13px;color:var(--text-sec);margin-bottom:16px">' + dayInfo + '</div>';
-    
-    // Se allenatore della categoria: mostra 2 opzioni
-    if (isAllenatore && hasCategory) {
-      html += '<div style="display:flex;gap:10px;margin-bottom:16px">' +
-        '<button class="btn-primary" style="flex:1;background:var(--teal)" onclick="openAttendanceModal(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">📋 Segna presenze</button>' +
-        '<button class="btn-primary" style="flex:1;background:var(--amber-mid)" onclick="openMessageModal(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">✉️ Scrivi messaggio</button>' +
-        '</div>';
-    }
-    
-    // Carica e mostra messaggio se esiste
-    db.collection('eventMessages').doc(eventId + '_' + category).get().then(function(msgSnap) {
-      if (msgSnap.exists) {
-        var msgData = msgSnap.data();
-        html += '<div style="background:var(--blue-light);padding:12px;border-radius:8px;margin-top:12px">' +
-          '<div style="font-weight:600;color:var(--blue-dark);font-size:12px">Messaggio allenatore</div>' +
-          '<div style="margin-top:6px;font-size:13px;color:var(--text)">' + (msgData.text || '') + '</div>' +
-          '<div style="font-size:11px;color:var(--text-sec);margin-top:4px">' + (msgData.authorName || 'Allenatore') + ' - ' + new Date(msgData.createdAt.toDate()).toLocaleDateString('it-IT') + '</div>' +
-          '</div>';
-      }
-      
-      document.getElementById('modal-body').innerHTML = html;
-      document.getElementById('modal-overlay').classList.add('active');
-      
-      clearTimeout(modalTimeout);
-      modalTimeout = setTimeout(() => closeModal(), 8000);
-    });
-  });
-}
-
-function openAttendanceModal(eventId, category, date) {
-  // Carica atleti dalla categoria
-  db.collection('config').doc('athletes').get().then(function(snap) {
+  db.collection('config/athletes').doc('athletes').get().then(function(snap) {
     if (!snap.exists) {
-      alert('Atleti non caricati');
+      document.getElementById('atleti-list').innerHTML = 'Nessun atleta importato.';
       return;
     }
     
-    var allAthletes = snap.data().athletes || {};
-    var athletes = (allAthletes[category] || []).slice();
+    const athletes = snap.data().athletes || {};
+    let html = '';
     
-    // Carica presenze già salvate
-    db.collection('attendance').doc(eventId + '_' + category).get().then(function(attSnap) {
-      var savedAttendance = {};
-      if (attSnap.exists) {
-        savedAttendance = attSnap.data().attendance || {};
-      }
-      
-      var html = '<div class="modal-header">Presenze — ' + (athletes.length > 0 ? athletes[0].name : 'Categoria') + '</div>' +
-        '<div style="margin-bottom:16px;font-size:12px;color:var(--text-sec)">Data: ' + new Date(date).toLocaleDateString('it-IT') + ' | ' + athletes.length + ' atleti</div>' +
-        '<div id="attendance-list" style="display:flex;flex-direction:column;gap:0;margin-bottom:16px;max-height:300px;overflow-y:auto">';
-      
-      athletes.forEach(function(a, i) {
-        var isChecked = savedAttendance[i] ? ' checked' : '';
-        html += '<div class="attendance-item">' +
-          '<input type="checkbox" class="attendance-checkbox" data-athlete-id="' + i + '"' + isChecked + ' onchange="toggleAttendance(this)">' +
-          '<div class="attendance-info">' +
-          '<div class="attendance-name">' + a.name + '</div>' +
-          '<div class="attendance-detail">' + a.surname + '</div>' +
-          '</div></div>';
-      });
-      
-      html += '</div>' +
-        '<div style="display:flex;gap:10px">' +
-        '<button class="btn-primary" style="flex:1;background:var(--teal)" onclick="saveAttendance(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">✅ Salva presenze</button>' +
-        '<button class="btn-primary" style="flex:1;background:var(--amber-mid)" onclick="exportAttendanceCSV(\'' + eventId + '\', \'' + category + '\')">📥 Export CSV</button>' +
-        '</div>';
-      
-      document.getElementById('modal-body').innerHTML = html;
-      clearTimeout(modalTimeout);
-      modalTimeout = setTimeout(() => closeModal(), 15000);
-    });
-  });
-}
-
-function toggleAttendance(el) {
-  el.classList.toggle('checked');
-}
-
-function saveAttendance(eventId, category, date) {
-  var attendance = {};
-  document.querySelectorAll('.attendance-checkbox:checked').forEach(function(el) {
-    var athleteId = el.dataset.athleteId;
-    attendance[athleteId] = true;
-  });
-  
-  db.collection('attendance').doc(eventId + '_' + category).set({
-    eventId: eventId,
-    category: category,
-    date: date,
-    attendance: attendance,
-    recordedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function() {
-    alert('✅ Presenze salvate!');
-    closeModal();
-  }).catch(function(err) {
-    alert('❌ Errore: ' + err.message);
-  });
-}
-
-function exportAttendanceCSV(eventId, category) {
-  db.collection('config').doc('athletes').get().then(function(snap) {
-    if (!snap.exists) return;
-    
-    var allAthletes = snap.data().athletes || {};
-    var athletes = (allAthletes[category] || []).slice();
-    
-    db.collection('attendance').doc(eventId + '_' + category).get().then(function(attSnap) {
-      var savedAttendance = attSnap.exists ? (attSnap.data().attendance || {}) : {};
-      
-      // Carica evento per il nome
-      db.collection('events').doc(eventId).get().then(function(eventSnap) {
-        var eventName = eventSnap.exists ? eventSnap.data().title : 'Evento';
-        var eventDate = eventSnap.exists ? eventSnap.data().date : '';
-        
-        // Genera CSV
-        var csv = 'Evento,Data,Categoria,Atleta,Presente\n';
-        csv += eventName + ',' + eventDate + ',' + CAT_LABELS[category] + ',';
-        var header = csv;
-        
-        athletes.forEach(function(a, i) {
-          var isPresent = savedAttendance[i] ? 'Si' : 'No';
-          csv += a.name + ' ' + a.surname + ',' + (isPresent) + '\n';
-        });
-        
-        // Download CSV
-        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        var link = document.createElement('a');
-        var url = URL.createObjectURL(blob);
-        var filename = 'presenze_' + eventId + '_' + category + '_' + new Date().toISOString().split('T')[0] + '.csv';
-        
-        link.setAttribute('href', url);
-        link.setAttribute('download', filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        alert('✅ CSV scaricato: ' + filename);
-      });
-    });
-  });
-}
-
-function openMessageModal(eventId, category, date) {
-  // Carica messaggio esistente
-  db.collection('eventMessages').doc(eventId + '_' + category).get().then(function(snap) {
-    var existingText = '';
-    if (snap.exists) {
-      existingText = snap.data().text || '';
+    for (const [cat, list] of Object.entries(athletes)) {
+      html += '<div style="margin-bottom:16px">' +
+        '<div style="font-weight:600;color:var(--text);margin-bottom:8px">' + CAT_LABELS[cat] + ' (' + list.length + ')</div>' +
+        '<div style="background:var(--bg);padding:10px;border-radius:var(--radius-sm);font-size:12px">' +
+        list.map(a => a.surname + ' ' + a.name).join('<br>') +
+        '</div></div>';
     }
     
-    var html = '<div class="modal-header">Messaggio per i genitori</div>' +
-      '<div style="font-size:12px;color:var(--text-sec);margin-bottom:12px">Data: ' + new Date(date).toLocaleDateString('it-IT') + '</div>' +
-      '<div class="field-label">Testo messaggio</div>' +
-      '<textarea class="field-input" id="event-message" placeholder="Scrivi il messaggio per i genitori..." style="min-height:120px;resize:vertical;font-family:inherit">' + existingText + '</textarea>' +
-      '<button class="btn-primary" style="background:var(--amber-mid);margin-top:12px" onclick="saveEventMessage(\'' + eventId + '\', \'' + category + '\', \'' + date + '\')">📤 Invia messaggio</button>';
-    
-    document.getElementById('modal-body').innerHTML = html;
-    clearTimeout(modalTimeout);
-    modalTimeout = setTimeout(() => closeModal(), 15000);
+    document.getElementById('atleti-list').innerHTML = html;
   });
 }
 
-function saveEventMessage(eventId, category, date) {
-  var text = document.getElementById('event-message').value.trim();
-  if (!text) {
-    alert('Scrivi un messaggio');
-    return;
+// ============ INIT ============
+auth.onAuthStateChanged(function(user) {
+  if (!user) {
+    showScreen('login');
+  } else {
+    currentUser = user;
+    loadUserData();
   }
-  
-  db.collection('users').doc(currentUser.uid).get().then(function(userSnap) {
-    var userData = userSnap.data();
-    
-    db.collection('eventMessages').doc(eventId + '_' + category).set({
-      eventId: eventId,
-      category: category,
-      date: date,
-      text: text,
-      authorId: currentUser.uid,
-      authorName: userData.displayName,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function() {
-      alert('✅ Messaggio inviato!');
-      closeModal();
-    }).catch(function(err) {
-      alert('❌ Errore: ' + err.message);
-    });
-  });
-}
-
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('active');
-  clearTimeout(modalTimeout);
-}
-
-function showProfile() {
-  db.collection('users').doc(currentUser.uid).get().then(function(snap) {
-    var userData = snap.data();
-    var html = '<div class="modal-header">Profilo</div>' +
-      '<div class="profile-header" style="border-bottom:.5px solid var(--border);padding-bottom:12px">' +
-      '<div class="profile-avatar">' + (userData.displayName || 'U').charAt(0) + '</div>' +
-      '<div><div class="profile-name">' + (userData.displayName || userData.email) + '</div>' +
-      '<div class="profile-email">' + userData.email + '</div></div></div>';
-    
-    // Mostra atleti se genitore
-    if (userRole === 'genitore') {
-      html += '<div style="margin-top:16px"><strong>Atleti</strong></div>';
-      (userData.athletes || []).forEach(function(a) {
-        html += '<div class="athlete-pill">' + a.name + ' - ' + (CAT_LABELS[a.category] || a.category) + '</div>';
-      });
-      
-      var catsStr = userData.categoriesAsGenitore || userData.categories || '';
-      var cats = catsStr.split(',').map(c => c.trim()).filter(c => c);
-      html += '<div style="margin-top:16px"><strong>Categorie figli</strong></div>';
-      cats.forEach(function(c) {
-        html += '<div class="athlete-pill">' + (CAT_LABELS[c] || c) + '</div>';
-      });
-    }
-    
-    // Mostra categorie se allenatore
-    if (userRole === 'allenatore') {
-      var catsStr = userData.categoriesAsAllenatore || userData.categories || '';
-      var cats = catsStr.split(',').map(c => c.trim()).filter(c => c);
-      html += '<div style="margin-top:16px"><strong>Categorie allegate</strong></div>';
-      cats.forEach(function(c) {
-        html += '<div class="athlete-pill">' + (CAT_LABELS[c] || c) + '</div>';
-      });
-    }
-    
-    // Switch ruolo: mostra bottone se ha multiRole
-    if (userData.multiRole && userData.multiRole.length > 1) {
-      if (userRole === 'allenatore') {
-        html += '<button class="btn-primary" style="margin-top:16px;background:var(--blue)" onclick="setUserRole(\'genitore\')">👨‍👩‍👧 Passa a Genitore</button>';
-      } else if (userRole === 'genitore') {
-        html += '<button class="btn-primary" style="margin-top:16px;background:var(--teal)" onclick="setUserRole(\'allenatore\')">🎿 Passa ad Allenatore</button>';
-      }
-    }
-    
-    html += '<button class="btn-primary" style="margin-top:16px" onclick="logoutUser()">🚪 Esci dall\'account</button>';
-    
-    document.getElementById('profile-body').innerHTML = html;
-    document.getElementById('profile-modal').classList.add('active');
-    
-    clearTimeout(modalTimeout);
-    modalTimeout = setTimeout(() => closeProfile(), 10000);
-  });
-}
-
-
-function closeProfile() {
-  document.getElementById('profile-modal').classList.remove('active');
-  clearTimeout(modalTimeout);
-}
-
-// ============ INIT ============ 
-window.addEventListener('load', function() {
-  // Carica config da Firestore
-  db.collection('config').doc('athletes').get().then(function(snap) {
-    if (snap.exists) {
-      importedAthletes = snap.data().athletes || {};
-    }
-  });
 });
-
 </script>
 
 </body>
