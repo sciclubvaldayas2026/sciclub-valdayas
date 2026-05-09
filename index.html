@@ -257,6 +257,18 @@ const CAT_LABELS = {
 
 const ALL_CATEGORIES = ['sbaby', 'baby', 'cuccioli', 'ragazzi', 'allievi', 'giovani', 'giovani_fisi', 'master'];
 
+// Mapping tra nomi sheet (file XLSX) e categorie interne
+const SHEET_TO_CATEGORY = {
+  'SUPERBABY': 'sbaby',
+  'BABY': 'baby',
+  'CUCCIOLI': 'cuccioli',
+  'RAGAZZI': 'ragazzi',
+  'ALLIEVI': 'allievi',
+  'GIOVANI': 'giovani',           // Giovani FIS (nel file si chiama GIOVANI)
+  'GIOVANI FISI': 'giovani_fisi',
+  'MASTER': 'master'
+};
+
 // ============ AUTH ============
 function login() {
   const email = document.getElementById('login-email').value.trim();
@@ -855,8 +867,14 @@ async function syncAtletiFromDrive() {
       
       if (cognomeIdx < 0 || nomeIdx < 0) return;
       
-      const category = sheetName.toLowerCase();
-      if (!ALL_CATEGORIES.includes(category)) return;
+      // Usa il mapping SHEET_TO_CATEGORY per convertire il nome sheet a categoria interna
+      const sheetNameUpper = sheetName.toUpperCase().trim();
+      const category = SHEET_TO_CATEGORY[sheetNameUpper];
+      
+      if (!category) {
+        console.log('⚠️ Sheet non mappato: ' + sheetName);
+        return;
+      }
       
       for (let i = 2; i < allRows.length; i++) {
         const row = allRows[i];
@@ -1018,8 +1036,14 @@ function processFile(file) {
         
         if (cognomeIdx < 0 || nomeIdx < 0) return;
         
-        const category = sheetName.toLowerCase();
-        if (!ALL_CATEGORIES.includes(category)) return;
+        // Usa il mapping SHEET_TO_CATEGORY
+        const sheetNameUpper = sheetName.toUpperCase().trim();
+        const category = SHEET_TO_CATEGORY[sheetNameUpper];
+        
+        if (!category) {
+          console.log('⚠️ Sheet non mappato: ' + sheetName);
+          return;
+        }
         
         for (let i = 2; i < allRows.length; i++) {
           const row = allRows[i];
