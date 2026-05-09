@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sci Club Val d'Ayas">
 <meta name="theme-color" content="#0C447C">
-<title>Sci Club Val d'Ayas v3.0</title>
+<title>Sci Club Val d'Ayas v3.1</title>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -175,9 +175,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       <button class="avatar-btn" onclick="showProfile()">👤</button>
     </div>
     <div class="admin-tabs">
-      <button class="admin-tab active" onclick="switchAdminTab('drive')">🔄 Drive Sync</button>
+      <button class="admin-tab active" onclick="switchAdminTab('drive')">🔄 Drive</button>
       <button class="admin-tab" onclick="switchAdminTab('import')">📥 Import</button>
       <button class="admin-tab" onclick="switchAdminTab('atleti')">👥 Atleti</button>
+      <button class="admin-tab" onclick="switchAdminTab('categorie')">🏷️ Categorie</button>
+      <button class="admin-tab" onclick="switchAdminTab('utenti')">👤 Utenti</button>
+      <button class="admin-tab" onclick="switchAdminTab('medici')">🏥 Medici</button>
+      <button class="admin-tab" onclick="switchAdminTab('events')">📌 Eventi</button>
     </div>
     <div class="content" id="admin-content"></div>
   </div>
@@ -810,6 +814,14 @@ function renderAdminTab() {
     renderImportTab();
   } else if (adminTab === 'atleti') {
     renderAtletiTab();
+  } else if (adminTab === 'categorie') {
+    renderCategorieTab();
+  } else if (adminTab === 'utenti') {
+    renderUtentiTab();
+  } else if (adminTab === 'medici') {
+    renderMediciTab();
+  } else if (adminTab === 'events') {
+    renderEventsTab();
   }
 }
 
@@ -1007,6 +1019,212 @@ function renderAtletiTab() {
     
     document.getElementById('atleti-list').innerHTML = html;
   });
+}
+
+function renderCategorieTab() {
+  let html = '<div class="admin-section"><div class="admin-card">' +
+    '<div class="admin-card-title">🏷️ Gestione categorie</div>';
+  
+  ALL_CATEGORIES.forEach(cat => {
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:.5px solid var(--border)">' +
+      '<div style="font-size:14px;font-weight:500">' + CAT_LABELS[cat] + '</div>' +
+      '<button class="btn-sm" style="background:var(--blue-light);color:var(--blue-dark)">Modifica</button>' +
+      '</div>';
+  });
+  
+  html += '<div style="margin-top:16px"><button class="btn-primary" style="background:var(--teal)">+ Nuova categoria</button></div>' +
+    '</div></div>';
+  
+  document.getElementById('admin-content').innerHTML = html;
+}
+
+function renderUtentiTab() {
+  document.getElementById('admin-content').innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">👤 Utenti</div><div id="users-list" style="font-size:13px;color:var(--text-sec)">Caricamento...</div></div></div>';
+  
+  db.collection('users').get().then(function(snap) {
+    const users = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
+      .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
+    
+    const approved = users.filter(u => u.status === 'approved');
+    const pending = users.filter(u => u.status === 'pending');
+    const rejected = users.filter(u => u.status === 'rejected');
+    
+    let html = '';
+    
+    if (approved.length > 0) {
+      html += '<div class="admin-card"><div class="admin-card-title" style="margin-top:0">✅ Approvati (' + approved.length + ')</div>';
+      approved.forEach(u => {
+        const role = u.role === 'admin' ? 'Admin' : u.role === 'allenatore' ? 'Allenatore' : 'Genitore';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:.5px solid var(--border)">' +
+          '<div>' +
+          '<div style="font-size:14px;font-weight:500">' + (u.displayName || u.email) + '</div>' +
+          '<div style="font-size:12px;color:var(--text-sec)">' + role + '</div>' +
+          '</div>' +
+          (u.role !== 'admin' ? '<button class="btn-sm" style="background:var(--red-light);color:var(--red)" onclick="suspendUser(\'' + u.id + '\')">Sospendi</button>' : '') +
+          '</div>';
+      });
+      html += '</div>';
+    }
+    
+    if (pending.length > 0) {
+      html += '<div class="admin-card"><div class="admin-card-title">⏳ In sospeso (' + pending.length + ')</div>';
+      pending.forEach(u => {
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:.5px solid var(--border)">' +
+          '<div>' +
+          '<div style="font-size:14px;font-weight:500">' + (u.displayName || u.email) + '</div>' +
+          '<div style="font-size:12px;color:var(--text-sec)">' + u.email + '</div>' +
+          '</div>' +
+          '<button class="btn-sm" style="background:var(--teal-light);color:var(--teal)" onclick="approveUser(\'' + u.id + '\')">Approva</button>' +
+          '</div>';
+      });
+      html += '</div>';
+    }
+    
+    if (rejected.length > 0) {
+      html += '<div class="admin-card"><div class="admin-card-title">❌ Rifiutati (' + rejected.length + ')</div>';
+      rejected.forEach(u => {
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:.5px solid var(--border)">' +
+          '<div style="font-size:14px;font-weight:500">' + (u.displayName || u.email) + '</div>' +
+          '<button class="btn-sm" style="background:var(--teal-light);color:var(--teal)" onclick="approveUser(\'' + u.id + '\')">Riattiva</button>' +
+          '</div>';
+      });
+      html += '</div>';
+    }
+    
+    document.getElementById('users-list').innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun utente trovato</div>';
+  });
+}
+
+function approveUser(uid) {
+  db.collection('users').doc(uid).update({ status: 'approved' }).then(() => {
+    renderUtentiTab();
+  });
+}
+
+function suspendUser(uid) {
+  if (confirm('Sospendere questo account?')) {
+    db.collection('users').doc(uid).update({ status: 'rejected' }).then(() => {
+      renderUtentiTab();
+    });
+  }
+}
+
+function renderMediciTab() {
+  let html = '<div class="admin-section"><div class="admin-card">' +
+    '<div class="admin-card-title">🏥 Certificati medici</div>' +
+    '<div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">Gestisci scadenze dei certificati medici per categoria.</div>';
+  
+  db.collection('config/athletes').doc('athletes').get().then(function(snap) {
+    if (!snap.exists) {
+      html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Importa atleti per visualizzare certificati medici</div>';
+      document.getElementById('admin-content').innerHTML = html + '</div></div>';
+      return;
+    }
+    
+    const athletes = snap.data().athletes || {};
+    
+    for (const [cat, list] of Object.entries(athletes)) {
+      const scaduti = list.filter(a => {
+        if (!a.medicalExpiry) return false;
+        const exp = new Date(a.medicalExpiry);
+        return exp < new Date();
+      }).length;
+      
+      const inScadenza = list.filter(a => {
+        if (!a.medicalExpiry) return false;
+        const exp = new Date(a.medicalExpiry);
+        const diff = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
+        return diff >= 0 && diff < 30;
+      }).length;
+      
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:.5px solid var(--border)">' +
+        '<div>' +
+        '<div style="font-size:14px;font-weight:500">' + CAT_LABELS[cat] + '</div>' +
+        '<div style="font-size:12px;color:var(--text-sec)">🔴 Scaduti: ' + scaduti + ' | 🟡 In scadenza: ' + inScadenza + '</div>' +
+        '</div>' +
+        '<button class="btn-sm" style="background:var(--teal-light);color:var(--teal)" onclick="openMediciModal(\'' + cat + '\')">Dettagli</button>' +
+        '</div>';
+    }
+    
+    document.getElementById('admin-content').innerHTML = html + '</div></div>';
+  });
+}
+
+function openMediciModal(cat) {
+  db.collection('config/athletes').doc('athletes').get().then(function(snap) {
+    if (!snap.exists) return;
+    
+    const athletes = snap.data().athletes[cat] || [];
+    let html = '<div style="margin-bottom:16px"><div style="font-size:16px;font-weight:600">' + CAT_LABELS[cat] + ' - Certificati medici</div></div>';
+    
+    const byStatus = { scaduti: [], inScadenza: [], validi: [], nonInseriti: [] };
+    
+    athletes.forEach(a => {
+      if (!a.medicalExpiry) {
+        byStatus.nonInseriti.push(a);
+      } else {
+        const exp = new Date(a.medicalExpiry);
+        const diff = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
+        if (diff < 0) byStatus.scaduti.push(a);
+        else if (diff < 30) byStatus.inScadenza.push(a);
+        else byStatus.validi.push(a);
+      }
+    });
+    
+    const sections = [
+      { title: '🔴 Scaduti', data: byStatus.scaduti, color: 'var(--red)' },
+      { title: '🟡 In scadenza', data: byStatus.inScadenza, color: 'var(--amber-mid)' },
+      { title: '🟢 Validi', data: byStatus.validi, color: 'var(--teal)' },
+      { title: '⚪ Non inseriti', data: byStatus.nonInseriti, color: 'var(--gray-400)' }
+    ];
+    
+    sections.forEach(sec => {
+      if (sec.data.length > 0) {
+        html += '<div style="margin-top:16px"><div style="font-size:13px;font-weight:600;color:' + sec.color + ';">' + sec.title + ' (' + sec.data.length + ')</div>';
+        sec.data.forEach(a => {
+          html += '<div style="padding:8px 0;border-bottom:.5px solid var(--border);font-size:13px">' +
+            '<div style="font-weight:500">' + a.surname + ' ' + a.name + '</div>' +
+            '<div style="color:var(--text-sec);font-size:12px">' + (a.medicalExpiry ? new Date(a.medicalExpiry).toLocaleDateString('it-IT') : 'N/A') + '</div>' +
+            '</div>';
+        });
+        html += '</div>';
+      }
+    });
+    
+    document.getElementById('event-modal-content').innerHTML = html;
+    document.getElementById('event-modal').classList.add('active');
+  });
+}
+
+function renderEventsTab() {
+  document.getElementById('admin-content').innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">📌 Gestione eventi</div><div id="events-list" style="font-size:13px;color:var(--text-sec)">Caricamento...</div></div></div>';
+  
+  db.collection('events').orderBy('date').get().then(function(snap) {
+    const events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    
+    let html = '';
+    events.forEach(e => {
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:.5px solid var(--border)">' +
+        '<div>' +
+        '<div style="font-size:14px;font-weight:500">' + e.title + '</div>' +
+        '<div style="font-size:12px;color:var(--text-sec)">' + new Date(e.date).toLocaleDateString('it-IT') + ' - ' + CAT_LABELS[e.category] + '</div>' +
+        '</div>' +
+        '<button class="btn-sm" style="background:var(--red-light);color:var(--red)" onclick="deleteEvent(\'' + e.id + '\')">Elimina</button>' +
+        '</div>';
+    });
+    
+    html += '<div style="margin-top:16px"><button class="btn-primary" style="background:var(--teal)">+ Nuovo evento</button></div>';
+    
+    document.getElementById('events-list').innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun evento trovato</div>';
+  });
+}
+
+function deleteEvent(eventId) {
+  if (confirm('Eliminare questo evento?')) {
+    db.collection('events').doc(eventId).delete().then(() => {
+      renderEventsTab();
+    });
+  }
 }
 
 // ============ INIT ============
