@@ -360,9 +360,10 @@ function syncGoogleDriveStructure() {
 
 async function downloadFileFromGoogleDrive(fileId) {
   try {
-    const url = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    // Usa l'endpoint di export Google Sheets (funziona con CORS)
+    const url = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
     const response = await fetch(url);
-    if (!response.ok) throw new Error('Download fallito');
+    if (!response.ok) throw new Error('Download fallito (status ' + response.status + ')');
     return await response.arrayBuffer();
   } catch (err) {
     console.error('Errore download:', err);
