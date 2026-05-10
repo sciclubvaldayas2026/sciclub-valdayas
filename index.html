@@ -114,6 +114,27 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .sync-status{background:var(--blue-light);color:var(--blue-dark);padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:12px;font-size:13px}
 </style>
 
+
+<script>
+// Funzioni registrazione genitore - Definite PRIMA dell'HTML per evitare ReferenceError
+function showLoginForm() {
+  const accediForm = document.getElementById('login-tab-accedi');
+  const registratiForm = document.getElementById('login-tab-registrati');
+  if (accediForm) accediForm.style.display = 'flex';
+  if (registratiForm) registratiForm.style.display = 'none';
+}
+
+function showRegisterForm() {
+  const accediForm = document.getElementById('login-tab-accedi');
+  const registratiForm = document.getElementById('login-tab-registrati');
+  if (accediForm) accediForm.style.display = 'none';
+  if (registratiForm) registratiForm.style.display = 'flex';
+  const container = document.getElementById('reg-figli-container');
+  if (container && container.children.length === 0) {
+    setTimeout(() => { if (typeof addFilioForm === 'function') addFilioForm(); }, 100);
+  }
+}
+</script>
 </head>
 <body>
 
