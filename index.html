@@ -13,7 +13,7 @@
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
 
-function addFilioForm() {
+window.addFilioForm = function() {
   const container = document.getElementById('reg-figli-container');
   if (!container) return;
   
@@ -53,7 +53,7 @@ function addFilioForm() {
 }
 }}
 
-function removeFilioForm(index) {
+window.removeFilioForm = function(index) {
   const elem = document.getElementById(`figli-list-${index}`);
   if (elem) elem.remove();
 }
@@ -163,14 +163,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 <script>
 // Funzioni registrazione genitore - Definite PRIMA dell'HTML per evitare ReferenceError
-function showLoginForm() {
+window.showLoginForm = function() {
   const accediForm = document.getElementById('login-tab-accedi');
   const registratiForm = document.getElementById('login-tab-registrati');
   if (accediForm) accediForm.style.display = 'flex';
   if (registratiForm) registratiForm.style.display = 'none';
 }
 
-function showRegisterForm() {
+window.showRegisterForm = function() {
   const accediForm = document.getElementById('login-tab-accedi');
   const registratiForm = document.getElementById('login-tab-registrati');
   if (accediForm) accediForm.style.display = 'none';
@@ -356,14 +356,14 @@ let selectedAllenatoreChip = 'all';
 let adminTab = 'drive';
 
 // ========== REGISTRAZIONE GENITORE ==========
-function showLoginForm() {
+window.showLoginForm = function() {
   const accediForm = document.getElementById('login-tab-accedi');
   const registratiForm = document.getElementById('login-tab-registrati');
   if (accediForm) accediForm.style.display = 'flex';
   if (registratiForm) registratiForm.style.display = 'none';
 }
 
-function showRegisterForm() {
+window.showRegisterForm = function() {
   const accediForm = document.getElementById('login-tab-accedi');
   const registratiForm = document.getElementById('login-tab-registrati');
   if (accediForm) accediForm.style.display = 'none';
@@ -377,7 +377,7 @@ function showRegisterForm() {
 
 
 
-function registerGenitore() {
+window.registerGenitore = function() {
   const nome = document.getElementById('reg-nome').value.trim();
   const cognome = document.getElementById('reg-cognome').value.trim();
   const email = document.getElementById('reg-email').value.trim();
@@ -479,7 +479,7 @@ const SHEET_TO_CATEGORY = {
 };
 
 // ============ AUTH ============
-function login() {
+window.login = function() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   
@@ -499,7 +499,7 @@ function login() {
     });
 }
 
-function logout() {
+window.logout = function() {
   auth.signOut().then(function() {
     currentUser = null;
     currentRole = null;
@@ -510,14 +510,14 @@ function logout() {
   });
 }
 
-function showLoginError(msg) {
+window.showLoginError = function(msg) {
   const errorEl = document.getElementById('login-error');
   errorEl.textContent = msg;
   errorEl.style.display = 'block';
   setTimeout(() => errorEl.style.display = 'none', 5000);
 }
 
-function loadUserData() {
+window.loadUserData = function() {
   db.collection('users').doc(currentUser.uid).get().then(function(snap) {
     if (!snap.exists) {
       showLoginError('Utente non trovato nel database');
@@ -543,7 +543,7 @@ function loadUserData() {
   });
 }
 
-function showRoleSelector(userData) {
+window.showRoleSelector = function(userData) {
   let html = '<div style="text-align:center;padding:20px"><div style="font-size:16px;font-weight:600;margin-bottom:20px">Scegli il tuo ruolo</div>';
   userData.multiRole.forEach(role => {
     html += '<button class="btn-primary" style="margin-bottom:10px" onclick="setUserRole(\'' + role + '\')">' + 
@@ -554,14 +554,14 @@ function showRoleSelector(userData) {
   document.getElementById('event-modal').classList.add('active');
 }
 
-function setUserRole(role) {
+window.setUserRole = function(role) {
   currentRole = role;
   db.collection('users').doc(currentUser.uid).update({ preferredRole: role });
   hideEventModal();
   showHomeScreen();
 }
 
-function showHomeScreen() {
+window.showHomeScreen = function() {
   const screen = currentRole === 'admin' ? 'admin' : (currentRole === 'allenatore' ? 'allenatore' : 'genitore');
   showScreen(screen);
   
@@ -574,19 +574,19 @@ function showHomeScreen() {
   }
 }
 
-function showScreen(screenId) {
+window.showScreen = function(screenId) {
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
   document.getElementById('screen-' + screenId).classList.add('active');
 }
 
 // ============ GOOGLE DRIVE FUNCTIONS ============
-function syncGoogleDriveStructure() {
+window.syncGoogleDriveStructure = function() {
   // Crea cartella "Presenze" se non esiste
   console.log('🔄 Sincronizzazione struttura Google Drive...');
   // Per ora, solo logging - l'app scarica file pubblici
 }
 
-async function downloadFileFromGoogleDrive(fileId) {
+async window.downloadFileFromGoogleDrive = function(fileId) {
   try {
     // Usa l'endpoint di export Google Sheets (funziona con CORS)
     const url = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
@@ -602,7 +602,7 @@ async function downloadFileFromGoogleDrive(fileId) {
 // File ID diretti - non serve ricerca
 
 // ============ GENITORE ============
-function loadGenitoreData() {
+window.loadGenitoreData = function() {
   db.collection('users').doc(currentUser.uid).get().then(function(snap) {
     const userData = snap.data();
     
@@ -622,7 +622,7 @@ function loadGenitoreData() {
   });
 }
 
-function selectGenitoreChip(cat) {
+window.selectGenitoreChip = function(cat) {
   selectedGenitoreChip = cat;
   document.querySelectorAll('#genitore-chips .chip').forEach((el, i) => {
     el.classList.remove('active');
@@ -631,7 +631,7 @@ function selectGenitoreChip(cat) {
   loadGenitoreData();
 }
 
-function renderGenitoreCalendar(userCats) {
+window.renderGenitoreCalendar = function(userCats) {
   db.collection('events').orderBy('date').get().then(function(snap) {
     const events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
     
@@ -674,7 +674,7 @@ function renderGenitoreCalendar(userCats) {
 }
 
 // ============ ALLENATORE ============
-function loadAllenatoreData() {
+window.loadAllenatoreData = function() {
   db.collection('users').doc(currentUser.uid).get().then(function(snap) {
     const userData = snap.data();
     
@@ -693,14 +693,14 @@ function loadAllenatoreData() {
   });
 }
 
-function selectAllenatoreChip(cat) {
+window.selectAllenatoreChip = function(cat) {
   selectedAllenatoreChip = cat;
   document.querySelectorAll('#allenatore-chips .chip').forEach(el => el.classList.remove('active'));
   event.target.classList.add('active');
   loadAllenatoreData();
 }
 
-function renderAllenatoreCalendar(userCats) {
+window.renderAllenatoreCalendar = function(userCats) {
   db.collection('events').orderBy('date').get().then(function(snap) {
     const events = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
     
@@ -743,7 +743,7 @@ function renderAllenatoreCalendar(userCats) {
 }
 
 // ============ EVENT MODAL ============
-function openEventModal(el) {
+window.openEventModal = function(el) {
   const eventId = el.getAttribute('data-event-id');
   const category = el.getAttribute('data-category');
   
@@ -781,12 +781,12 @@ function openEventModal(el) {
   document.getElementById('event-modal').classList.add('active');
 }
 
-function hideEventModal() {
+window.hideEventModal = function() {
   document.getElementById('event-modal').classList.remove('active');
 }
 
 // ============ PRESENZE MODAL ============
-function openPresenzeModal(eventId, category) {
+window.openPresenzeModal = function(eventId, category) {
   document.getElementById('event-modal').classList.remove('active');
   
   // Carica atleti per categoria
@@ -834,7 +834,7 @@ function openPresenzeModal(eventId, category) {
   });
 }
 
-function saveAttendance(eventId, category, athleteCount) {
+window.saveAttendance = function(eventId, category, athleteCount) {
   const attendance = {};
   for (let i = 0; i < athleteCount; i++) {
     const checkbox = document.getElementById('presence-' + i);
@@ -855,7 +855,7 @@ function saveAttendance(eventId, category, athleteCount) {
   });
 }
 
-function exportPresenze(eventId, category, athleteCount) {
+window.exportPresenze = function(eventId, category, athleteCount) {
   db.collection('config').doc('athletes').get().then(function(snap) {
     if (!snap.exists) {
       showPresenzeError('Atleti non trovati.');
@@ -897,7 +897,7 @@ function exportPresenze(eventId, category, athleteCount) {
   });
 }
 
-function uploadPresenceToGoogleDrive(eventId, category, csvContent) {
+window.uploadPresenceToGoogleDrive = function(eventId, category, csvContent) {
   // Per ora, loggiamo solo
   // In produzione, usereste un backend per caricare su Drive
   console.log('📤 Upload presenze su Google Drive:', eventId, category);
@@ -905,24 +905,24 @@ function uploadPresenceToGoogleDrive(eventId, category, csvContent) {
   // TODO: implementare upload via backend
 }
 
-function showPresenzeError(msg) {
+window.showPresenzeError = function(msg) {
   const contentEl = document.getElementById('presenze-modal-content');
   contentEl.innerHTML = '<div style="background:var(--red-light);color:var(--red);padding:12px;border-radius:var(--radius-sm);font-size:13px">' + msg + '</div>';
 }
 
-function showPresenzeSuccess(msg) {
+window.showPresenzeSuccess = function(msg) {
   const contentEl = document.getElementById('presenze-modal-content');
   const currentHtml = contentEl.innerHTML;
   const successDiv = '<div style="background:var(--teal-light);color:var(--teal);padding:12px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:12px">' + msg + '</div>';
   contentEl.innerHTML = successDiv + currentHtml;
 }
 
-function hidePresenzeModal() {
+window.hidePresenzeModal = function() {
   document.getElementById('presenze-modal').classList.remove('active');
 }
 
 // ============ MESSAGE MODAL ============
-function openMessageModal(eventId, category) {
+window.openMessageModal = function(eventId, category) {
   let html = '<div style="margin-bottom:16px">' +
     '<div style="font-size:16px;font-weight:600;margin-bottom:4px">✉️ Scrivi Messaggio</div>' +
     '<div style="font-size:12px;color:var(--text-sec)">Categoria: ' + CAT_LABELS[category] + '</div>' +
@@ -933,7 +933,7 @@ function openMessageModal(eventId, category) {
   document.getElementById('event-modal-content').innerHTML = html;
 }
 
-function sendMessage(eventId, category) {
+window.sendMessage = function(eventId, category) {
   const messageText = document.getElementById('message-text').value.trim();
   
   if (!messageText) {
@@ -960,7 +960,7 @@ function sendMessage(eventId, category) {
 }
 
 // ============ PROFILE MODAL ============
-function showProfile() {
+window.showProfile = function() {
   db.collection('users').doc(currentUser.uid).get().then(function(snap) {
     const user = snap.data();
     
@@ -1013,19 +1013,19 @@ function showProfile() {
   });
 }
 
-function hideProfile() {
+window.hideProfile = function() {
   document.getElementById('profile-modal').classList.remove('active');
 }
 
 // ============ ADMIN ============
-function switchAdminTab(tab) {
+window.switchAdminTab = function(tab) {
   adminTab = tab;
   document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
   event.target.classList.add('active');
   renderAdminTab();
 }
 
-function renderAdminTab() {
+window.renderAdminTab = function() {
   if (adminTab === 'drive') {
     renderDriveTab();
   } else if (adminTab === 'import') {
@@ -1045,7 +1045,7 @@ function renderAdminTab() {
   }
 }
 
-function renderDriveTab() {
+window.renderDriveTab = function() {
   let html = '<div class="admin-section">' +
     '<div class="admin-card">' +
     '<div class="admin-card-title">🔄 Google Drive Sync</div>' +
@@ -1058,7 +1058,7 @@ function renderDriveTab() {
   document.getElementById('admin-content').innerHTML = html;
 }
 
-async function syncAtletiFromDrive() {
+async window.syncAtletiFromDrive = function() {
   const statusEl = document.getElementById('sync-status');
   statusEl.innerHTML = '<div class="loading-msg"><div class="spinner"></div> Scaricando atleti da Google Drive...</div>';
   
@@ -1118,7 +1118,7 @@ async function syncAtletiFromDrive() {
   }
 }
 
-async function syncProgrammaFromDrive() {
+async window.syncProgrammaFromDrive = function() {
   const statusEl = document.getElementById('sync-status');
   statusEl.innerHTML = '<div class="loading-msg"><div class="spinner"></div> Scaricando programma da Google Drive...</div>';
   
@@ -1269,7 +1269,7 @@ async function syncProgrammaFromDrive() {
   }
 }
 
-function renderImportTab() {
+window.renderImportTab = function() {
   let html = '<div class="admin-section">' +
     '<div class="admin-card">' +
     '<div class="admin-card-title">📥 Importa file Excel (locale)</div>' +
@@ -1283,26 +1283,26 @@ function renderImportTab() {
   document.getElementById('admin-content').innerHTML = html;
 }
 
-function handleDragOver(e) {
+window.handleDragOver = function(e) {
   e.preventDefault();
   e.target.closest('.dropzone').classList.add('active');
 }
 
-function handleDragLeave(e) {
+window.handleDragLeave = function(e) {
   e.target.closest('.dropzone').classList.remove('active');
 }
 
-function handleFileDrop(e) {
+window.handleFileDrop = function(e) {
   e.preventDefault();
   e.target.closest('.dropzone').classList.remove('active');
   if (e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]);
 }
 
-function handleFileSelect(e) {
+window.handleFileSelect = function(e) {
   if (e.target.files.length) processFile(e.target.files[0]);
 }
 
-function processFile(file) {
+window.processFile = function(file) {
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
@@ -1359,7 +1359,7 @@ function processFile(file) {
   reader.readAsArrayBuffer(file);
 }
 
-function renderAtletiTab() {
+window.renderAtletiTab = function() {
   document.getElementById('admin-content').innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">👥 Atleti Importati</div><div id="atleti-list" style="font-size:13px;color:var(--text-sec)">Caricamento...</div></div></div>';
   
   db.collection('config').doc('athletes').get().then(function(snap) {
@@ -1383,7 +1383,7 @@ function renderAtletiTab() {
   });
 }
 
-function renderCategorieTab() {
+window.renderCategorieTab = function() {
   let html = '<div class="admin-section"><div class="admin-card">' +
     '<div class="admin-card-title">🏷️ Gestione categorie</div>';
   
@@ -1400,7 +1400,7 @@ function renderCategorieTab() {
   document.getElementById('admin-content').innerHTML = html;
 }
 
-function renderUtentiTab() {
+window.renderUtentiTab = function() {
   document.getElementById('admin-content').innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">👤 Utenti</div><div id="users-list" style="font-size:13px;color:var(--text-sec)">Caricamento...</div></div></div>';
   
   db.collection('users').get().then(function(snap) {
@@ -1457,13 +1457,13 @@ function renderUtentiTab() {
   });
 }
 
-function approveUser(uid) {
+window.approveUser = function(uid) {
   db.collection('users').doc(uid).update({ status: 'approved' }).then(() => {
     renderUtentiTab();
   });
 }
 
-function suspendUser(uid) {
+window.suspendUser = function(uid) {
   if (confirm('Sospendere questo account?')) {
     db.collection('users').doc(uid).update({ status: 'rejected' }).then(() => {
       renderUtentiTab();
@@ -1471,7 +1471,7 @@ function suspendUser(uid) {
   }
 }
 
-function renderMediciTab() {
+window.renderMediciTab = function() {
   let html = '<div class="admin-section"><div class="admin-card">' +
     '<div class="admin-card-title">🏥 Certificati medici</div>' +
     '<div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">Gestisci scadenze dei certificati medici per categoria.</div>';
@@ -1512,7 +1512,7 @@ function renderMediciTab() {
   });
 }
 
-function openMediciModal(cat) {
+window.openMediciModal = function(cat) {
   db.collection('config').doc('athletes').get().then(function(snap) {
     if (!snap.exists) return;
     
@@ -1558,7 +1558,7 @@ function openMediciModal(cat) {
   });
 }
 
-function renderApprovazioniTab() {
+window.renderApprovazioniTab = function() {
   let html = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">✅ Genitori in Attesa di Approvazione</div>';
   
   db.collection('users')
@@ -1605,7 +1605,7 @@ function renderApprovazioniTab() {
     });
 }
 
-function approveGenitore(uid) {
+window.approveGenitore = function(uid) {
   if (!confirm('Approvare questo genitore?')) return;
   
   db.collection('users').doc(uid).update({
@@ -1618,7 +1618,7 @@ function approveGenitore(uid) {
   });
 }
 
-function rejectGenitore(uid) {
+window.rejectGenitore = function(uid) {
   if (!confirm('Rifiutare e cancellare questo genitore?')) return;
   
   db.collection('users').doc(uid).delete().then(function() {
@@ -1629,7 +1629,7 @@ function rejectGenitore(uid) {
   });
 }
 
-function renderEventsTab() {
+window.renderEventsTab = function() {
   document.getElementById('admin-content').innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">📌 Gestione eventi</div><div id="events-list" style="font-size:13px;color:var(--text-sec)">Caricamento...</div></div></div>';
   
   db.collection('events').orderBy('date').get().then(function(snap) {
@@ -1652,7 +1652,7 @@ function renderEventsTab() {
   });
 }
 
-function deleteEvent(eventId) {
+window.deleteEvent = function(eventId) {
   if (confirm('Eliminare questo evento?')) {
     db.collection('events').doc(eventId).delete().then(() => {
       renderEventsTab();
