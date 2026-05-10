@@ -112,15 +112,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-msg{text-align:center;padding:20px;color:var(--text-sec);font-size:13px}
 .sync-status{background:var(--blue-light);color:var(--blue-dark);padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:12px;font-size:13px}
-
-/* LOGIN TABS */
-.login-tab-btn{transition:all 0.2s}
-.login-tab-btn:hover{opacity:0.7}
-.field-input, select {appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:none}
-select{background:var(--bg-card);border:1px solid var(--border);padding:10px;border-radius:var(--radius-sm);font-size:14px;color:var(--text);cursor:pointer}
-.btn-secondary{background:var(--gray-100);color:var(--text);padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-size:14px;transition:all 0.2s}
-.btn-secondary:hover{background:var(--gray-400);opacity:0.9}
-
 </style>
 
 </head>
@@ -134,7 +125,6 @@ select{background:var(--bg-card);border:1px solid var(--border);padding:10px;bor
       <div class="login-title">Sci Club Val d'Ayas</div>
       <div class="login-sub">v3.6</div>
     </div>
-    <!-- LOGIN FORM - ACCEDI -->
     <div id="login-tab-accedi" class="login-card">
       <div>
         <div class="field-label">Email</div>
@@ -152,14 +142,12 @@ select{background:var(--bg-card);border:1px solid var(--border);padding:10px;bor
       </div>
     </div>
     
-    <!-- REGISTRATION FORM - REGISTRATI GENITORE -->
     <div id="login-tab-registrati" class="login-card" style="display:none;flex-direction:column;gap:12px;max-height:calc(100vh - 200px);overflow-y:auto;padding-bottom:40px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
         <a href="javascript:void(0)" onclick="showLoginForm()" style="color:var(--blue-dark);font-size:18px;text-decoration:none;cursor:pointer">←</a>
         <div style="font-size:14px;font-weight:600;color:var(--text)">👨‍👩‍👧‍👦 Registrazione Genitore</div>
       </div>
       
-      <!-- DATI GENITORE -->
       <div>
         <div class="field-label">Nome</div>
         <input id="reg-nome" class="field-input" type="text" placeholder="Marco">
@@ -181,7 +169,6 @@ select{background:var(--bg-card);border:1px solid var(--border);padding:10px;bor
         <input id="reg-password-conf" class="field-input" type="password" placeholder="••••••••">
       </div>
       
-      <!-- FIGLI -->
       <div style="padding-top:12px;border-top:1px solid var(--border)">
         <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text)">👨‍👧‍👦 Figli (almeno 1)</div>
         <div id="reg-figli-container"></div>
@@ -237,7 +224,6 @@ select{background:var(--bg-card);border:1px solid var(--border);padding:10px;bor
       <button class="admin-tab" onclick="switchAdminTab('atleti')">👥 Atleti</button>
       <button class="admin-tab" onclick="switchAdminTab('categorie')">🏷️ Categorie</button>
       <button class="admin-tab" onclick="switchAdminTab('utenti')">👤 Utenti</button>
-      <button class="admin-tab" onclick="switchAdminTab('approvazioni')">✅ Approvazioni</button>
       <button class="admin-tab" onclick="switchAdminTab('medici')">🏥 Medici</button>
       <button class="admin-tab" onclick="switchAdminTab('events')">📌 Eventi</button>
     </div>
@@ -302,6 +288,138 @@ let selectedGenitoreChip = 'all';
 let selectedAllenatoreChip = 'all';
 let adminTab = 'drive';
 
+// ========== REGISTRAZIONE GENITORE ==========
+function showLoginForm() {
+  const accediForm = document.getElementById('login-tab-accedi');
+  const registratiForm = document.getElementById('login-tab-registrati');
+  if (accediForm) accediForm.style.display = 'flex';
+  if (registratiForm) registratiForm.style.display = 'none';
+}
+
+function showRegisterForm() {
+  const accediForm = document.getElementById('login-tab-accedi');
+  const registratiForm = document.getElementById('login-tab-registrati');
+  if (accediForm) accediForm.style.display = 'none';
+  if (registratiForm) registratiForm.style.display = 'flex';
+  // Inizializza primo figlio
+  const container = document.getElementById('reg-figli-container');
+  if (container && container.children.length === 0) {
+    setTimeout(() => { if (typeof addFilioForm === 'function') addFilioForm(); }, 50);
+  }
+}
+
+function addFilioForm() {
+  const container = document.getElementById('reg-figli-container');
+  if (!container) return;
+  
+  const index = container.children.length;
+  const html = `
+    <div id="figli-list-${index}" style="padding:12px;background:var(--blue-light);border-radius:var(--radius-sm);margin-bottom:12px">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="flex:1">
+          <div class="field-label">Nome figlio/a</div>
+          <input id="figlio-nome-${index}" class="field-input" type="text" placeholder="Luca" style="font-size:14px;padding:8px">
+        </div>
+        <div style="flex:1">
+          <div class="field-label">Cognome</div>
+          <input id="figlio-cognome-${index}" class="field-input" type="text" placeholder="Rossi" style="font-size:14px;padding:8px">
+        </div>
+      </div>
+      <div>
+        <div class="field-label">Categoria</div>
+        <select id="figlio-categoria-${index}" class="field-input" style="font-size:14px;padding:8px">
+          <option value="">-- Seleziona categoria --</option>
+          <option value="Master">Master</option>
+          <option value="Giovani">Giovani</option>
+        </select>
+      </div>
+      ${index > 0 ? `<button type="button" class="btn-secondary" onclick="removeFilioForm(${index})" style="width:100%;margin-top:8px">Rimuovi</button>` : ''}
+    </div>
+  `;
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+function removeFilioForm(index) {
+  const elem = document.getElementById(`figli-list-${index}`);
+  if (elem) elem.remove();
+}
+
+function registerGenitore() {
+  const nome = document.getElementById('reg-nome').value.trim();
+  const cognome = document.getElementById('reg-cognome').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const passwordConf = document.getElementById('reg-password-conf').value;
+  const errorEl = document.getElementById('reg-error');
+  
+  if (!nome || !cognome || !email || !password) {
+    errorEl.textContent = 'Compilare tutti i campi';
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  if (password !== passwordConf) {
+    errorEl.textContent = 'Le password non corrispondono';
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  const figli = [];
+  document.querySelectorAll('[id^="figli-list-"]').forEach((elem, idx) => {
+    const filioNome = document.getElementById(`figlio-nome-${idx}`)?.value.trim();
+    const filioCognome = document.getElementById(`figlio-cognome-${idx}`)?.value.trim();
+    const filioCategoria = document.getElementById(`figlio-categoria-${idx}`)?.value;
+    
+    if (filioNome && filioCognome && filioCategoria) {
+      figli.push({
+        nome: filioNome,
+        cognome: filioCognome,
+        categoria: filioCategoria,
+        id: 'f-' + Math.random().toString(36).substr(2, 9)
+      });
+    }
+  });
+  
+  if (figli.length === 0) {
+    errorEl.textContent = 'Aggiungi almeno un figlio/a';
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(function(userCred) {
+      return db.collection('users').doc(userCred.user.uid).set({
+        uid: userCred.user.uid,
+        email: email,
+        role: 'genitore',
+        multiRole: ['genitore'],
+        status: 'pending_approval',
+        profileData: {
+          nome: nome,
+          cognome: cognome,
+          createdAt: new Date().toISOString()
+        },
+        figli: figli,
+        createdAt: new Date()
+      });
+    })
+    .then(function() {
+      alert('✓ Registrazione completata!\n\nL\'admin dovrà approvare la tua registrazione.\nRiceverai una email di conferma.');
+      document.getElementById('reg-nome').value = '';
+      document.getElementById('reg-cognome').value = '';
+      document.getElementById('reg-email').value = '';
+      document.getElementById('reg-password').value = '';
+      document.getElementById('reg-password-conf').value = '';
+      document.getElementById('reg-figli-container').innerHTML = '';
+      showLoginForm();
+    })
+    .catch(function(err) {
+      errorEl.textContent = 'Errore: ' + err.message;
+      errorEl.style.display = 'block';
+    });
+}
+
+
 const CAT_LABELS = {
   sbaby: 'S.Baby',
   baby: 'Baby',
@@ -328,170 +446,6 @@ const SHEET_TO_CATEGORY = {
 };
 
 // ============ AUTH ============
-
-// ========== REGISTRAZIONE GENITORE ==========
-function showLoginForm() {
-  document.getElementById('login-tab-accedi').style.display = 'flex';
-  document.getElementById('login-tab-registrati').style.display = 'none';
-}
-
-function showRegisterForm() {
-  document.getElementById('login-tab-accedi').style.display = 'none';
-  document.getElementById('login-tab-registrati').style.display = 'flex';
-  // Inizializza primo figlio se vuoto
-  if (document.getElementById('reg-figli-container').children.length === 0) {
-    addFilioForm();
-  }
-}
-
-function switchLoginTab(tab) {
-  const accesoBtn = document.getElementById('tab-accedi-btn');
-  const registratiBtn = document.getElementById('tab-registrati-btn');
-  const accesoTab = document.getElementById('login-tab-accedi');
-  const registratiTab = document.getElementById('login-tab-registrati');
-  
-  if (tab === 'accedi') {
-    accesoBtn.style.borderBottom = '3px solid var(--blue-dark)';
-    accesoBtn.style.color = 'var(--blue-dark)';
-    registratiBtn.style.borderBottom = 'none';
-    registratiBtn.style.color = 'var(--text-sec)';
-    accesoTab.style.display = 'flex';
-    registratiTab.style.display = 'none';
-  } else {
-    registratiBtn.style.borderBottom = '3px solid var(--blue-dark)';
-    registratiBtn.style.color = 'var(--blue-dark)';
-    accesoBtn.style.borderBottom = 'none';
-    accesoBtn.style.color = 'var(--text-sec)';
-    accesoTab.style.display = 'none';
-    registratiTab.style.display = 'flex';
-    // Inizializza primo figlio
-    if (!document.getElementById('figli-list-0')) {
-      addFilioForm();
-    }
-  }
-}
-
-function addFilioForm() {
-  const container = document.getElementById('reg-figli-container');
-  const index = container.children.length;
-  
-  const html = `
-    <div id="figli-list-${index}" style="padding:12px;background:var(--blue-light);border-radius:var(--radius-sm);margin-bottom:12px">
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <div style="flex:1">
-          <div class="field-label">Nome figlio/a</div>
-          <input id="figlio-nome-${index}" class="field-input" type="text" placeholder="Luca" style="font-size:14px;padding:8px">
-        </div>
-        <div style="flex:1">
-          <div class="field-label">Cognome</div>
-          <input id="figlio-cognome-${index}" class="field-input" type="text" placeholder="Rossi" style="font-size:14px;padding:8px">
-        </div>
-      </div>
-      <div>
-        <div class="field-label">Categoria</div>
-        <select id="figlio-categoria-${index}" class="field-input" style="font-size:14px;padding:8px">
-          <option value="">-- Seleziona categoria --</option>
-          <option value="Master">Master</option>
-          <option value="Giovani">Giovani</option>
-        </select>
-      </div>
-      ${index > 0 ? `<button type="button" class="btn-secondary" onclick="removeFilioForm(${index})" style="width:100%;margin-top:8px">Rimuovi</button>` : ''}
-    </div>
-  `;
-  
-  container.insertAdjacentHTML('beforeend', html);
-}
-
-function removeFilioForm(index) {
-  const elem = document.getElementById(`figli-list-${index}`);
-  if (elem) elem.remove();
-}
-
-function registerGenitore() {
-  const nome = document.getElementById('reg-nome').value.trim();
-  const cognome = document.getElementById('reg-cognome').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const password = document.getElementById('reg-password').value;
-  const passwordConf = document.getElementById('reg-password-conf').value;
-  const errorEl = document.getElementById('reg-error');
-  
-  // Validazione base
-  if (!nome || !cognome || !email || !password) {
-    errorEl.textContent = 'Compilare tutti i campi genitore';
-    errorEl.style.display = 'block';
-    return;
-  }
-  
-  if (password !== passwordConf) {
-    errorEl.textContent = 'Le password non corrispondono';
-    errorEl.style.display = 'block';
-    return;
-  }
-  
-  // Raccogli dati figli
-  const figli = [];
-  document.querySelectorAll('[id^="figli-list-"]').forEach((elem, idx) => {
-    const filioNome = document.getElementById(`figlio-nome-${idx}`)?.value.trim();
-    const filioCognome = document.getElementById(`figlio-cognome-${idx}`)?.value.trim();
-    const filioCategoria = document.getElementById(`figlio-categoria-${idx}`)?.value;
-    
-    if (filioNome && filioCognome && filioCategoria) {
-      figli.push({
-        nome: filioNome,
-        cognome: filioCognome,
-        categoria: filioCategoria,
-        id: 'figlio-' + Math.random().toString(36).substr(2, 9)
-      });
-    }
-  });
-  
-  if (figli.length === 0) {
-    errorEl.textContent = 'Aggiungi almeno un figlio/a';
-    errorEl.style.display = 'block';
-    return;
-  }
-  
-  // Crea utente Firebase
-  auth.createUserWithEmailAndPassword(email, password)
-    .then(function(userCred) {
-      const uid = userCred.user.uid;
-      
-      // Salva in Firestore con status pending
-      return db.collection('users').doc(uid).set({
-        uid: uid,
-        email: email,
-        role: 'genitore',
-        multiRole: ['genitore'],
-        status: 'pending_approval',  // ← IMPORTANTE
-        profileData: {
-          nome: nome,
-          cognome: cognome,
-          createdAt: new Date().toISOString()
-        },
-        figli: figli,
-        createdAt: new Date()
-      });
-    })
-    .then(function() {
-      document.getElementById('reg-error').style.display = 'none';
-      alert('Registrazione completata!\n\nL'admin dovrà approvare la tua registrazione.\nRiceverai una email di conferma.');
-      // Reset form
-      document.getElementById('reg-nome').value = '';
-      document.getElementById('reg-cognome').value = '';
-      document.getElementById('reg-email').value = '';
-      document.getElementById('reg-password').value = '';
-      document.getElementById('reg-password-conf').value = '';
-      document.getElementById('reg-figli-container').innerHTML = '';
-      // Torna al tab accedi
-      switchLoginTab('accedi');
-    })
-    .catch(function(err) {
-      errorEl.textContent = 'Errore: ' + err.message;
-      errorEl.style.display = 'block';
-    });
-}
-
-
 function login() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
@@ -541,7 +495,7 @@ function loadUserData() {
     
     // CONTROLLO APPROVAL PER GENITORI
     if (userData.role === 'genitore' && userData.status === 'pending_approval') {
-      showLoginError('⏳ La tua registrazione è in attesa di approvazione dall'admin. Ti contatteremo via email.');
+      showLoginError('⏳ La tua registrazione è in attesa di approvazione dall\'admin. Ti contatteremo via email.');
       logout();
       return;
     }
@@ -1051,8 +1005,6 @@ function renderAdminTab() {
     renderUtentiTab();
   } else if (adminTab === 'medici') {
     renderMediciTab();
-  } else if (adminTab === 'approvazioni') {
-    renderApprovazioniTab();
   } else if (adminTab === 'events') {
     renderEventsTab();
   }
@@ -1570,81 +1522,6 @@ function openMediciModal(cat) {
     document.getElementById('event-modal').classList.add('active');
   });
 }
-
-
-function renderApprovazioniTab() {
-  let html = '<div class="admin-section">' +
-    '<div class="admin-card">' +
-    '<div class="admin-card-title">✅ Genitori in Attesa di Approvazione</div>';
-  
-  // Query genitori con status pending_approval
-  db.collection('users')
-    .where('role', '==', 'genitore')
-    .where('status', '==', 'pending_approval')
-    .get()
-    .then(function(querySnapshot) {
-      if (querySnapshot.empty) {
-        html += '<div style="padding:16px;color:var(--text-sec)">✓ Nessun genitore in attesa</div>';
-      } else {
-        querySnapshot.forEach(function(doc) {
-          const user = doc.data();
-          const uid = doc.id;
-          const prof = user.profileData || {};
-          const figli = user.figli || [];
-          
-          html += '<div style="padding:12px;border-bottom:1px solid var(--border);margin-bottom:12px">' +
-            '<div style="font-weight:600;margin-bottom:8px">' + prof.nome + ' ' + prof.cognome + '</div>' +
-            '<div style="font-size:13px;color:var(--text-sec);margin-bottom:8px">📧 ' + user.email + '</div>' +
-            '<div style="font-size:13px;color:var(--text-sec);margin-bottom:8px">📅 Registrato: ' + new Date(user.createdAt).toLocaleDateString('it-IT') + '</div>' +
-            '<div style="font-size:13px;font-weight:600;margin-bottom:8px">👨‍👧‍👦 Figli:</div>' +
-            '<ul style="margin-left:16px;font-size:13px;color:var(--text-sec)">';
-          
-          figli.forEach(function(figlio) {
-            html += '<li>' + figlio.nome + ' ' + figlio.cognome + ' (' + figlio.categoria + ')</li>';
-          });
-          
-          html += '</ul>' +
-            '<div style="margin-top:12px;display:flex;gap:8px">' +
-            '<button class="btn-sm green" onclick="approveGenitore('' + uid + '')" style="flex:1">✅ Approva</button>' +
-            '<button class="btn-sm red" onclick="rejectGenitore('' + uid + '')" style="flex:1">❌ Rifiuta</button>' +
-            '</div>' +
-            '</div>';
-        });
-      }
-      
-      html += '</div></div>';
-      document.getElementById('admin-content').innerHTML = html;
-    })
-    .catch(function(err) {
-      html += '<div style="color:red">Errore: ' + err.message + '</div></div></div>';
-      document.getElementById('admin-content').innerHTML = html;
-    });
-}
-
-function approveGenitore(uid) {
-  if (!confirm('Approvare questo genitore?')) return;
-  
-  db.collection('users').doc(uid).update({
-    status: 'active'
-  }).then(function() {
-    alert('✓ Genitore approvato!');
-    renderApprovazioniTab();
-  }).catch(function(err) {
-    alert('Errore: ' + err.message);
-  });
-}
-
-function rejectGenitore(uid) {
-  if (!confirm('Rifiutare e cancellare questo genitore?')) return;
-  
-  db.collection('users').doc(uid).delete().then(function() {
-    alert('✓ Genitore rimosso');
-    renderApprovazioniTab();
-  }).catch(function(err) {
-    alert('Errore: ' + err.message);
-  });
-}
-
 
 function renderEventsTab() {
   document.getElementById('admin-content').innerHTML = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">📌 Gestione eventi</div><div id="events-list" style="font-size:13px;color:var(--text-sec)">Caricamento...</div></div></div>';
