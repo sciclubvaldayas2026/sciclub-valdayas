@@ -134,14 +134,8 @@ select{background:var(--bg-card);border:1px solid var(--border);padding:10px;bor
       <div class="login-title">Sci Club Val d'Ayas</div>
       <div class="login-sub">v3.6</div>
     </div>
-    <!-- TAB NAVIGATION -->
-    <div style="display:flex;background:white;border-bottom:2px solid var(--border);padding:0">
-      <button id="tab-accedi-btn" class="login-tab-btn active" onclick="switchLoginTab('accedi')" style="flex:1;padding:12px;border:none;background:none;cursor:pointer;font-weight:600;color:var(--blue-dark);border-bottom:3px solid var(--blue-dark);font-size:14px">Accedi</button>
-      <button id="tab-registrati-btn" class="login-tab-btn" onclick="switchLoginTab('registrati')" style="flex:1;padding:12px;border:none;background:none;cursor:pointer;font-weight:600;color:var(--text-sec);font-size:14px">Registrati</button>
-    </div>
-    
-    <!-- TAB 1: ACCEDI -->
-    <div id="login-tab-accedi" class="login-card" style="display:flex;flex-direction:column;gap:16px">
+    <!-- LOGIN FORM - ACCEDI -->
+    <div id="login-tab-accedi" class="login-card">
       <div>
         <div class="field-label">Email</div>
         <input id="login-email" class="field-input" type="email" placeholder="tu@example.com">
@@ -152,11 +146,16 @@ select{background:var(--bg-card);border:1px solid var(--border);padding:10px;bor
       </div>
       <div id="login-error" class="error-msg"></div>
       <button class="btn-primary" onclick="login()">Accedi</button>
+      <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:13px;color:var(--text-sec);margin-bottom:8px">Non hai account?</div>
+        <a href="javascript:void(0)" onclick="showRegisterForm()" style="color:var(--blue-dark);font-weight:600;font-size:14px;text-decoration:none;cursor:pointer">👉 Registrati come genitore</a>
+      </div>
     </div>
     
-    <!-- TAB 2: REGISTRATI GENITORE -->
+    <!-- REGISTRATION FORM - REGISTRATI GENITORE -->
     <div id="login-tab-registrati" class="login-card" style="display:none;flex-direction:column;gap:12px;max-height:calc(100vh - 200px);overflow-y:auto;padding-bottom:40px">
-      <div style="padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        <a href="javascript:void(0)" onclick="showLoginForm()" style="color:var(--blue-dark);font-size:18px;text-decoration:none;cursor:pointer">←</a>
         <div style="font-size:14px;font-weight:600;color:var(--text)">👨‍👩‍👧‍👦 Registrazione Genitore</div>
       </div>
       
@@ -331,6 +330,20 @@ const SHEET_TO_CATEGORY = {
 // ============ AUTH ============
 
 // ========== REGISTRAZIONE GENITORE ==========
+function showLoginForm() {
+  document.getElementById('login-tab-accedi').style.display = 'flex';
+  document.getElementById('login-tab-registrati').style.display = 'none';
+}
+
+function showRegisterForm() {
+  document.getElementById('login-tab-accedi').style.display = 'none';
+  document.getElementById('login-tab-registrati').style.display = 'flex';
+  // Inizializza primo figlio se vuoto
+  if (document.getElementById('reg-figli-container').children.length === 0) {
+    addFilioForm();
+  }
+}
+
 function switchLoginTab(tab) {
   const accesoBtn = document.getElementById('tab-accedi-btn');
   const registratiBtn = document.getElementById('tab-registrati-btn');
