@@ -313,6 +313,16 @@ function addFilioForm() {
   if (!container) return;
   
   const index = container.children.length;
+  
+  // Crea options per le categorie da ALL_CATEGORIES
+  let categoryOptions = '<option value="">-- Seleziona categoria --</option>';
+  if (typeof ALL_CATEGORIES !== 'undefined' && Array.isArray(ALL_CATEGORIES)) {
+    ALL_CATEGORIES.forEach(cat => {
+      const label = CAT_LABELS && CAT_LABELS[cat] ? CAT_LABELS[cat] : cat.toUpperCase();
+      categoryOptions += `<option value="${cat}">${label}</option>`;
+    });
+  }
+  
   const html = `
     <div id="figli-list-${index}" style="padding:12px;background:var(--blue-light);border-radius:var(--radius-sm);margin-bottom:12px">
       <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -328,9 +338,7 @@ function addFilioForm() {
       <div>
         <div class="field-label">Categoria</div>
         <select id="figlio-categoria-${index}" class="field-input" style="font-size:14px;padding:8px">
-          <option value="">-- Seleziona categoria --</option>
-          <option value="Master">Master</option>
-          <option value="Giovani">Giovani</option>
+          ${categoryOptions}
         </select>
       </div>
       ${index > 0 ? `<button type="button" class="btn-secondary" onclick="removeFilioForm(${index})" style="width:100%;margin-top:8px">Rimuovi</button>` : ''}
@@ -338,6 +346,7 @@ function addFilioForm() {
   `;
   container.insertAdjacentHTML('beforeend', html);
 }
+}}
 
 function removeFilioForm(index) {
   const elem = document.getElementById(`figli-list-${index}`);
@@ -1003,6 +1012,8 @@ function renderAdminTab() {
     renderCategorieTab();
   } else if (adminTab === 'utenti') {
     renderUtentiTab();
+  } else if (adminTab === 'approvazioni') {
+    renderApprovazioniTab();
   } else if (adminTab === 'medici') {
     renderMediciTab();
   } else if (adminTab === 'events') {
@@ -1520,6 +1531,77 @@ function openMediciModal(cat) {
     
     document.getElementById('event-modal-content').innerHTML = html;
     document.getElementById('event-modal').classList.add('active');
+  });
+}
+
+function renderApprovazioniTab() {
+  let html = '<div class="admin-section"><div class="admin-card"><div class="admin-card-title">✅ Genitori in Attesa di Approvazione</div>';
+  
+  db.collection('users')
+    .where('role', '==', 'genitore')
+    .where('status', '==', 'pending_approval')
+    .get()
+    .then(function(querySnapshot) {
+      if (querySnapshot.empty) {
+        html += '<div style="padding:16px;color:var(--text-sec)">✓ Nessun genitore in attesa</div>';
+      } else {
+        querySnapshot.forEach(function(doc) {
+          const user = doc.data();
+          const uid = doc.id;
+          const prof = user.profileData || {};
+          const figli = user.figli || [];
+          
+          html += '<div style="padding:12px;border-bottom:1px solid var(--border);margin-bottom:12px">' +
+            '<div style="font-weight:600;margin-bottom:8px">' + prof.nome + ' ' + prof.cognome + '</div>' +
+            '<div style="font-size:13px;color:var(--text-sec);margin-bottom:8px">📧 ' + user.email + '</div>' +
+            '<div style="font-size:13px;color:var(--text-sec);margin-bottom:8px">📅 Registrato: ' + (user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString('it-IT') : 'N/A') + '</div>' +
+            '<div style="font-size:13px;font-weight:600;margin-bottom:8px">👨‍👧‍👦 Figli:</div>' +
+            '<ul style="margin-left:16px;font-size:13px;color:var(--text-sec)">';
+          
+          figli.forEach(function(figlio) {
+            const catLabel = CAT_LABELS && CAT_LABELS[figlio.categoria] ? CAT_LABELS[figlio.categoria] : figlio.categoria;
+            html += '<li>' + figlio.nome + ' ' + figlio.cognome + ' (' + catLabel + ')</li>';
+          });
+          
+          html += '</ul>' +
+            '<div style="margin-top:12px;display:flex;gap:8px">' +
+            '<button class="btn-sm green" onclick="approveGenitore(\'' + uid + '\')" style="flex:1">✅ Approva</button>' +
+            '<button class="btn-sm red" onclick="rejectGenitore(\'' + uid + '\')" style="flex:1">❌ Rifiuta</button>' +
+            '</div>' +
+            '</div>';
+        });
+      }
+      
+      html += '</div></div>';
+      document.getElementById('admin-content').innerHTML = html;
+    })
+    .catch(function(err) {
+      html += '<div style="color:red">Errore: ' + err.message + '</div></div></div>';
+      document.getElementById('admin-content').innerHTML = html;
+    });
+}
+
+function approveGenitore(uid) {
+  if (!confirm('Approvare questo genitore?')) return;
+  
+  db.collection('users').doc(uid).update({
+    status: 'active'
+  }).then(function() {
+    alert('✓ Genitore approvato!');
+    renderApprovazioniTab();
+  }).catch(function(err) {
+    alert('Errore: ' + err.message);
+  });
+}
+
+function rejectGenitore(uid) {
+  if (!confirm('Rifiutare e cancellare questo genitore?')) return;
+  
+  db.collection('users').doc(uid).delete().then(function() {
+    alert('✓ Genitore rimosso');
+    renderApprovazioniTab();
+  }).catch(function(err) {
+    alert('Errore: ' + err.message);
   });
 }
 
