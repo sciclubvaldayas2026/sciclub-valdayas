@@ -115,6 +115,18 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 </style>
 
 <script>
+const ALL_CATEGORIES = ['sbaby', 'baby', 'cuccioli', 'ragazzi', 'allievi', 'giovani', 'giovani_fisi', 'master'];
+const CAT_LABELS = {
+  sbaby: 'S.Baby',
+  baby: 'Baby',
+  cuccioli: 'Cuccioli',
+  ragazzi: 'Ragazzi',
+  allievi: 'Allievi',
+  giovani: 'Giovani FIS',
+  giovani_fisi: 'Giovani FISI',
+  master: 'Master'
+};
+
 // Funzioni registrazione - definite nel HEAD prima dell'HTML
 function showLoginForm() {
   var a = document.getElementById('login-tab-accedi');
