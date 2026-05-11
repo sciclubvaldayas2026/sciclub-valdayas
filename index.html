@@ -146,6 +146,15 @@ function showRegisterForm() {
   }
 }
 
+function login() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  
+  if (!email || !password) {
+    showLoginError('Email e password obbligatori');
+    return;
+  }
+
 function addFilioForm() {
   var c = document.getElementById('reg-figli-container');
   if (!c) return;
@@ -400,14 +409,7 @@ const SHEET_TO_CATEGORY = {
 };
 
 // ============ AUTH ============
-function login() {
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  
-  if (!email || !password) {
-    showLoginError('Email e password obbligatori');
-    return;
-  }
+
   
   auth.signInWithEmailAndPassword(email, password)
     .then(function(userCred) {
