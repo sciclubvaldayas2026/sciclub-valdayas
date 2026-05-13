@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sci Club Val d'Ayas">
 <meta name="theme-color" content="#0C447C">
-<title>Sci Club Val d'Ayas v4.4.1</title>
+<title>Sci Club Val d'Ayas v4.4.1.1</title>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -385,8 +385,7 @@ function showAtletaDashboard() {
     html += '</div>';
   }
   
-  // Lista attività
-  html += '<div id="calendario-container" style="margin-top:20px;margin-bottom:20px">';
+  html += '<div id="calendario-container" style="margin-top:20px;margin-bottom:20px;max-height:60vh;overflow-y:auto;border:0.5px solid var(--border);border-radius:12px;padding:12px">';
   html += '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento...</div>';
   html += '</div>';
   
