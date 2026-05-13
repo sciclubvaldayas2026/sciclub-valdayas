@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.5</title>
+  <title>Sci Club Val d'Ayas v4.5.1</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+  <!-- Firebase v9 compat (global) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
     :root {
       --bg: #f8f8f8;
@@ -216,7 +215,7 @@
   </div>
 
   <script>
-    // ============ FIREBASE INIT ============
+    // ============ FIREBASE INIT (compat) ============
     const firebaseConfig = {
       apiKey: "AIzaSyAb7GSGVmfDEgoRlv6-sx5JHZv3GNfsToU",
       authDomain: "sciclub-valdayas.firebaseapp.com",
@@ -233,7 +232,7 @@
     // ============ GLOBALS ============
     var currentUser = null;
     var currentUserData = null;
-    var currentRole = 'atleta'; // 'atleta' o 'allenatore'
+    var currentRole = 'atleta';
     
     const CAT_LABELS = {
       'sbaby': 'S-Baby', 'baby': 'Baby', 'cuccioli': 'Cuccioli',
@@ -319,7 +318,6 @@
       html += '<div class="role-menu">';
       html += '<button class="role-btn active" onclick="selectRole(\'atleta\', this)" style="font-size:18px">📚 Atleta</button>';
       
-      // Mostra pulsante Allenatore solo se ha role allenatore
       if (currentUserData.role === 'allenatore') {
         html += '<button class="role-btn" onclick="selectRole(\'allenatore\', this)" style="font-size:18px">🏋️ Allenatore</button>';
       }
@@ -335,12 +333,10 @@
     function selectRole(role, btnElement) {
       currentRole = role;
       
-      // Aggiorna UI
       var buttons = document.querySelectorAll('.role-btn');
       buttons.forEach(function(b) { b.classList.remove('active'); });
       if (btnElement) btnElement.classList.add('active');
       
-      // Carica dashboard per ruolo
       if (role === 'atleta') {
         showAtletaDashboard();
       } else if (role === 'allenatore') {
@@ -348,7 +344,7 @@
       }
     }
 
-    // ============ CALENDARIO v4.4.1 (Atleta) ============
+    // ============ CALENDARIO (Atleta) ============
     function loadAttivitaPerCategoria(categoria, callback) {
       downloadFileFromGoogleDrive(PROGRAMMA_FILE_ID).then(function(arrayBuffer) {
         var data = new Uint8Array(arrayBuffer);
@@ -608,14 +604,13 @@
       });
     }
 
-    // ============ ALLENATORE DASHBOARD (v4.5) ============
+    // ============ ALLENATORE (v4.5.1) ============
     function showAllenatoreDashboard() {
       var nome = currentUserData.profileData.nome;
       var html = '<div style="padding:20px">';
       html += '<h2>Pannello Allenatore 🏋️</h2>';
       html += '<p style="color:var(--text-sec);margin-bottom:24px">Ciao ' + nome + '!</p>';
       
-      // Categorie che allena
       var categorieListe = currentUserData.allenatore_categories || [];
       
       if (categorieListe.length === 0) {
@@ -657,7 +652,6 @@
       
       document.getElementById('app').innerHTML = html;
       
-      // Carica attività per questa categoria
       loadAttivitaPerCategoria(categoria, function() {
         var attivita = calendarioAttivita[categoria] || {};
         var allDates = Object.keys(attivita).sort();
@@ -680,7 +674,7 @@
             html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
             
             attivita[dateStr].forEach(function(act, idx) {
-              html += '<div class="activity-item" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title + '\', \'' + categoria + '\')" style="border-left:3px solid ' + act.color + '">';
+              html += '<div class="activity-item" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')" style="border-left:3px solid ' + act.color + '">';
               html += '<div style="font-weight:500">' + act.title + '</div>';
               html += '<div style="font-size:11px;color:var(--text-sec);margin-top:4px">Clicca per aggiungere messaggio</div>';
               html += '</div>';
