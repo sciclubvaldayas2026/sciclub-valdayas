@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sci Club Val d'Ayas">
 <meta name="theme-color" content="#0C447C">
-<title>Sci Club Val d'Ayas v4.3</title>
+<title>Sci Club Val d'Ayas v4.4</title>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -364,7 +364,176 @@ function showAtletaDashboard() {
   }
   
   html += '</div>';
+  
+  // v4.4: Selettore categoria (se > 1 categoria)
+  var categorieListe = [];
+  for (var i = 0; i < currentUserData.atleti.length; i++) {
+    if (categorieListe.indexOf(currentUserData.atleti[i].categoria) === -1) {
+      categorieListe.push(currentUserData.atleti[i].categoria);
+    }
+  }
+  
+  if (categorieListe.length > 1) {
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-size:13px;color:var(--text-sec);margin-bottom:8px">Seleziona categoria:</div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    for (var c = 0; c < categorieListe.length; c++) {
+      var cat = categorieListe[c];
+      var isActive = (c === 0) ? ' style="background:var(--blue-dark);color:white"' : '';
+      html += '<button class="chip" onclick="selectCategoria(\'' + cat + '\')"' + isActive + '>' + (CAT_LABELS[cat] || cat) + '</button>';
+    }
+    html += '</div>';
+    html += '</div>';
+  }
+  
+  // Calendario
+  html += '<div id="calendario-container" style="margin-top:20px;margin-bottom:20px">';
+  html += renderCalendarioMese(categorieListe[0] || categorieListe[0]);
+  html += '</div>';
+  
   html += '<button class="btn-primary" onclick="logout()" style="width:100%">Logout</button>';
+  html += '</div>';
+  
+  document.getElementById('app').innerHTML = html;
+  
+  // Carica messaggi per categoria
+  loadMessaggiPerCategoria(categorieListe[0] || categorieListe[0]);
+}
+
+// ============ CALENDARIO v4.4 ============
+var calendarioMessaggi = {}; // Cache messaggi {categoria: {dateString: [messages]}}
+var categoriaSel = null; // Categoria selezionata
+
+function selectCategoria(cat) {
+  categoriaSel = cat;
+  // Aggiorna i chip
+  var chips = document.querySelectorAll('.chip');
+  chips.forEach(function(c) {
+    c.style.background = '';
+    c.style.color = 'var(--text-sec)';
+  });
+  event.target.style.background = 'var(--blue-dark)';
+  event.target.style.color = 'white';
+  
+  // Ricarica calendario per categoria
+  var container = document.getElementById('calendario-container');
+  container.innerHTML = renderCalendarioMese(cat);
+  loadMessaggiPerCategoria(cat);
+}
+
+function renderCalendarioMese(categoria) {
+  var oggi = new Date();
+  var mese = oggi.getMonth();
+  var anno = oggi.getFullYear();
+  
+  var primoGiorno = new Date(anno, mese, 1);
+  var ultimoGiorno = new Date(anno, mese + 1, 0);
+  var giorniInMese = ultimoGiorno.getDate();
+  var inizioSettimana = primoGiorno.getDay(); // 0=domenica, 1=lunedì, ecc
+  
+  // Nomi mesi/giorni
+  var mesiNomi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+  var giorniNomi = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+  
+  var html = '<div style="background:var(--bg-card);border-radius:12px;padding:16px;border:.5px solid var(--border)">';
+  html += '<div style="text-align:center;font-size:14px;font-weight:600;margin-bottom:16px">' + mesiNomi[mese] + ' ' + anno + '</div>';
+  
+  // Intestazione giorni
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px">';
+  for (var d = 0; d < 7; d++) {
+    html += '<div style="text-align:center;font-size:11px;color:var(--text-sec);font-weight:600">' + giorniNomi[d] + '</div>';
+  }
+  html += '</div>';
+  
+  // Giorni
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
+  
+  // Celle vuote prima del primo giorno
+  for (var i = 0; i < inizioSettimana; i++) {
+    html += '<div style="aspect-ratio:1;background:var(--gray-50);border-radius:6px"></div>';
+  }
+  
+  // Giorni del mese
+  for (var giorno = 1; giorno <= giorniInMese; giorno++) {
+    var dateStr = anno + '-' + String(mese + 1).padStart(2, '0') + '-' + String(giorno).padStart(2, '0');
+    var haMessaggi = calendarioMessaggi[categoria] && calendarioMessaggi[categoria][dateStr];
+    var numMessaggi = haMessaggi ? calendarioMessaggi[categoria][dateStr].length : 0;
+    
+    var bgColor = 'var(--bg)';
+    var borderColor = 'var(--border)';
+    var cursorStyle = 'cursor:default';
+    var onclickAttr = '';
+    
+    if (numMessaggi > 0) {
+      bgColor = 'var(--blue-light)';
+      borderColor = 'var(--blue-mid)';
+      cursorStyle = 'cursor:pointer';
+      onclickAttr = ' onclick="showMessaggiGiorno(\'' + dateStr + '\',\'' + categoria + '\')"';
+    }
+    
+    html += '<div style="aspect-ratio:1;background:' + bgColor + ';border:.5px solid ' + borderColor + ';border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;' + cursorStyle + ';"' + onclickAttr + '>';
+    html += '<div style="font-size:13px;font-weight:600">' + giorno + '</div>';
+    if (numMessaggi > 0) {
+      html += '<div style="font-size:16px">💬</div>';
+    }
+    html += '</div>';
+  }
+  
+  html += '</div>';
+  html += '</div>';
+  
+  return html;
+}
+
+function loadMessaggiPerCategoria(categoria) {
+  // Query eventMessages/{categoria}/...
+  var nomeColl = 'eventMessages';
+  var nomeSub = categoria;
+  
+  db.collection(nomeColl).doc(nomeSub).collection('messages').get().then(function(snap) {
+    if (!calendarioMessaggi[categoria]) {
+      calendarioMessaggi[categoria] = {};
+    }
+    
+    snap.docs.forEach(function(doc) {
+      var data = doc.data();
+      var dateStr = data.data || data.dateString || '';
+      
+      if (!calendarioMessaggi[categoria][dateStr]) {
+        calendarioMessaggi[categoria][dateStr] = [];
+      }
+      
+      calendarioMessaggi[categoria][dateStr].push(Object.assign({ id: doc.id }, data));
+    });
+    
+    // Aggiorna il calendario
+    var container = document.getElementById('calendario-container');
+    if (container) {
+      container.innerHTML = renderCalendarioMese(categoria);
+    }
+  }).catch(function(err) {
+    console.log('Nessun messaggio trovato per categoria:', categoria, err);
+  });
+}
+
+function showMessaggiGiorno(dateStr, categoria) {
+  var messaggi = calendarioMessaggi[categoria] && calendarioMessaggi[categoria][dateStr] || [];
+  
+  var html = '<div style="padding:20px">';
+  html += '<div style="font-size:18px;font-weight:600;margin-bottom:16px">Messaggi - ' + dateStr + '</div>';
+  
+  messaggi.forEach(function(msg, idx) {
+    html += '<div style="background:var(--bg-card);border-radius:12px;padding:16px;margin-bottom:12px;border:.5px solid var(--border)">';
+    html += '<div style="font-size:13px;color:var(--text-sec);margin-bottom:4px">' + (msg.authorName || 'Allenatore') + '</div>';
+    html += '<div style="font-size:14px;line-height:1.5">' + (msg.text || msg.messaggio || '') + '</div>';
+    if (msg.createdAt) {
+      var ts = msg.createdAt.toDate ? msg.createdAt.toDate() : new Date(msg.createdAt);
+      html += '<div style="font-size:11px;color:var(--text-sec);margin-top:8px">' + ts.toLocaleDateString('it-IT') + ' ' + ts.toLocaleTimeString('it-IT').substring(0, 5) + '</div>';
+    }
+    html += '</div>';
+  });
+  
+  html += '<button class="btn-primary" onclick="showAtletaDashboard()" style="width:100%;margin-top:16px">Torna alla dashboard</button>';
   html += '</div>';
   
   document.getElementById('app').innerHTML = html;
