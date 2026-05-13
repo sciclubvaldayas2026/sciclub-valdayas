@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.6</title>
+  <title>Sci Club Val d'Ayas v4.6.2</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -541,12 +541,19 @@
                   calendarioAttivita[categoria][dateStr] = [];
                 }
                 
-                calendarioAttivita[categoria][dateStr].push({
-                  date: dateStr,
-                  title: activityCell,
-                  type: activityType,
-                  color: color
+                // DEDUPLICAZIONE: verifica se attività esiste già per questa data
+                var alreadyExists = calendarioAttivita[categoria][dateStr].some(function(existing) {
+                  return existing.title === activityCell && existing.type === activityType;
                 });
+                
+                if (!alreadyExists) {
+                  calendarioAttivita[categoria][dateStr].push({
+                    date: dateStr,
+                    title: activityCell,
+                    type: activityType,
+                    color: color
+                  });
+                }
               }
             });
           }
@@ -618,27 +625,41 @@
         
         var items = allDates[dateStr];
         
-        html += '<div style="margin-bottom:12px;margin-top:16px">';
-        html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
+        html += '<div style="margin-bottom:16px;margin-top:12px">';
+        html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
+        
+        // Contenitore unico per attività + messaggi
+        html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
+        
+        var itemCount = 0;
         
         if (items.attivita && items.attivita.length > 0) {
-          items.attivita.forEach(function(act) {
-            html += '<div style="margin-top:8px;padding:10px 12px;background:var(--bg-card);border-radius:8px;border-left:3px solid ' + act.color + ';font-size:13px">';
+          items.attivita.forEach(function(act, idx) {
+            if (itemCount > 0) {
+              html += '<div style="height:1px;background:var(--border)"></div>';
+            }
+            html += '<div style="padding:10px 12px;border-left:3px solid ' + act.color + ';font-size:13px">';
             html += '<div style="font-weight:500;color:var(--text)">' + act.title + '</div>';
             html += '<div style="font-size:11px;color:var(--text-sec);margin-top:2px">' + (act.type === 'sci' ? '⛷️ Sci' : act.type === 'atletica' ? '🏃 Atletica' : act.type === 'acrobatica' ? '🤸 Acrobatica' : '🏋️ Multisport') + '</div>';
             html += '</div>';
+            itemCount++;
           });
         }
         
         if (items.messaggi && items.messaggi.length > 0) {
           items.messaggi.forEach(function(msg) {
-            html += '<div style="margin-top:8px;padding:10px 12px;background:var(--bg-card);border-radius:8px;border-left:3px solid var(--blue-mid);font-size:13px">';
+            if (itemCount > 0) {
+              html += '<div style="height:1px;background:var(--border)"></div>';
+            }
+            html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);font-size:13px">';
             html += '<div style="font-weight:500;color:var(--blue-dark)">💬 ' + (msg.authorName || 'Allenatore') + '</div>';
-            html += '<div style="margin-top:4px;color:var(--text);line-height:1.4">' + (msg.text || msg.messaggio || '') + '</div>';
+            html += '<div style="margin-top:4px;color:var(--text);line-height:1.4;font-size:12px">' + (msg.text || msg.messaggio || '') + '</div>';
             html += '</div>';
+            itemCount++;
           });
         }
         
+        html += '</div>';
         html += '</div>';
       });
       
