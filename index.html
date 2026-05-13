@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.5.2</title>
+  <title>Sci Club Val d'Ayas v4.6</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- Firebase v9 compat (global) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
     :root {
@@ -64,6 +63,17 @@
       transition: all 0.2s;
     }
     .btn-secondary:hover { background: var(--gray-50); }
+    
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--blue-mid);
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 14px;
+      padding: 0;
+    }
+    .btn-link:hover { color: var(--blue-dark); }
     
     .chip {
       background: var(--bg-card);
@@ -138,9 +148,9 @@
       display: flex;
       gap: 12px;
       margin-bottom: 24px;
+      flex-direction: column;
     }
     .role-btn {
-      flex: 1;
       padding: 16px;
       border-radius: 12px;
       border: 2px solid var(--border);
@@ -149,6 +159,7 @@
       font-size: 14px;
       font-weight: 600;
       transition: all 0.2s;
+      text-align: left;
     }
     .role-btn:hover { border-color: var(--blue-mid); }
     .role-btn.active { border-color: var(--blue-dark); background: var(--blue-light); color: var(--blue-dark); }
@@ -207,6 +218,28 @@
       cursor: pointer;
       font-size: 18px;
     }
+    
+    .divider {
+      text-align: center;
+      margin: 24px 0;
+      position: relative;
+    }
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider span {
+      background: var(--bg);
+      padding: 0 12px;
+      position: relative;
+      color: var(--text-sec);
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -215,7 +248,7 @@
   </div>
 
   <script>
-    // ============ FIREBASE INIT (compat) ============
+    // ============ FIREBASE INIT ============
     const firebaseConfig = {
       apiKey: "AIzaSyAb7GSGVmfDEgoRlv6-sx5JHZv3GNfsToU",
       authDomain: "sciclub-valdayas.firebaseapp.com",
@@ -232,7 +265,7 @@
     // ============ GLOBALS ============
     var currentUser = null;
     var currentUserData = null;
-    var currentRole = 'atleta';
+    var currentRole = null;
     
     const CAT_LABELS = {
       'sbaby': 'S-Baby', 'baby': 'Baby', 'cuccioli': 'Cuccioli',
@@ -248,7 +281,7 @@
     var categoriaSel = null;
     var selectedActivityForMessage = null;
 
-    // ============ AUTH ============
+    // ============ AUTH FLOWS ============
     function showLogin() {
       var html = '<div style="max-width:400px;margin:60px auto">';
       html += '<h1 style="text-align:center;margin-bottom:40px">🏔️ Sci Club Val d\'Ayas</h1>';
@@ -261,12 +294,43 @@
       html += '<input type="password" id="login-password" placeholder="•••••••">';
       html += '</div>';
       html += '<button class="btn-primary" onclick="login()" style="width:100%">Login</button>';
+      html += '<div class="divider"><span>oppure</span></div>';
+      html += '<button class="btn-secondary" onclick="showRegistration()" style="width:100%">Registrati</button>';
+      html += '</div>';
+      document.getElementById('app').innerHTML = html;
+    }
+
+    function showRegistration() {
+      var html = '<div style="max-width:400px;margin:40px auto">';
+      html += '<h2 style="text-align:center;margin-bottom:24px">Registrazione</h2>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Nome</label>';
+      html += '<input type="text" id="reg-nome" placeholder="Nome">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Cognome</label>';
+      html += '<input type="text" id="reg-cognome" placeholder="Cognome">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Email</label>';
+      html += '<input type="email" id="reg-email" placeholder="tua@email.com">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Password</label>';
+      html += '<input type="password" id="reg-password" placeholder="Almeno 6 caratteri">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Sei un allenatore?</label>';
+      html += '<input type="checkbox" id="reg-allenatore"> <span style="font-size:13px">Sì, sono un allenatore</span>';
+      html += '</div>';
+      html += '<button class="btn-primary" onclick="register()" style="width:100%;margin-bottom:12px">Registrati</button>';
+      html += '<button class="btn-secondary" onclick="showLogin()" style="width:100%">← Torna al login</button>';
       html += '</div>';
       document.getElementById('app').innerHTML = html;
     }
 
     function login() {
-      var email = document.getElementById('login-email').value;
+      var email = document.getElementById('login-email').value.trim();
       var password = document.getElementById('login-password').value;
       
       if (!email || !password) {
@@ -280,7 +344,49 @@
           loadUserData();
         })
         .catch(function(error) {
-          alert('Errore login: ' + error.message);
+          alert('Errore: ' + error.message);
+        });
+    }
+
+    function register() {
+      var nome = document.getElementById('reg-nome').value.trim();
+      var cognome = document.getElementById('reg-cognome').value.trim();
+      var email = document.getElementById('reg-email').value.trim();
+      var password = document.getElementById('reg-password').value;
+      var isAllenatore = document.getElementById('reg-allenatore').checked;
+      
+      if (!nome || !cognome || !email || !password) {
+        alert('Compila tutti i campi');
+        return;
+      }
+      
+      if (password.length < 6) {
+        alert('Password deve avere almeno 6 caratteri');
+        return;
+      }
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(function(result) {
+          var uid = result.user.uid;
+          var userData = {
+            uid: uid,
+            email: email,
+            role: isAllenatore ? 'allenatore' : 'atleta',
+            status: 'pending_approval',
+            profileData: { nome: nome, cognome: cognome },
+            atleti: [],
+            allenatore_categories: [],
+            createdAt: firebase.firestore.Timestamp.now()
+          };
+          
+          return db.collection('users').doc(uid).set(userData);
+        })
+        .then(function() {
+          alert('Registrazione completata! L\'admin deve approvare il tuo account.');
+          showLogin();
+        })
+        .catch(function(error) {
+          alert('Errore registrazione: ' + error.message);
         });
     }
 
@@ -291,7 +397,29 @@
         .then(function(doc) {
           if (doc.exists) {
             currentUserData = Object.assign({ uid: currentUser.uid }, doc.data());
-            showRoleMenu();
+            
+            // v4.6: Login intelligente!
+            // Se SOLO atleta → vai direttamente a dashboard atleta
+            // Se SOLO allenatore → vai direttamente a dashboard allenatore
+            // Se DOPPIO → mostra menu scelta
+            
+            var isAtleta = currentUserData.role === 'atleta' || (currentUserData.role === 'both');
+            var isAllenatore = currentUserData.role === 'allenatore' || (currentUserData.role === 'both');
+            
+            if (isAtleta && !isAllenatore) {
+              // Solo atleta
+              currentRole = 'atleta';
+              showAtletaDashboard();
+            } else if (isAllenatore && !isAtleta) {
+              // Solo allenatore
+              currentRole = 'allenatore';
+              showAllenatoreDashboard();
+            } else if (isAtleta && isAllenatore) {
+              // Doppio ruolo → mostra menu
+              showRoleMenu();
+            } else {
+              alert('Profilo non valido');
+            }
           } else {
             alert('Profilo non trovato');
           }
@@ -305,23 +433,20 @@
       auth.signOut().then(function() {
         currentUser = null;
         currentUserData = null;
+        currentRole = null;
         showLogin();
       });
     }
 
-    // ============ ROLE MENU ============
+    // ============ ROLE MENU (solo per doppio ruolo) ============
     function showRoleMenu() {
       var html = '<div style="padding:20px">';
       html += '<h1>Ciao, ' + currentUserData.profileData.nome + '! 👋</h1>';
       html += '<p style="color:var(--text-sec);margin-bottom:24px">Scegli il tuo ruolo:</p>';
       
       html += '<div class="role-menu">';
-      html += '<button class="role-btn active" onclick="selectRole(\'atleta\', this)" style="font-size:18px">📚 Atleta</button>';
-      
-      if (currentUserData.role === 'allenatore') {
-        html += '<button class="role-btn" onclick="selectRole(\'allenatore\', this)" style="font-size:18px">🏋️ Allenatore</button>';
-      }
-      
+      html += '<button class="role-btn" onclick="selectRole(\'atleta\')" style="font-size:16px">📚 Atleta</button>';
+      html += '<button class="role-btn" onclick="selectRole(\'allenatore\')" style="font-size:16px">🏋️ Allenatore</button>';
       html += '</div>';
       
       html += '<button class="btn-secondary" onclick="logout()" style="width:100%;margin-top:40px">Logout</button>';
@@ -330,12 +455,8 @@
       document.getElementById('app').innerHTML = html;
     }
 
-    function selectRole(role, btnElement) {
+    function selectRole(role) {
       currentRole = role;
-      
-      var buttons = document.querySelectorAll('.role-btn');
-      buttons.forEach(function(b) { b.classList.remove('active'); });
-      if (btnElement) btnElement.classList.add('active');
       
       if (role === 'atleta') {
         showAtletaDashboard();
@@ -566,8 +687,11 @@
       html += '</div>';
       
       html += '<div style="display:flex;gap:12px">';
-      html += '<button class="btn-secondary" onclick="showRoleMenu()" style="flex:1">← Indietro</button>';
+      if (currentUserData.role === 'both') {
+        html += '<button class="btn-secondary" onclick="showRoleMenu()" style="flex:1">← Cambia ruolo</button>';
+      }
       html += '<button class="btn-secondary" onclick="logout()" style="flex:1">Logout</button>';
+      html += '</div>';
       html += '</div>';
       
       document.getElementById('app').innerHTML = html;
@@ -606,7 +730,7 @@
       });
     }
 
-    // ============ ALLENATORE (v4.5.1) ============
+    // ============ ALLENATORE (v4.6) ============
     function showAllenatoreDashboard() {
       var nome = currentUserData.profileData.nome;
       var html = '<div style="padding:20px">';
@@ -634,7 +758,12 @@
         html += '</div>';
       }
       
-      html += '<button class="btn-secondary" onclick="selectRole(\'atleta\', null)" style="width:100%;margin-top:40px">← Indietro</button>';
+      html += '<div style="display:flex;gap:12px;margin-top:40px">';
+      if (currentUserData.role === 'both') {
+        html += '<button class="btn-secondary" onclick="showRoleMenu()" style="flex:1">← Cambia ruolo</button>';
+      }
+      html += '<button class="btn-secondary" onclick="logout()" style="flex:1">Logout</button>';
+      html += '</div>';
       html += '</div>';
       
       document.getElementById('app').innerHTML = html;
@@ -649,8 +778,10 @@
       html += '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento...</div>';
       html += '</div>';
       
-      html += '<button class="btn-secondary" onclick="showAllenatoreDashboard()" style="width:100%;margin-bottom:12px">← Indietro</button>';
-      html += '<button class="btn-secondary" onclick="logout()" style="width:100%">Logout</button>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="showAllenatoreDashboard()" style="flex:1">← Indietro</button>';
+      html += '<button class="btn-secondary" onclick="logout()" style="flex:1">Logout</button>';
+      html += '</div>';
       html += '</div>';
       
       document.getElementById('app').innerHTML = html;
