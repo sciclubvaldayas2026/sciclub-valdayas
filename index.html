@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.5.1</title>
+  <title>Sci Club Val d'Ayas v4.5.2</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- Firebase v9 compat (global) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
@@ -565,7 +565,9 @@
       html += '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento...</div>';
       html += '</div>';
       
-      html += '<button class="btn-secondary" onclick="selectRole(\'atleta\', null)" style="width:100%;margin-bottom:12px">← Indietro</button>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="showRoleMenu()" style="flex:1">← Indietro</button>';
+      html += '<button class="btn-secondary" onclick="logout()" style="flex:1">Logout</button>';
       html += '</div>';
       
       document.getElementById('app').innerHTML = html;
@@ -647,7 +649,8 @@
       html += '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento...</div>';
       html += '</div>';
       
-      html += '<button class="btn-secondary" onclick="showAllenatoreDashboard()" style="width:100%">← Indietro</button>';
+      html += '<button class="btn-secondary" onclick="showAllenatoreDashboard()" style="width:100%;margin-bottom:12px">← Indietro</button>';
+      html += '<button class="btn-secondary" onclick="logout()" style="width:100%">Logout</button>';
       html += '</div>';
       
       document.getElementById('app').innerHTML = html;
