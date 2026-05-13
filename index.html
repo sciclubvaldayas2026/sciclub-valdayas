@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.6.2</title>
+  <title>Sci Club Val d'Ayas v4.7</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -17,6 +17,8 @@
       --blue-mid: #0066cc;
       --blue-light: #e8f1ff;
       --gray-50: #f5f5f5;
+      --red: #dc2626;
+      --green: #16a34a;
     }
     
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,7 +30,7 @@
     }
     
     #app {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
       min-height: 100vh;
@@ -64,30 +66,29 @@
     }
     .btn-secondary:hover { background: var(--gray-50); }
     
-    .btn-link {
-      background: none;
+    .btn-danger {
+      background: var(--red);
+      color: white;
       border: none;
-      color: var(--blue-mid);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
       cursor: pointer;
-      text-decoration: underline;
-      font-size: 14px;
-      padding: 0;
     }
-    .btn-link:hover { color: var(--blue-dark); }
+    .btn-danger:hover { background: #991b1b; }
     
-    .chip {
-      background: var(--bg-card);
-      color: var(--text-sec);
-      border: 1px solid var(--border);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
+    .btn-success {
+      background: var(--green);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
       cursor: pointer;
-      transition: all 0.2s;
     }
-    .chip:hover { background: var(--gray-50); }
+    .btn-success:hover { background: #15803d; }
     
-    input[type="text"], input[type="email"], input[type="password"], textarea {
+    input, select, textarea {
       width: 100%;
       padding: 10px 12px;
       border: 1px solid var(--border);
@@ -95,10 +96,6 @@
       font-size: 14px;
       font-family: inherit;
       margin-bottom: 12px;
-    }
-    textarea {
-      min-height: 80px;
-      resize: vertical;
     }
     
     .form-group {
@@ -123,19 +120,6 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    .loading-msg {
-      text-align: center;
-      color: var(--text-sec);
-      padding: 20px;
-    }
-    
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-sec);
-    }
-    .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
-    
     .card {
       background: var(--bg-card);
       border: 0.5px solid var(--border);
@@ -144,36 +128,59 @@
       margin-bottom: 12px;
     }
     
-    .role-menu {
-      display: flex;
+    .admin-menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 12px;
       margin-bottom: 24px;
-      flex-direction: column;
     }
-    .role-btn {
-      padding: 16px;
-      border-radius: 12px;
-      border: 2px solid var(--border);
+    .admin-card {
       background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
       cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
       transition: all 0.2s;
-      text-align: left;
+      text-align: center;
     }
-    .role-btn:hover { border-color: var(--blue-mid); }
-    .role-btn.active { border-color: var(--blue-dark); background: var(--blue-light); color: var(--blue-dark); }
+    .admin-card:hover { border-color: var(--blue-mid); background: var(--blue-light); }
+    .admin-card-title { font-weight: 600; margin-bottom: 4px; }
+    .admin-card-count { font-size: 24px; font-weight: 700; color: var(--blue-dark); }
     
-    .activity-item {
+    .user-item {
       background: var(--bg-card);
       border: 0.5px solid var(--border);
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .activity-item:hover { background: var(--blue-light); border-color: var(--blue-mid); }
+    
+    .user-info {
+      flex: 1;
+    }
+    .user-name { font-weight: 600; }
+    .user-meta { font-size: 12px; color: var(--text-sec); margin-top: 4px; }
+    
+    .user-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-pending { background: #fef08a; color: #92400e; }
+    .badge-approved { background: #bbf7d0; color: #065f46; }
+    .badge-admin { background: #dbeafe; color: #1e40af; }
+    .badge-atleta { background: #f3e8ff; color: #5b21b6; }
+    .badge-allenatore { background: #fed7aa; color: #92400e; }
     
     .modal-overlay {
       position: fixed;
@@ -219,27 +226,21 @@
       font-size: 18px;
     }
     
-    .divider {
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-box {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
       text-align: center;
-      margin: 24px 0;
-      position: relative;
     }
-    .divider::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--border);
-    }
-    .divider span {
-      background: var(--bg);
-      padding: 0 12px;
-      position: relative;
-      color: var(--text-sec);
-      font-size: 13px;
-    }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--blue-dark); }
+    .stat-label { font-size: 12px; color: var(--text-sec); margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -265,7 +266,7 @@
     // ============ GLOBALS ============
     var currentUser = null;
     var currentUserData = null;
-    var currentRole = null;
+    var allUsers = [];
     
     const CAT_LABELS = {
       'sbaby': 'S-Baby', 'baby': 'Baby', 'cuccioli': 'Cuccioli',
@@ -274,57 +275,20 @@
     };
     
     const ALL_CATEGORIES = ['sbaby', 'baby', 'cuccioli', 'ragazzi', 'allievi', 'giovani', 'giovani_fisi', 'master'];
-    const PROGRAMMA_FILE_ID = '17112nlUQ8o2phkyAhs4S4S_QxzUxZwHJ';
-    
-    var calendarioAttivita = {};
-    var calendarioMessaggi = {};
-    var categoriaSel = null;
-    var selectedActivityForMessage = null;
 
-    // ============ AUTH FLOWS ============
+    // ============ AUTH ============
     function showLogin() {
       var html = '<div style="max-width:400px;margin:60px auto">';
       html += '<h1 style="text-align:center;margin-bottom:40px">🏔️ Sci Club Val d\'Ayas</h1>';
       html += '<div class="form-group">';
       html += '<label class="form-label">Email</label>';
-      html += '<input type="email" id="login-email" placeholder="tua@email.com">';
+      html += '<input type="email" id="login-email" placeholder="admin@email.com">';
       html += '</div>';
       html += '<div class="form-group">';
       html += '<label class="form-label">Password</label>';
       html += '<input type="password" id="login-password" placeholder="•••••••">';
       html += '</div>';
-      html += '<button class="btn-primary" onclick="login()" style="width:100%">Login</button>';
-      html += '<div class="divider"><span>oppure</span></div>';
-      html += '<button class="btn-secondary" onclick="showRegistration()" style="width:100%">Registrati</button>';
-      html += '</div>';
-      document.getElementById('app').innerHTML = html;
-    }
-
-    function showRegistration() {
-      var html = '<div style="max-width:400px;margin:40px auto">';
-      html += '<h2 style="text-align:center;margin-bottom:24px">Registrazione</h2>';
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Nome</label>';
-      html += '<input type="text" id="reg-nome" placeholder="Nome">';
-      html += '</div>';
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Cognome</label>';
-      html += '<input type="text" id="reg-cognome" placeholder="Cognome">';
-      html += '</div>';
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Email</label>';
-      html += '<input type="email" id="reg-email" placeholder="tua@email.com">';
-      html += '</div>';
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Password</label>';
-      html += '<input type="password" id="reg-password" placeholder="Almeno 6 caratteri">';
-      html += '</div>';
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Sei un allenatore?</label>';
-      html += '<input type="checkbox" id="reg-allenatore"> <span style="font-size:13px">Sì, sono un allenatore</span>';
-      html += '</div>';
-      html += '<button class="btn-primary" onclick="register()" style="width:100%;margin-bottom:12px">Registrati</button>';
-      html += '<button class="btn-secondary" onclick="showLogin()" style="width:100%">← Torna al login</button>';
+      html += '<button class="btn-primary" onclick="login()" style="width:100%">Login Admin</button>';
       html += '</div>';
       document.getElementById('app').innerHTML = html;
     }
@@ -348,48 +312,6 @@
         });
     }
 
-    function register() {
-      var nome = document.getElementById('reg-nome').value.trim();
-      var cognome = document.getElementById('reg-cognome').value.trim();
-      var email = document.getElementById('reg-email').value.trim();
-      var password = document.getElementById('reg-password').value;
-      var isAllenatore = document.getElementById('reg-allenatore').checked;
-      
-      if (!nome || !cognome || !email || !password) {
-        alert('Compila tutti i campi');
-        return;
-      }
-      
-      if (password.length < 6) {
-        alert('Password deve avere almeno 6 caratteri');
-        return;
-      }
-      
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(function(result) {
-          var uid = result.user.uid;
-          var userData = {
-            uid: uid,
-            email: email,
-            role: isAllenatore ? 'allenatore' : 'atleta',
-            status: 'pending_approval',
-            profileData: { nome: nome, cognome: cognome },
-            atleti: [],
-            allenatore_categories: [],
-            createdAt: firebase.firestore.Timestamp.now()
-          };
-          
-          return db.collection('users').doc(uid).set(userData);
-        })
-        .then(function() {
-          alert('Registrazione completata! L\'admin deve approvare il tuo account.');
-          showLogin();
-        })
-        .catch(function(error) {
-          alert('Errore registrazione: ' + error.message);
-        });
-    }
-
     function loadUserData() {
       if (!currentUser) return;
       
@@ -398,27 +320,11 @@
           if (doc.exists) {
             currentUserData = Object.assign({ uid: currentUser.uid }, doc.data());
             
-            // v4.6: Login intelligente!
-            // Se SOLO atleta → vai direttamente a dashboard atleta
-            // Se SOLO allenatore → vai direttamente a dashboard allenatore
-            // Se DOPPIO → mostra menu scelta
-            
-            var isAtleta = currentUserData.role === 'atleta' || (currentUserData.role === 'both');
-            var isAllenatore = currentUserData.role === 'allenatore' || (currentUserData.role === 'both');
-            
-            if (isAtleta && !isAllenatore) {
-              // Solo atleta
-              currentRole = 'atleta';
-              showAtletaDashboard();
-            } else if (isAllenatore && !isAtleta) {
-              // Solo allenatore
-              currentRole = 'allenatore';
-              showAllenatoreDashboard();
-            } else if (isAtleta && isAllenatore) {
-              // Doppio ruolo → mostra menu
-              showRoleMenu();
+            if (currentUserData.role === 'admin') {
+              showAdminDashboard();
             } else {
-              alert('Profilo non valido');
+              alert('Solo admin possono accedere qui');
+              logout();
             }
           } else {
             alert('Profilo non trovato');
@@ -433,448 +339,226 @@
       auth.signOut().then(function() {
         currentUser = null;
         currentUserData = null;
-        currentRole = null;
         showLogin();
       });
     }
 
-    // ============ ROLE MENU (solo per doppio ruolo) ============
-    function showRoleMenu() {
+    // ============ ADMIN DASHBOARD ============
+    function showAdminDashboard() {
       var html = '<div style="padding:20px">';
-      html += '<h1>Ciao, ' + currentUserData.profileData.nome + '! 👋</h1>';
-      html += '<p style="color:var(--text-sec);margin-bottom:24px">Scegli il tuo ruolo:</p>';
-      
-      html += '<div class="role-menu">';
-      html += '<button class="role-btn" onclick="selectRole(\'atleta\')" style="font-size:16px">📚 Atleta</button>';
-      html += '<button class="role-btn" onclick="selectRole(\'allenatore\')" style="font-size:16px">🏋️ Allenatore</button>';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">';
+      html += '<h1>🔐 Dashboard Admin</h1>';
+      html += '<button class="btn-secondary" onclick="logout()">Logout</button>';
       html += '</div>';
       
-      html += '<button class="btn-secondary" onclick="logout()" style="width:100%;margin-top:40px">Logout</button>';
+      html += '<div class="admin-menu">';
+      html += '<div class="admin-card" onclick="loadApprovazioni()">';
+      html += '<div class="admin-card-title">⏳ Approvazioni</div>';
+      html += '<div id="pending-count" class="admin-card-count">0</div>';
+      html += '<div style="font-size:12px;color:var(--text-sec)">In sospeso</div>';
+      html += '</div>';
+      
+      html += '<div class="admin-card" onclick="loadUtenti()">';
+      html += '<div class="admin-card-title">👥 Utenti</div>';
+      html += '<div id="users-count" class="admin-card-count">0</div>';
+      html += '<div style="font-size:12px;color:var(--text-sec)">Totali</div>';
+      html += '</div>';
+      
+      html += '<div class="admin-card" onclick="loadAtleti()">';
+      html += '<div class="admin-card-title">🏃 Atleti</div>';
+      html += '<div id="atleti-count" class="admin-card-count">0</div>';
+      html += '<div style="font-size:12px;color:var(--text-sec)">Registrati</div>';
+      html += '</div>';
+      
+      html += '<div class="admin-card" onclick="loadAllenatori()">';
+      html += '<div class="admin-card-title">🏋️ Allenatori</div>';
+      html += '<div id="allenatori-count" class="admin-card-count">0</div>';
+      html += '<div style="font-size:12px;color:var(--text-sec)">Assegnati</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      html += '<div id="admin-content" style="margin-top:24px"></div>';
       html += '</div>';
       
       document.getElementById('app').innerHTML = html;
-    }
-
-    function selectRole(role) {
-      currentRole = role;
       
-      if (role === 'atleta') {
-        showAtletaDashboard();
-      } else if (role === 'allenatore') {
-        showAllenatoreDashboard();
-      }
+      // Carica statistiche
+      loadStats();
+      loadApprovazioni();
     }
 
-    // ============ CALENDARIO (Atleta) ============
-    function loadAttivitaPerCategoria(categoria, callback) {
-      downloadFileFromGoogleDrive(PROGRAMMA_FILE_ID).then(function(arrayBuffer) {
-        var data = new Uint8Array(arrayBuffer);
-        var workbook = XLSX.read(data, { type: 'array' });
-        var sheet = workbook.Sheets[workbook.SheetNames[0]];
-        var allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-        
-        var monthRow = allRows[0] || [];
-        var categoryRow = allRows[2] || [];
-        
-        var months = [];
-        var currentMonth = null;
-        for (var colIdx = 0; colIdx < monthRow.length; colIdx++) {
-          var monthCell = (monthRow[colIdx] || '').toString().trim().toUpperCase();
-          if (monthCell && ['GENNAIO', 'FEBBRAIO', 'MARZO', 'APRILE', 'MAGGIO', 'GIUGNO', 'LUGLIO', 'AGOSTO', 'SETTEMBRE', 'OTTOBRE', 'NOVEMBRE', 'DICEMBRE'].includes(monthCell)) {
-            if (currentMonth) {
-              currentMonth.endCol = colIdx - 1;
-              months.push(currentMonth);
-            }
-            currentMonth = { name: monthCell, startCol: colIdx, endCol: colIdx };
-          }
-        }
-        if (currentMonth) {
-          currentMonth.endCol = monthRow.length - 1;
-          months.push(currentMonth);
-        }
-        
-        if (!calendarioAttivita[categoria]) {
-          calendarioAttivita[categoria] = {};
-        }
-        
-        months.forEach(function(monthData) {
-          var monthName = monthData.name.toLowerCase();
-          var monthNum = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'].indexOf(monthName) + 1;
-          var year = 2026;
-          
-          var monthCategories = [];
-          for (var colIdx = monthData.startCol; colIdx <= monthData.endCol; colIdx++) {
-            var catCell = (categoryRow[colIdx] || '').toString().trim().toUpperCase();
-            if (catCell && ALL_CATEGORIES.includes(catCell.toLowerCase())) {
-              monthCategories.push({ col: colIdx, name: catCell.toLowerCase() });
-            }
-          }
-          
-          for (var rowIdx = 10; rowIdx <= 40 && rowIdx < allRows.length; rowIdx++) {
-            var row = allRows[rowIdx] || [];
-            var dayNumCell = (row[monthData.startCol] || '').toString().trim();
-            var dayNum = parseInt(dayNumCell);
-            if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) continue;
-            
-            var dateStr = String(year) + '-' + String(monthNum).padStart(2, '0') + '-' + String(dayNum).padStart(2, '0');
-            
-            monthCategories.forEach(function(catInfo) {
-              var activityCell = (row[catInfo.col] || '').toString().trim();
-              
-              if (activityCell && activityCell.length > 0 && activityCell !== 'R' && catInfo.name === categoria) {
-                var activityType = 'sci';
-                var color = '#FFC000';
-                
-                var cellUpper = activityCell.toUpperCase();
-                if (cellUpper.includes('ATLETICA')) {
-                  activityType = 'atletica';
-                  color = '#00B050';
-                } else if (cellUpper.includes('ACROBATICA') || cellUpper.includes('CAMPUS')) {
-                  activityType = 'acrobatica';
-                  color = '#00B0F0';
-                } else if (cellUpper.includes('MULTISPORT')) {
-                  activityType = 'multisport';
-                  color = '#FF7F00';
-                }
-                
-                if (!calendarioAttivita[categoria][dateStr]) {
-                  calendarioAttivita[categoria][dateStr] = [];
-                }
-                
-                // DEDUPLICAZIONE: verifica se attività esiste già per questa data
-                var alreadyExists = calendarioAttivita[categoria][dateStr].some(function(existing) {
-                  return existing.title === activityCell && existing.type === activityType;
-                });
-                
-                if (!alreadyExists) {
-                  calendarioAttivita[categoria][dateStr].push({
-                    date: dateStr,
-                    title: activityCell,
-                    type: activityType,
-                    color: color
-                  });
-                }
-              }
-            });
-          }
-        });
-        
-        if (callback) callback();
-      }).catch(function(err) {
-        console.error('Errore caricamento attività:', err);
-        if (callback) callback();
-      });
-    }
-
-    function loadMessaggiPerCategoria(categoria, callback) {
-      var nomeColl = 'eventMessages';
-      
-      db.collection(nomeColl).doc(categoria).collection('messages').get().then(function(snap) {
-        if (!calendarioMessaggi[categoria]) {
-          calendarioMessaggi[categoria] = {};
-        }
+    function loadStats() {
+      db.collection('users').get().then(function(snap) {
+        allUsers = [];
+        var pending = 0;
+        var atleti = 0;
+        var allenatori = 0;
         
         snap.docs.forEach(function(doc) {
-          var data = doc.data();
-          var dateStr = data.data || data.dateString || '';
+          var data = Object.assign({ uid: doc.id }, doc.data());
+          allUsers.push(data);
           
-          if (!calendarioMessaggi[categoria][dateStr]) {
-            calendarioMessaggi[categoria][dateStr] = [];
-          }
-          
-          calendarioMessaggi[categoria][dateStr].push(Object.assign({ id: doc.id }, data));
+          if (data.status === 'pending_approval') pending++;
+          if (data.role === 'atleta') atleti++;
+          if (data.role === 'allenatore') allenatori++;
         });
         
-        if (callback) callback();
-      }).catch(function(err) {
-        console.log('Nessun messaggio per categoria:', categoria);
-        if (callback) callback();
+        document.getElementById('pending-count').innerText = pending;
+        document.getElementById('users-count').innerText = allUsers.length;
+        document.getElementById('atleti-count').innerText = atleti;
+        document.getElementById('allenatori-count').innerText = allenatori;
       });
     }
 
-    function renderListaAttivita(categoria) {
-      var attivita = calendarioAttivita[categoria] || {};
-      var messaggi = calendarioMessaggi[categoria] || {};
+    function loadApprovazioni() {
+      var pending = allUsers.filter(function(u) { return u.status === 'pending_approval'; });
       
-      var allDates = {};
-      Object.keys(attivita).forEach(function(dateStr) {
-        if (!allDates[dateStr]) allDates[dateStr] = { attivita: [], messaggi: [] };
-        allDates[dateStr].attivita = attivita[dateStr];
-      });
-      Object.keys(messaggi).forEach(function(dateStr) {
-        if (!allDates[dateStr]) allDates[dateStr] = { attivita: [], messaggi: [] };
-        allDates[dateStr].messaggi = messaggi[dateStr];
-      });
+      var html = '<h2>⏳ In Attesa di Approvazione (' + pending.length + ')</h2>';
       
-      var sortedDates = Object.keys(allDates).sort();
-      
-      if (sortedDates.length === 0) {
-        return '<div style="padding:40px 20px;text-align:center;color:var(--text-sec)">Nessuna attività per questa categoria</div>';
-      }
-      
-      var html = '<div style="padding:12px">';
-      
-      sortedDates.forEach(function(dateStr) {
-        var d = new Date(dateStr + 'T00:00:00');
-        var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-        var dayName = giorniNomi[d.getDay()];
-        var dayNum = d.getDate();
-        var monthNum = d.getMonth() + 1;
-        var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
-        var monthName = mesiNomi[d.getMonth()];
-        
-        var items = allDates[dateStr];
-        
-        html += '<div style="margin-bottom:16px;margin-top:12px">';
-        html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
-        
-        // Contenitore unico per attività + messaggi
-        html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
-        
-        var itemCount = 0;
-        
-        if (items.attivita && items.attivita.length > 0) {
-          items.attivita.forEach(function(act, idx) {
-            if (itemCount > 0) {
-              html += '<div style="height:1px;background:var(--border)"></div>';
-            }
-            html += '<div style="padding:10px 12px;border-left:3px solid ' + act.color + ';font-size:13px">';
-            html += '<div style="font-weight:500;color:var(--text)">' + act.title + '</div>';
-            html += '<div style="font-size:11px;color:var(--text-sec);margin-top:2px">' + (act.type === 'sci' ? '⛷️ Sci' : act.type === 'atletica' ? '🏃 Atletica' : act.type === 'acrobatica' ? '🤸 Acrobatica' : '🏋️ Multisport') + '</div>';
-            html += '</div>';
-            itemCount++;
-          });
-        }
-        
-        if (items.messaggi && items.messaggi.length > 0) {
-          items.messaggi.forEach(function(msg) {
-            if (itemCount > 0) {
-              html += '<div style="height:1px;background:var(--border)"></div>';
-            }
-            html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);font-size:13px">';
-            html += '<div style="font-weight:500;color:var(--blue-dark)">💬 ' + (msg.authorName || 'Allenatore') + '</div>';
-            html += '<div style="margin-top:4px;color:var(--text);line-height:1.4;font-size:12px">' + (msg.text || msg.messaggio || '') + '</div>';
-            html += '</div>';
-            itemCount++;
-          });
-        }
-        
-        html += '</div>';
-        html += '</div>';
-      });
-      
-      html += '</div>';
-      return html;
-    }
-
-    function showAtletaDashboard() {
-      var nome = currentUserData.profileData.nome;
-      var html = '<div style="padding:20px">';
-      html += '<h2>Benvenuto, ' + nome + '</h2>';
-      html += '<h3 style="margin-top:20px">I tuoi atleti:</h3>';
-      html += '<div style="background:var(--bg-card);padding:16px;border-radius:12px;margin-bottom:20px">';
-      
-      for (var i = 0; i < currentUserData.atleti.length; i++) {
-        var a = currentUserData.atleti[i];
-        html += '<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">';
-        html += '<div><strong>' + a.nome + ' ' + a.cognome + '</strong></div>';
-        html += '<div style="color:var(--text-sec);font-size:13px">' + a.categoria + '</div>';
-        html += '</div>';
-      }
-      
-      html += '</div>';
-      
-      var categorieListe = [];
-      for (var i = 0; i < currentUserData.atleti.length; i++) {
-        if (categorieListe.indexOf(currentUserData.atleti[i].categoria) === -1) {
-          categorieListe.push(currentUserData.atleti[i].categoria);
-        }
-      }
-      
-      if (categorieListe.length > 1) {
-        html += '<div style="margin-bottom:16px">';
-        html += '<div style="font-size:13px;color:var(--text-sec);margin-bottom:8px">Seleziona categoria:</div>';
-        html += '<div style="display:flex;gap:8px;flex-wrap:wrap" id="categoria-chips">';
-        for (var c = 0; c < categorieListe.length; c++) {
-          var cat = categorieListe[c];
-          html += '<button class="chip" style="' + (c === 0 ? 'background:var(--blue-dark);color:white' : '') + '" onclick="selectCategoria(\'' + cat + '\', this)">' + (CAT_LABELS[cat] || cat) + '</button>';
-        }
-        html += '</div>';
-        html += '</div>';
-      }
-      
-      html += '<div id="calendario-container" style="margin-top:20px;margin-bottom:20px;max-height:60vh;overflow-y:auto;border:0.5px solid var(--border);border-radius:12px;padding:12px">';
-      html += '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento...</div>';
-      html += '</div>';
-      
-      html += '<div style="display:flex;gap:12px">';
-      if (currentUserData.role === 'both') {
-        html += '<button class="btn-secondary" onclick="showRoleMenu()" style="flex:1">← Cambia ruolo</button>';
-      }
-      html += '<button class="btn-secondary" onclick="logout()" style="flex:1">Logout</button>';
-      html += '</div>';
-      html += '</div>';
-      
-      document.getElementById('app').innerHTML = html;
-      
-      var primaCategoria = categorieListe[0];
-      loadAttivitaPerCategoria(primaCategoria, function() {
-        loadMessaggiPerCategoria(primaCategoria, function() {
-          var container = document.getElementById('calendario-container');
-          if (container) {
-            container.innerHTML = renderListaAttivita(primaCategoria);
-          }
-        });
-      });
-    }
-
-    function selectCategoria(cat, btnElement) {
-      categoriaSel = cat;
-      
-      var chips = document.querySelectorAll('.chip');
-      chips.forEach(function(c) {
-        c.style.background = 'var(--bg-card)';
-        c.style.color = 'var(--text-sec)';
-      });
-      if (btnElement) {
-        btnElement.style.background = 'var(--blue-dark)';
-        btnElement.style.color = 'white';
-      }
-      
-      var container = document.getElementById('calendario-container');
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento attività...</div>';
-      
-      loadAttivitaPerCategoria(cat, function() {
-        loadMessaggiPerCategoria(cat, function() {
-          container.innerHTML = renderListaAttivita(cat);
-        });
-      });
-    }
-
-    // ============ ALLENATORE (v4.6) ============
-    function showAllenatoreDashboard() {
-      var nome = currentUserData.profileData.nome;
-      var html = '<div style="padding:20px">';
-      html += '<h2>Pannello Allenatore 🏋️</h2>';
-      html += '<p style="color:var(--text-sec);margin-bottom:24px">Ciao ' + nome + '!</p>';
-      
-      var categorieListe = currentUserData.allenatore_categories || [];
-      
-      if (categorieListe.length === 0) {
-        html += '<div style="padding:20px;background:var(--blue-light);border-radius:8px;color:var(--text)">';
-        html += 'Non sei assegnato a nessuna categoria. Contatta l\'admin.';
-        html += '</div>';
+      if (pending.length === 0) {
+        html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessuna approvazione in sospeso</div>';
       } else {
-        html += '<h3 style="margin-top:20px">Scegli categoria:</h3>';
-        html += '<div style="display:flex;flex-direction:column;gap:8px" id="categoria-allenatore">';
-        
-        for (var c = 0; c < categorieListe.length; c++) {
-          var cat = categorieListe[c];
-          html += '<button class="card" onclick="loadAttivitaAllenatore(\'' + cat + '\')" style="text-align:left;padding:16px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s">';
-          html += '<div style="font-weight:600">' + (CAT_LABELS[cat] || cat) + '</div>';
-          html += '<div style="font-size:12px;color:var(--text-sec);margin-top:4px">Gestisci messaggi e attività</div>';
-          html += '</button>';
-        }
-        
-        html += '</div>';
+        pending.forEach(function(user) {
+          html += '<div class="user-item">';
+          html += '<div class="user-info">';
+          html += '<div class="user-name">' + user.profileData.nome + ' ' + user.profileData.cognome + '</div>';
+          html += '<div class="user-meta">' + user.email + ' • ' + (CAT_LABELS[user.role] || user.role) + '</div>';
+          html += '</div>';
+          html += '<div class="user-actions">';
+          html += '<button class="btn-success" onclick="approveUser(\'' + user.uid + '\')">Approva</button>';
+          html += '<button class="btn-danger" onclick="rejectUser(\'' + user.uid + '\')">Rifiuta</button>';
+          html += '</div>';
+          html += '</div>';
+        });
       }
       
-      html += '<div style="display:flex;gap:12px;margin-top:40px">';
-      if (currentUserData.role === 'both') {
-        html += '<button class="btn-secondary" onclick="showRoleMenu()" style="flex:1">← Cambia ruolo</button>';
-      }
-      html += '<button class="btn-secondary" onclick="logout()" style="flex:1">Logout</button>';
-      html += '</div>';
-      html += '</div>';
-      
-      document.getElementById('app').innerHTML = html;
+      document.getElementById('admin-content').innerHTML = html;
     }
 
-    function loadAttivitaAllenatore(categoria) {
-      var html = '<div style="padding:20px">';
-      html += '<h2>← Gestione ' + (CAT_LABELS[categoria] || categoria) + '</h2>';
+    function loadUtenti() {
+      var html = '<h2>👥 Elenco Utenti (' + allUsers.length + ')</h2>';
       
-      html += '<h3 style="margin-top:20px">Attività di questa categoria:</h3>';
-      html += '<div id="attivita-list" style="margin-bottom:20px;max-height:60vh;overflow-y:auto;border:0.5px solid var(--border);border-radius:12px;padding:12px">';
-      html += '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento...</div>';
-      html += '</div>';
-      
-      html += '<div style="display:flex;gap:12px">';
-      html += '<button class="btn-secondary" onclick="showAllenatoreDashboard()" style="flex:1">← Indietro</button>';
-      html += '<button class="btn-secondary" onclick="logout()" style="flex:1">Logout</button>';
-      html += '</div>';
-      html += '</div>';
-      
-      document.getElementById('app').innerHTML = html;
-      
-      loadAttivitaPerCategoria(categoria, function() {
-        var attivita = calendarioAttivita[categoria] || {};
-        var allDates = Object.keys(attivita).sort();
+      allUsers.forEach(function(user) {
+        var badgeRole = user.role === 'admin' ? 'badge-admin' : user.role === 'atleta' ? 'badge-atleta' : 'badge-allenatore';
+        var badgeStatus = user.status === 'approved' ? 'badge-approved' : 'badge-pending';
         
-        var html = '<div style="padding:12px">';
-        
-        if (allDates.length === 0) {
-          html += '<div style="text-align:center;color:var(--text-sec);padding:20px">Nessuna attività</div>';
-        } else {
-          allDates.forEach(function(dateStr) {
-            var d = new Date(dateStr + 'T00:00:00');
-            var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-            var dayName = giorniNomi[d.getDay()];
-            var dayNum = d.getDate();
-            var monthNum = d.getMonth() + 1;
-            var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
-            var monthName = mesiNomi[d.getMonth()];
-            
-            html += '<div style="margin-bottom:12px">';
-            html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
-            
-            attivita[dateStr].forEach(function(act, idx) {
-              html += '<div class="activity-item" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')" style="border-left:3px solid ' + act.color + '">';
-              html += '<div style="font-weight:500">' + act.title + '</div>';
-              html += '<div style="font-size:11px;color:var(--text-sec);margin-top:4px">Clicca per aggiungere messaggio</div>';
-              html += '</div>';
-            });
-            
-            html += '</div>';
-          });
-        }
-        
+        html += '<div class="user-item">';
+        html += '<div class="user-info">';
+        html += '<div class="user-name">' + user.profileData.nome + ' ' + user.profileData.cognome + '</div>';
+        html += '<div class="user-meta">';
+        html += user.email + ' • ';
+        html += '<span class="badge ' + badgeRole + '">' + user.role + '</span> ';
+        html += '<span class="badge ' + badgeStatus + '">' + user.status + '</span>';
         html += '</div>';
-        document.getElementById('attivita-list').innerHTML = html;
+        html += '</div>';
+        html += '<div class="user-actions">';
+        html += '<button class="btn-primary" onclick="editUser(\'' + user.uid + '\')">Modifica</button>';
+        html += '</div>';
+        html += '</div>';
       });
+      
+      document.getElementById('admin-content').innerHTML = html;
     }
 
-    function openMessageForm(dateStr, activityTitle, categoria) {
-      selectedActivityForMessage = { dateStr: dateStr, activityTitle: activityTitle, categoria: categoria };
+    function loadAtleti() {
+      var atleti = allUsers.filter(function(u) { return u.role === 'atleta' && u.status === 'approved'; });
       
-      var d = new Date(dateStr + 'T00:00:00');
-      var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-      var dayName = giorniNomi[d.getDay()];
-      var dayNum = d.getDate();
-      var monthNum = d.getMonth() + 1;
-      var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
-      var monthName = mesiNomi[d.getMonth()];
-      var dateDisplay = dayName + ', ' + dayNum + ' ' + monthName;
+      var html = '<h2>🏃 Atleti (' + atleti.length + ')</h2>';
+      
+      if (atleti.length === 0) {
+        html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun atleta approvato</div>';
+      } else {
+        atleti.forEach(function(user) {
+          var catList = user.atleti ? user.atleti.map(function(a) { return a.categoria; }).join(', ') : 'Nessuno';
+          
+          html += '<div class="user-item">';
+          html += '<div class="user-info">';
+          html += '<div class="user-name">' + user.profileData.nome + ' ' + user.profileData.cognome + '</div>';
+          html += '<div class="user-meta">' + user.email + ' • Categorie: ' + catList + '</div>';
+          html += '</div>';
+          html += '<div class="user-actions">';
+          html += '<button class="btn-primary" onclick="editUser(\'' + user.uid + '\')">Modifica</button>';
+          html += '</div>';
+          html += '</div>';
+        });
+      }
+      
+      document.getElementById('admin-content').innerHTML = html;
+    }
+
+    function loadAllenatori() {
+      var allenatori = allUsers.filter(function(u) { return u.role === 'allenatore' && u.status === 'approved'; });
+      
+      var html = '<h2>🏋️ Allenatori (' + allenatori.length + ')</h2>';
+      
+      if (allenatori.length === 0) {
+        html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun allenatore approvato</div>';
+      } else {
+        allenatori.forEach(function(user) {
+          var catList = user.allenatore_categories ? user.allenatore_categories.join(', ') : 'Nessuna';
+          
+          html += '<div class="user-item">';
+          html += '<div class="user-info">';
+          html += '<div class="user-name">' + user.profileData.nome + ' ' + user.profileData.cognome + '</div>';
+          html += '<div class="user-meta">' + user.email + ' • Categorie: ' + catList + '</div>';
+          html += '</div>';
+          html += '<div class="user-actions">';
+          html += '<button class="btn-primary" onclick="editUser(\'' + user.uid + '\')">Modifica</button>';
+          html += '</div>';
+          html += '</div>';
+        });
+      }
+      
+      document.getElementById('admin-content').innerHTML = html;
+    }
+
+    function editUser(uid) {
+      var user = allUsers.find(function(u) { return u.uid === uid; });
+      if (!user) return;
       
       var html = '<div class="modal-overlay">';
       html += '<div class="modal">';
-      html += '<button class="modal-close" onclick="closeMessageForm()">✕</button>';
-      html += '<div class="modal-header">Aggiungi Messaggio</div>';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Modifica ' + user.profileData.nome + '</div>';
+      
       html += '<div class="form-group">';
-      html += '<label class="form-label">Data</label>';
-      html += '<div style="padding:10px;background:var(--gray-50);border-radius:8px;color:var(--text)">' + dateDisplay + '</div>';
+      html += '<label class="form-label">Ruolo</label>';
+      html += '<select id="edit-role">';
+      html += '<option value="atleta" ' + (user.role === 'atleta' ? 'selected' : '') + '>Atleta</option>';
+      html += '<option value="allenatore" ' + (user.role === 'allenatore' ? 'selected' : '') + '>Allenatore</option>';
+      html += '<option value="admin" ' + (user.role === 'admin' ? 'selected' : '') + '>Admin</option>';
+      html += '</select>';
       html += '</div>';
+      
       html += '<div class="form-group">';
-      html += '<label class="form-label">Attività</label>';
-      html += '<div style="padding:10px;background:var(--gray-50);border-radius:8px;color:var(--text)">' + activityTitle + '</div>';
+      html += '<label class="form-label">Status</label>';
+      html += '<select id="edit-status">';
+      html += '<option value="pending_approval" ' + (user.status === 'pending_approval' ? 'selected' : '') + '>In attesa</option>';
+      html += '<option value="approved" ' + (user.status === 'approved' ? 'selected' : '') + '>Approvato</option>';
+      html += '</select>';
       html += '</div>';
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Messaggio per i ragazzi</label>';
-      html += '<textarea id="message-text" placeholder="Scrivi il tuo messaggio..."></textarea>';
-      html += '</div>';
+      
+      if (user.role === 'allenatore') {
+        html += '<div class="form-group">';
+        html += '<label class="form-label">Categorie Allenatore</label>';
+        html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">';
+        
+        var selectedCats = user.allenatore_categories || [];
+        ALL_CATEGORIES.forEach(function(cat) {
+          var isChecked = selectedCats.indexOf(cat) >= 0;
+          html += '<label style="display:flex;align-items:center;margin-bottom:0">';
+          html += '<input type="checkbox" id="cat-' + cat + '" ' + (isChecked ? 'checked' : '') + '> ';
+          html += '<span style="margin-left:6px">' + (CAT_LABELS[cat] || cat) + '</span>';
+          html += '</label>';
+        });
+        
+        html += '</div>';
+        html += '</div>';
+      }
+      
       html += '<div style="display:flex;gap:12px">';
-      html += '<button class="btn-secondary" onclick="closeMessageForm()" style="flex:1">Annulla</button>';
-      html += '<button class="btn-primary" onclick="saveMessage()" style="flex:1">Salva</button>';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveUserEdit(\'' + uid + '\')" style="flex:1">Salva</button>';
       html += '</div>';
       html += '</div>';
       html += '</div>';
@@ -882,50 +566,71 @@
       document.getElementById('app').insertAdjacentHTML('beforeend', html);
     }
 
-    function closeMessageForm() {
+    function saveUserEdit(uid) {
+      var role = document.getElementById('edit-role').value;
+      var status = document.getElementById('edit-status').value;
+      var categories = [];
+      
+      if (role === 'allenatore') {
+        ALL_CATEGORIES.forEach(function(cat) {
+          if (document.getElementById('cat-' + cat).checked) {
+            categories.push(cat);
+          }
+        });
+      }
+      
+      var updateData = {
+        role: role,
+        status: status
+      };
+      
+      if (role === 'allenatore') {
+        updateData.allenatore_categories = categories;
+      }
+      
+      db.collection('users').doc(uid).update(updateData)
+        .then(function() {
+          alert('Utente aggiornato!');
+          closeModal();
+          loadStats();
+          loadUtenti();
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
+    function approveUser(uid) {
+      db.collection('users').doc(uid).update({
+        status: 'approved'
+      })
+        .then(function() {
+          alert('Utente approvato!');
+          loadStats();
+          loadApprovazioni();
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
+    function rejectUser(uid) {
+      if (!confirm('Sei sicuro di voler rifiutare questo utente?')) return;
+      
+      db.collection('users').doc(uid).delete()
+        .then(function() {
+          alert('Utente rifiutato e cancellato!');
+          loadStats();
+          loadApprovazioni();
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
+    function closeModal() {
       var overlay = document.querySelector('.modal-overlay');
       if (overlay) overlay.remove();
-      selectedActivityForMessage = null;
-    }
-
-    function saveMessage() {
-      if (!selectedActivityForMessage) return;
-      
-      var messageText = document.getElementById('message-text').value.trim();
-      if (!messageText) {
-        alert('Scrivi un messaggio');
-        return;
-      }
-      
-      var categoria = selectedActivityForMessage.categoria;
-      var dateStr = selectedActivityForMessage.dateStr;
-      
-      db.collection('eventMessages').doc(categoria).collection('messages').add({
-        data: dateStr,
-        category: categoria,
-        authorName: currentUserData.profileData.nome,
-        text: messageText,
-        createdAt: firebase.firestore.Timestamp.now()
-      }).then(function(docRef) {
-        alert('Messaggio salvato! ✅');
-        closeMessageForm();
-        loadAttivitaAllenatore(categoria);
-      }).catch(function(err) {
-        alert('Errore salvataggio: ' + err.message);
-      });
-    }
-
-    // ============ GOOGLE DRIVE ============
-    async function downloadFileFromGoogleDrive(fileId) {
-      try {
-        const url = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Download failed');
-        return await response.arrayBuffer();
-      } catch (err) {
-        console.error('Error downloading from Google Drive:', err);
-        return null;
-      }
     }
 
     // ============ APP START ============
