@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.7</title>
+  <title>Sci Club Val d'Ayas v4.7.1</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -282,13 +282,13 @@
       html += '<h1 style="text-align:center;margin-bottom:40px">🏔️ Sci Club Val d\'Ayas</h1>';
       html += '<div class="form-group">';
       html += '<label class="form-label">Email</label>';
-      html += '<input type="email" id="login-email" placeholder="admin@email.com">';
+      html += '<input type="email" id="login-email" placeholder="tua@email.com">';
       html += '</div>';
       html += '<div class="form-group">';
       html += '<label class="form-label">Password</label>';
       html += '<input type="password" id="login-password" placeholder="•••••••">';
       html += '</div>';
-      html += '<button class="btn-primary" onclick="login()" style="width:100%">Login Admin</button>';
+      html += '<button class="btn-primary" onclick="login()" style="width:100%">Login</button>';
       html += '</div>';
       document.getElementById('app').innerHTML = html;
     }
@@ -320,14 +320,22 @@
           if (doc.exists) {
             currentUserData = Object.assign({ uid: currentUser.uid }, doc.data());
             
+            // Smart redirect based on role
             if (currentUserData.role === 'admin') {
               showAdminDashboard();
+            } else if (currentUserData.role === 'atleta') {
+              alert('Accesso atleta non disponibile in questo portale. Usa l\'app principale.');
+              logout();
+            } else if (currentUserData.role === 'allenatore') {
+              alert('Accesso allenatore non disponibile in questo portale. Usa l\'app principale.');
+              logout();
             } else {
-              alert('Solo admin possono accedere qui');
+              alert('Ruolo non riconosciuto');
               logout();
             }
           } else {
             alert('Profilo non trovato');
+            logout();
           }
         })
         .catch(function(err) {
@@ -461,23 +469,36 @@
     }
 
     function loadAtleti() {
-      var atleti = allUsers.filter(function(u) { return u.role === 'atleta' && u.status === 'approved'; });
+      // Raccogli TUTTI gli atleti da TUTTI gli user
+      var tuttiAtleti = [];
       
-      var html = '<h2>🏃 Atleti (' + atleti.length + ')</h2>';
+      allUsers.forEach(function(user) {
+        if (user.atleti && Array.isArray(user.atleti)) {
+          user.atleti.forEach(function(atleta) {
+            tuttiAtleti.push({
+              nome: atleta.nome,
+              cognome: atleta.cognome,
+              categoria: atleta.categoria,
+              genitore: user.profileData.nome + ' ' + user.profileData.cognome,
+              genitoreEmail: user.email
+            });
+          });
+        }
+      });
       
-      if (atleti.length === 0) {
-        html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun atleta approvato</div>';
+      var html = '<h2>🏃 Atleti (' + tuttiAtleti.length + ')</h2>';
+      
+      if (tuttiAtleti.length === 0) {
+        html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun atleta registrato</div>';
       } else {
-        atleti.forEach(function(user) {
-          var catList = user.atleti ? user.atleti.map(function(a) { return a.categoria; }).join(', ') : 'Nessuno';
-          
+        tuttiAtleti.forEach(function(atleta) {
           html += '<div class="user-item">';
           html += '<div class="user-info">';
-          html += '<div class="user-name">' + user.profileData.nome + ' ' + user.profileData.cognome + '</div>';
-          html += '<div class="user-meta">' + user.email + ' • Categorie: ' + catList + '</div>';
+          html += '<div class="user-name">' + atleta.nome + ' ' + atleta.cognome + '</div>';
+          html += '<div class="user-meta">';
+          html += 'Categoria: <strong>' + (CAT_LABELS[atleta.categoria] || atleta.categoria) + '</strong> • ';
+          html += 'Genitore: ' + atleta.genitore + ' (' + atleta.genitoreEmail + ')';
           html += '</div>';
-          html += '<div class="user-actions">';
-          html += '<button class="btn-primary" onclick="editUser(\'' + user.uid + '\')">Modifica</button>';
           html += '</div>';
           html += '</div>';
         });
@@ -487,7 +508,9 @@
     }
 
     function loadAllenatori() {
-      var allenatori = allUsers.filter(function(u) { return u.role === 'allenatore' && u.status === 'approved'; });
+      var allenatori = allUsers.filter(function(u) { 
+        return (u.role === 'allenatore' || u.allenatore_categories) && u.status === 'approved'; 
+      });
       
       var html = '<h2>🏋️ Allenatori (' + allenatori.length + ')</h2>';
       
@@ -495,7 +518,7 @@
         html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun allenatore approvato</div>';
       } else {
         allenatori.forEach(function(user) {
-          var catList = user.allenatore_categories ? user.allenatore_categories.join(', ') : 'Nessuna';
+          var catList = user.allenatore_categories && user.allenatore_categories.length > 0 ? user.allenatore_categories.map(function(c) { return CAT_LABELS[c] || c; }).join(', ') : 'Nessuna';
           
           html += '<div class="user-item">';
           html += '<div class="user-info">';
