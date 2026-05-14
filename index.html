@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.8</title>
+  <title>Sci Club Val d'Ayas v4.9</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -730,8 +730,38 @@
       
       for (var i = 0; i < currentUserData.atleti.length; i++) {
         var a = currentUserData.atleti[i];
-        html += '<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">';
-        html += '<div><strong>' + a.nome + ' ' + a.cognome + '</strong></div>';
+        
+        var flagColor = var(--green);
+        var flagEmoji = '🟢';
+        var flagText = 'Valido';
+        
+        if (a.scadenza) {
+          var scadDate = new Date(a.scadenza);
+          var oggi = new Date();
+          var diffMs = scadDate - oggi;
+          var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+          
+          if (diffDays < 0) {
+            flagColor = '#dc2626';
+            flagEmoji = '🔴';
+            flagText = 'Scaduto';
+          } else if (diffDays <= 30) {
+            flagColor = '#FFC000';
+            flagEmoji = '🟡';
+            flagText = 'Scade in ' + diffDays + 'gg';
+          } else {
+            flagColor = var(--green);
+            flagEmoji = '🟢';
+            flagText = 'Valido';
+          }
+        }
+        
+        html += '<div style="padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">';
+        html += '<div>';
+        html += '<strong>' + a.nome + ' ' + a.cognome + '</strong>';
+        html += ' <span style="font-size:14px;margin-left:8px">' + flagEmoji + '</span>';
+        html += '<div style="font-size:12px;color:' + flagColor + ';margin-top:4px;font-weight:600">' + flagText + '</div>';
+        html += '</div>';
         html += '<div style="color:var(--text-sec);font-size:13px">' + a.categoria + '</div>';
         html += '</div>';
       }
@@ -1003,6 +1033,10 @@
       html += '<button class="btn-secondary" onclick="logout()">Logout</button>';
       html += '</div>';
       
+      html += '<div style="margin-bottom:20px">';
+      html += '<button class="btn-primary" onclick="showRegistraAllenatore()" style="width:100%;margin-bottom:12px">+ Registra Allenatore</button>';
+      html += '</div>';
+      
       html += '<div class="admin-menu">';
       html += '<div class="admin-card" onclick="loadApprovazioni()">';
       html += '<div class="admin-card-title">⏳ Approvazioni</div>';
@@ -1096,8 +1130,11 @@
               nome: atleta.nome,
               cognome: atleta.cognome,
               categoria: atleta.categoria,
+              scadenza: atleta.scadenza || null,
               genitore: user.profileData.nome + ' ' + user.profileData.cognome,
-              genitoreEmail: user.email
+              genitoreEmail: user.email,
+              genitoreUid: user.uid,
+              atleteIndex: user.atleti.indexOf(atleta)
             });
           });
         }
@@ -1109,19 +1146,107 @@
         html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun atleta registrato</div>';
       } else {
         tuttiAtleti.forEach(function(atleta) {
+          var flagColor = 'var(--green)';
+          var flagEmoji = '🟢';
+          var flagText = 'Valido';
+          
+          if (atleta.scadenza) {
+            var scadDate = new Date(atleta.scadenza);
+            var oggi = new Date();
+            var diffMs = scadDate - oggi;
+            var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+              flagColor = var(--red);
+              flagEmoji = '🔴';
+              flagText = 'Scaduto';
+            } else if (diffDays <= 30) {
+              flagColor = '#FFC000';
+              flagEmoji = '🟡';
+              flagText = 'Scade in ' + diffDays + 'gg';
+            } else {
+              flagColor = var(--green);
+              flagEmoji = '🟢';
+              flagText = 'Valido';
+            }
+          }
+          
           html += '<div class="user-item">';
           html += '<div class="user-info">';
-          html += '<div class="user-name">' + atleta.nome + ' ' + atleta.cognome + '</div>';
+          html += '<div class="user-name">';
+          html += atleta.nome + ' ' + atleta.cognome;
+          html += ' <span style="font-size:14px;margin-left:8px">' + flagEmoji + '</span>';
+          html += '</div>';
           html += '<div class="user-meta">';
           html += 'Categoria: <strong>' + (CAT_LABELS[atleta.categoria] || atleta.categoria) + '</strong> • ';
-          html += 'Genitore: ' + atleta.genitore + ' (' + atleta.genitoreEmail + ')';
+          html += 'Genitore: ' + atleta.genitore + ' • ';
+          html += '<span style="color:' + flagColor + ';font-weight:600">' + flagText + '</span>';
+          if (atleta.scadenza) {
+            html += ' (' + atleta.scadenza + ')';
+          }
           html += '</div>';
+          html += '</div>';
+          html += '<div class="user-actions">';
+          html += '<button class="btn-primary" onclick="editScadenzaAtleta(\'' + atleta.genitoreUid + '\', ' + atleta.atleteIndex + ', \'' + atleta.nome + '\', \'' + atleta.cognome + '\')">Scadenza</button>';
           html += '</div>';
           html += '</div>';
         });
       }
       
       document.getElementById('admin-content').innerHTML = html;
+    }
+    
+    function editScadenzaAtleta(genitoreUid, atleteIndex, nome, cognome) {
+      var user = allUsers.find(function(u) { return u.uid === genitoreUid; });
+      if (!user || !user.atleti || !user.atleti[atleteIndex]) return;
+      
+      var atleta = user.atleti[atleteIndex];
+      var scadenzaValue = atleta.scadenza || '';
+      
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Scadenza Certificato</div>';
+      html += '<div style="margin-bottom:16px">';
+      html += '<strong>' + nome + ' ' + cognome + '</strong>';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Data Scadenza (YYYY-MM-DD)</label>';
+      html += '<input type="date" id="scad-date" value="' + scadenzaValue + '">';
+      html += '</div>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveScadenzaAtleta(\'' + genitoreUid + '\', ' + atleteIndex + ')" style="flex:1">Salva</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+    
+    function saveScadenzaAtleta(genitoreUid, atleteIndex) {
+      var scadDate = document.getElementById('scad-date').value;
+      
+      var user = allUsers.find(function(u) { return u.uid === genitoreUid; });
+      if (!user) return;
+      
+      var atleti = user.atleti || [];
+      if (atleti[atleteIndex]) {
+        atleti[atleteIndex].scadenza = scadDate;
+      }
+      
+      db.collection('users').doc(genitoreUid).update({
+        atleti: atleti
+      })
+        .then(function() {
+          alert('Scadenza aggiornata!');
+          closeModal();
+          loadAdminStats();
+          loadAtletiAdmin();
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
     }
 
     function loadAllennatoriAdmin() {
@@ -1273,7 +1398,105 @@
       if (overlay) overlay.remove();
     }
 
-    // ============ GOOGLE DRIVE ============
+    // ============ REGISTRA ALLENATORE ============
+    function showRegistraAllenatore() {
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Registra Nuovo Allenatore</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Nome</label>';
+      html += '<input type="text" id="reg-nome" placeholder="Nome">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Cognome</label>';
+      html += '<input type="text" id="reg-cognome" placeholder="Cognome">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Email</label>';
+      html += '<input type="email" id="reg-email" placeholder="email@example.com">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Password</label>';
+      html += '<input type="password" id="reg-password" placeholder="Almeno 6 caratteri">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Categorie Allenatore</label>';
+      html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">';
+      
+      ALL_CATEGORIES.forEach(function(cat) {
+        html += '<label style="display:flex;align-items:center;margin-bottom:0">';
+        html += '<input type="checkbox" id="cat-' + cat + '"> ';
+        html += '<span style="margin-left:6px">' + (CAT_LABELS[cat] || cat) + '</span>';
+        html += '</label>';
+      });
+      
+      html += '</div>';
+      html += '</div>';
+      
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveRegistraAllenatore()" style="flex:1">Registra</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    function saveRegistraAllenatore() {
+      var nome = document.getElementById('reg-nome').value.trim();
+      var cognome = document.getElementById('reg-cognome').value.trim();
+      var email = document.getElementById('reg-email').value.trim();
+      var password = document.getElementById('reg-password').value;
+      var categories = [];
+      
+      ALL_CATEGORIES.forEach(function(cat) {
+        if (document.getElementById('cat-' + cat).checked) {
+          categories.push(cat);
+        }
+      });
+      
+      if (!nome || !cognome || !email || !password) {
+        alert('Compila tutti i campi');
+        return;
+      }
+      
+      if (password.length < 6) {
+        alert('Password deve avere almeno 6 caratteri');
+        return;
+      }
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(function(result) {
+          var uid = result.user.uid;
+          var userData = {
+            uid: uid,
+            email: email,
+            role: 'allenatore',
+            status: 'approved',
+            profileData: { nome: nome, cognome: cognome },
+            allenatore_categories: categories,
+            createdAt: firebase.firestore.Timestamp.now()
+          };
+          
+          return db.collection('users').doc(uid).set(userData);
+        })
+        .then(function() {
+          alert('Allenatore registrato e approvato!');
+          closeModal();
+          loadAdminStats();
+          loadAdminDashboard();
+        })
+        .catch(function(error) {
+          alert('Errore: ' + error.message);
+        });
+    }
     async function downloadFileFromGoogleDrive(fileId) {
       try {
         const url = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
