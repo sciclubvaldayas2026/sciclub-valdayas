@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.19</title>
+  <title>Sci Club Val d'Ayas v4.20</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -908,35 +908,39 @@
           
           html += '<div style="margin-bottom:' + marginBottom + ';margin-top:' + marginTop + '">';
           
-          html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
-          
-          // DATA DENTRO IL BOX (v4.18)
-          html += '<div style="padding:10px 12px;background:var(--gray-50);border-bottom:0.5px solid var(--border);font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
-          
-          var itemCount = 0;
-          
+          // ATTIVITÀ (CONDENSA DATA + NOME NELLA STESSA RIGA - v4.20)
           if (items.attivita && items.attivita.length > 0) {
             items.attivita.forEach(function(act, idx) {
-              if (itemCount > 0) {
-                html += '<div style="height:1px;background:var(--border)"></div>';
-              }
-              html += '<div style="padding:10px 12px;border-left:3px solid ' + act.color + ';font-size:13px">';
-              html += '<div style="font-weight:500;color:var(--text)">' + act.title + '</div>';
-              html += '<div style="font-size:11px;color:var(--text-sec);margin-top:2px">' + (act.type === 'sci' ? '⛷️ Sci' : act.type === 'atletica' ? '🏃 Atletica' : act.type === 'acrobatica' ? '🤸 Acrobatica' : '🏋️ Multisport') + '</div>';
+              html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px">';
+              
+              // DATA + NOME ATTIVITÀ STESSA RIGA
+              html += '<div style="padding:10px 12px;border-left:3px solid ' + act.color + ';display:flex;justify-content:space-between;align-items:center">';
+              html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + ' - ' + act.title + '</div>';
               html += '</div>';
-              itemCount++;
+              
+              // TIPO ATTIVITÀ SOTTO
+              html += '<div style="padding:0 12px 10px 12px;border-left:3px solid ' + act.color + ';margin-left:-3px">';
+              html += '<div style="font-size:11px;color:var(--text-sec)">' + (act.type === 'sci' ? '⛷️ Sci' : act.type === 'atletica' ? '🏃 Atletica' : act.type === 'acrobatica' ? '🤸 Acrobatica' : '🏋️ Multisport') + '</div>';
+              html += '</div>';
+              
+              html += '</div>';
             });
           }
           
+          // MESSAGGI
           if (items.messaggi && items.messaggi.length > 0) {
             items.messaggi.forEach(function(msg) {
-              if (itemCount > 0) {
-                html += '<div style="height:1px;background:var(--border)"></div>';
-              }
-              html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);font-size:13px">';
-              html += '<div style="font-weight:500;color:var(--blue-dark)">💬 ' + (msg.authorName || 'Allenatore') + '</div>';
-              html += '<div style="margin-top:4px;color:var(--text);line-height:1.4;font-size:12px">';
+              html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px">';
+              
+              // DATA + AUTORE STESSA RIGA
+              html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);display:flex;justify-content:space-between;align-items:center">';
+              html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + ' - 💬 ' + (msg.authorName || 'Allenatore') + '</div>';
+              html += '</div>';
+              
+              // TESTO MESSAGGIO
+              html += '<div style="padding:0 12px 10px 12px;color:var(--text);line-height:1.4;font-size:12px">';
               html += (msg.text || msg.messaggio || '');
+              
               if (msg.id && (currentRole === 'allenatore' || currentUserData.role === 'allenatore')) {
                 html += '<div style="margin-top:8px;display:flex;gap:6px">';
                 html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
@@ -944,12 +948,11 @@
                 html += '</div>';
               }
               html += '</div>';
+              
               html += '</div>';
-              itemCount++;
             });
           }
           
-          html += '</div>';
           html += '</div>';
         });
       });
@@ -1194,47 +1197,43 @@
             
             html += '<div style="margin-bottom:' + marginBottom + ';margin-top:' + marginTop + '">';
             
-            html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
-            
-            // DATA DENTRO IL BOX (v4.18)
-            html += '<div style="padding:10px 12px;background:var(--gray-50);border-bottom:0.5px solid var(--border);font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
-            
-            var itemCount = 0;
-            
+            // ATTIVITÀ (CONDENSA DATA + NOME NELLA STESSA RIGA - v4.20)
             if (items.attivita && items.attivita.length > 0) {
               items.attivita.forEach(function(act, idx) {
-                if (itemCount > 0) {
-                  html += '<div style="height:1px;background:var(--border)"></div>';
-                }
-                html += '<div class="activity-item" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')" style="border-left:3px solid ' + act.color + ';cursor:pointer">';
-                html += '<div style="font-weight:500">' + act.title + '</div>';
-                html += '<div style="font-size:11px;color:var(--text-sec);margin-top:4px">Clicca per aggiungere messaggio</div>';
+                html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px">';
+                
+                // DATA + NOME ATTIVITÀ STESSA RIGA (CLICKABILE)
+                html += '<div class="activity-item" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')" style="border-left:3px solid ' + act.color + ';cursor:pointer;padding:10px 12px;display:flex;justify-content:space-between;align-items:center">';
+                html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + ' - ' + act.title + '</div>';
+                html += '<div style="font-size:11px;color:var(--text-sec)">Clicca per aggiungere messaggio</div>';
                 html += '</div>';
-                itemCount++;
+                
+                html += '</div>';
               });
             }
             
+            // MESSAGGI
             if (items.messaggi && items.messaggi.length > 0) {
               items.messaggi.forEach(function(msg) {
-                if (itemCount > 0) {
-                  html += '<div style="height:1px;background:var(--border)"></div>';
-                }
-                html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);font-size:13px">';
-                html += '<div style="font-weight:500;color:var(--blue-dark)">💬 ' + (msg.authorName || 'Allenatore') + '</div>';
-                html += '<div style="margin-top:4px;color:var(--text);line-height:1.4;font-size:12px">';
+                html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px">';
+                
+                // DATA + AUTORE STESSA RIGA
+                html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);display:flex;justify-content:space-between;align-items:center">';
+                html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + ' - 💬 ' + (msg.authorName || 'Allenatore') + '</div>';
+                html += '</div>';
+                
+                // TESTO MESSAGGIO
+                html += '<div style="padding:0 12px 10px 12px;color:var(--text);line-height:1.4;font-size:12px">';
                 html += (msg.text || msg.messaggio || '');
                 html += '<div style="margin-top:8px;display:flex;gap:6px">';
                 html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
                 html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
                 html += '</div>';
                 html += '</div>';
+                
                 html += '</div>';
-                itemCount++;
               });
             }
-            
-            html += '</div>';
-            html += '</div>';
           });
         });
       }
