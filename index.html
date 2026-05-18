@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.16.2</title>
+  <title>Sci Club Val d'Ayas v4.17</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -783,11 +783,14 @@
     }
 
     function loadMessaggiPerCategoria(categoria, callback) {
+      // RESET della cache (v4.17 FIX)
+      if (!calendarioMessaggi[categoria]) {
+        calendarioMessaggi[categoria] = {};
+      } else {
+        calendarioMessaggi[categoria] = {};  // Svuota prima di ricaricare
+      }
+      
       db.collection('eventMessages').doc(categoria).collection('messages').get().then(function(snap) {
-        if (!calendarioMessaggi[categoria]) {
-          calendarioMessaggi[categoria] = {};
-        }
-        
         snap.docs.forEach(function(doc) {
           var data = doc.data();
           var dateStr = data.data || data.dateString || '';
@@ -819,7 +822,7 @@
         var diffMs = currDate - prevDate;
         var diffDays = diffMs / (1000 * 60 * 60 * 24);
         
-        if (diffDays <= 2) {
+        if (diffDays === 1) {
           currentGroup.push(dates[i]);
         } else {
           groups.push(currentGroup);
@@ -900,8 +903,8 @@
           var items = allDates[dateStr];
           
           // Meno margin se è parte di una trasferta
-          var marginTop = trasfertaHeader ? (dayIdx === 0 ? '8px' : '4px') : '12px';
-          var marginBottom = trasfertaHeader ? '8px' : '16px';
+          var marginTop = trasfertaHeader ? (dayIdx === 0 ? '8px' : '0px') : '12px';
+          var marginBottom = trasfertaHeader ? '0px' : '16px';
           
           html += '<div style="margin-bottom:' + marginBottom + ';margin-top:' + marginTop + '">';
           html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
