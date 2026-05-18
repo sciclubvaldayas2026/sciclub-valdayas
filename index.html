@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.22</title>
+  <title>Sci Club Val d'Ayas v4.23</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -964,14 +964,13 @@
     function showAtletaDashboard() {
       var nome = currentUserData.profileData.nome;
       var html = renderHeader();
-      html += '<div style="padding:20px">';
-      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">';
-      html += '<h2>Benvenuto, ' + nome + '</h2>';
-      html += '<button class="btn-secondary" onclick="logout()">Logout</button>';
+      html += '<div style="padding:12px 20px 8px 20px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+      html += '<div style="font-size:16px;font-weight:600">Ciao, ' + nome + '</div>';
+      html += '<button class="btn-secondary" onclick="logout()" style="padding:8px 12px;font-size:12px">Logout</button>';
       html += '</div>';
       
-      html += '';
-      html += '<div style="background:transparent;padding:0px;border-radius:0px;margin-bottom:8px">';
+      html += '<div style="margin-bottom:4px">';
       
       for (var i = 0; i < currentUserData.atleti.length; i++) {
         var a = currentUserData.atleti[i];
@@ -1001,13 +1000,13 @@
           }
         }
         
-        html += '<div style="padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">';
+        html += '<div style="padding:6px 0;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px">';
         html += '<div>';
         html += '<strong>' + a.nome + ' ' + a.cognome + '</strong>';
-        html += ' <span style="font-size:14px;margin-left:8px">' + flagEmoji + '</span>';
-        html += '<div style="font-size:12px;color:' + flagColor + ';margin-top:4px;font-weight:600">' + flagText + '</div>';
+        html += ' ' + flagEmoji;
+        html += '<div style="font-size:11px;color:' + flagColor + ';margin-top:2px;font-weight:600">' + flagText + '</div>';
         html += '</div>';
-        html += '<div style="color:var(--text-sec);font-size:13px">' + a.categoria + '</div>';
+        html += '<div style="color:var(--text-sec);font-size:11px">' + a.categoria + '</div>';
         html += '</div>';
       }
       
@@ -1021,26 +1020,25 @@
       }
       
       if (categorieListe.length > 1) {
-        html += '<div style="margin-bottom:16px">';
-        html += '<div style="font-size:13px;color:var(--text-sec);margin-bottom:0px">Seleziona categoria:</div>';
-        html += '<div style="display:flex;gap:8px;flex-wrap:wrap" id="categoria-chips">';
+        html += '<div style="margin-bottom:6px">';
+        html += '<div style="display:flex;gap:6px;flex-wrap:wrap" id="categoria-chips">';
         for (var c = 0; c < categorieListe.length; c++) {
           var cat = categorieListe[c];
-          html += '<button class="chip" style="' + (c === 0 ? 'background:var(--blue-dark);color:white' : '') + '" onclick="selectCategoria(\'' + cat + '\', this)">' + (CAT_LABELS[cat] || cat) + '</button>';
+          html += '<button class="chip" style="padding:6px 12px;font-size:12px;' + (c === 0 ? 'background:var(--blue-dark);color:white' : '') + '" onclick="selectCategoria(\'' + cat + '\', this)">' + (CAT_LABELS[cat] || cat) + '</button>';
         }
         html += '</div>';
         html += '</div>';
       }
       
-      html += '<div id="calendario-container" style="margin-top:20px;margin-bottom:20px;max-height:60vh;overflow-y:auto;border:0.5px solid var(--border);border-radius:12px;padding:12px">';
+      html += '<div id="calendario-container" style="margin-top:8px;margin-bottom:12px;height:calc(100vh - 280px);overflow-y:auto;border:0.5px solid var(--border);border-radius:12px;padding:12px">';
       html += '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento...</div>';
       html += '</div>';
       
-      html += '<div style="display:flex;gap:12px">';
+      html += '<div style="display:flex;gap:12px;padding:0 0 8px 0">';
       if (currentUserData.role === 'both' || (currentUserData.role === 'atleta' && currentUserData.allenatore_categories)) {
-        html += '<button class="btn-secondary" onclick="showRoleMenu()" style="flex:1">← Cambia ruolo</button>';
+        html += '<button class="btn-secondary" onclick="showRoleMenu()" style="flex:1;font-size:12px;padding:8px">← Cambia ruolo</button>';
       }
-      html += '<button class="btn-secondary" onclick="logout()" style="flex:1">Logout</button>';
+      html += '<button class="btn-secondary" onclick="logout()" style="flex:1;font-size:12px;padding:8px">Logout</button>';
       html += '</div>';
       html += '</div>';
       
