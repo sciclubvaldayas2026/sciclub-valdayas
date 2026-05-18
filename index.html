@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.12</title>
+  <title>Sci Club Val d'Ayas v4.16</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -806,6 +806,52 @@
       });
     }
 
+    // ============ RAGGRUPPAMENTO EVENTI (v4.14) ============
+    function groupEventsByTrasferta(dates) {
+      if (dates.length === 0) return [];
+      
+      var groups = [];
+      var currentGroup = [dates[0]];
+      
+      for (var i = 1; i < dates.length; i++) {
+        var prevDate = new Date(dates[i - 1] + 'T00:00:00');
+        var currDate = new Date(dates[i] + 'T00:00:00');
+        var diffMs = currDate - prevDate;
+        var diffDays = diffMs / (1000 * 60 * 60 * 24);
+        
+        if (diffDays <= 2) {
+          currentGroup.push(dates[i]);
+        } else {
+          groups.push(currentGroup);
+          currentGroup = [dates[i]];
+        }
+      }
+      groups.push(currentGroup);
+      
+      return groups;
+    }
+
+    function getTrasfertaHeader(dateGroup) {
+      if (dateGroup.length === 1) {
+        return null;
+      }
+      
+      var startDate = new Date(dateGroup[0] + 'T00:00:00');
+      var endDate = new Date(dateGroup[dateGroup.length - 1] + 'T00:00:00');
+      
+      var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+      var startDay = startDate.getDate();
+      var endDay = endDate.getDate();
+      var startMonth = mesiNomi[startDate.getMonth()];
+      var endMonth = mesiNomi[endDate.getMonth()];
+      
+      if (startMonth === endMonth) {
+        return '🚌 Trasferta ' + startDay + '-' + endDay + ' ' + startMonth;
+      } else {
+        return '🚌 Trasferta ' + startDay + ' ' + startMonth + ' - ' + endDay + ' ' + endMonth;
+      }
+    }
+
     function renderListaAttivita(categoria) {
       var attivita = calendarioAttivita[categoria] || {};
       var messaggi = calendarioMessaggi[categoria] || {};
@@ -826,54 +872,77 @@
         return '<div style="padding:40px 20px;text-align:center;color:var(--text-sec)">Nessuna attività per questa categoria</div>';
       }
       
+      // RAGGRUPPAMENTO TRASFERTE (v4.14)
+      var dateGroups = groupEventsByTrasferta(sortedDates);
+      
       var html = '<div style="padding:12px">';
       
-      sortedDates.forEach(function(dateStr) {
-        var d = new Date(dateStr + 'T00:00:00');
-        var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-        var dayName = giorniNomi[d.getDay()];
-        var dayNum = d.getDate();
-        var monthNum = d.getMonth() + 1;
-        var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
-        var monthName = mesiNomi[d.getMonth()];
+      dateGroups.forEach(function(dateGroup) {
+        var trasfertaHeader = getTrasfertaHeader(dateGroup);
         
-        var items = allDates[dateStr];
-        
-        html += '<div style="margin-bottom:16px;margin-top:12px">';
-        html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
-        
-        html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
-        
-        var itemCount = 0;
-        
-        if (items.attivita && items.attivita.length > 0) {
-          items.attivita.forEach(function(act, idx) {
-            if (itemCount > 0) {
-              html += '<div style="height:1px;background:var(--border)"></div>';
-            }
-            html += '<div style="padding:10px 12px;border-left:3px solid ' + act.color + ';font-size:13px">';
-            html += '<div style="font-weight:500;color:var(--text)">' + act.title + '</div>';
-            html += '<div style="font-size:11px;color:var(--text-sec);margin-top:2px">' + (act.type === 'sci' ? '⛷️ Sci' : act.type === 'atletica' ? '🏃 Atletica' : act.type === 'acrobatica' ? '🤸 Acrobatica' : '🏋️ Multisport') + '</div>';
-            html += '</div>';
-            itemCount++;
-          });
+        // Se è una trasferta, mostra intestazione
+        if (trasfertaHeader) {
+          html += '<div style="margin-top:24px;margin-bottom:12px;padding:12px;background:linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);border-radius:8px;color:white;font-weight:600;font-size:14px">';
+          html += trasfertaHeader;
+          html += '</div>';
         }
         
-        if (items.messaggi && items.messaggi.length > 0) {
-          items.messaggi.forEach(function(msg) {
-            if (itemCount > 0) {
-              html += '<div style="height:1px;background:var(--border)"></div>';
-            }
-            html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);font-size:13px">';
-            html += '<div style="font-weight:500;color:var(--blue-dark)">💬 ' + (msg.authorName || 'Allenatore') + '</div>';
-            html += '<div style="margin-top:4px;color:var(--text);line-height:1.4;font-size:12px">' + (msg.text || msg.messaggio || '') + '</div>';
-            html += '</div>';
-            itemCount++;
-          });
-        }
-        
-        html += '</div>';
-        html += '</div>';
+        // Render tutti i giorni nel gruppo
+        dateGroup.forEach(function(dateStr) {
+          var d = new Date(dateStr + 'T00:00:00');
+          var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+          var dayName = giorniNomi[d.getDay()];
+          var dayNum = d.getDate();
+          var monthNum = d.getMonth() + 1;
+          var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+          var monthName = mesiNomi[d.getMonth()];
+          
+          var items = allDates[dateStr];
+          
+          html += '<div style="margin-bottom:16px;margin-top:12px">';
+          html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
+          
+          html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
+          
+          var itemCount = 0;
+          
+          if (items.attivita && items.attivita.length > 0) {
+            items.attivita.forEach(function(act, idx) {
+              if (itemCount > 0) {
+                html += '<div style="height:1px;background:var(--border)"></div>';
+              }
+              html += '<div style="padding:10px 12px;border-left:3px solid ' + act.color + ';font-size:13px">';
+              html += '<div style="font-weight:500;color:var(--text)">' + act.title + '</div>';
+              html += '<div style="font-size:11px;color:var(--text-sec);margin-top:2px">' + (act.type === 'sci' ? '⛷️ Sci' : act.type === 'atletica' ? '🏃 Atletica' : act.type === 'acrobatica' ? '🤸 Acrobatica' : '🏋️ Multisport') + '</div>';
+              html += '</div>';
+              itemCount++;
+            });
+          }
+          
+          if (items.messaggi && items.messaggi.length > 0) {
+            items.messaggi.forEach(function(msg) {
+              if (itemCount > 0) {
+                html += '<div style="height:1px;background:var(--border)"></div>';
+              }
+              html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);font-size:13px">';
+              html += '<div style="font-weight:500;color:var(--blue-dark)">💬 ' + (msg.authorName || 'Allenatore') + '</div>';
+              html += '<div style="margin-top:4px;color:var(--text);line-height:1.4;font-size:12px">';
+              html += (msg.text || msg.messaggio || '');
+              if (msg.id && (currentRole === 'allenatore' || currentUserData.role === 'allenatore')) {
+                html += '<div style="margin-top:8px;display:flex;gap:6px">';
+                html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
+                html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
+                html += '</div>';
+              }
+              html += '</div>';
+              html += '</div>';
+              itemCount++;
+            });
+          }
+          
+          html += '</div>';
+          html += '</div>';
+        });
       });
       
       html += '</div>';
@@ -1162,6 +1231,61 @@
       }).catch(function(err) {
         alert('Errore salvataggio: ' + err.message);
       });
+    }
+
+    // ============ EDIT/DELETE MESSAGGI (v4.16) ============
+    function editMessage(msgId, categoria, currentText) {
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Modifica Messaggio</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Testo</label>';
+      html += '<textarea id="edit-msg-text" placeholder="Modifica il messaggio...">' + currentText + '</textarea>';
+      html += '</div>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveEditMessage(\'' + msgId + '\', \'' + categoria + '\')" style="flex:1">Salva</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    function saveEditMessage(msgId, categoria) {
+      var newText = document.getElementById('edit-msg-text').value.trim();
+      
+      if (!newText) {
+        alert('Scrivi un messaggio');
+        return;
+      }
+      
+      db.collection('eventMessages').doc(categoria).collection('messages').doc(msgId).update({
+        text: newText,
+        updatedAt: firebase.firestore.Timestamp.now()
+      })
+        .then(function() {
+          alert('Messaggio aggiornato! ✅');
+          closeModal();
+          loadAttivitaAllenatore(categoria);
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
+    function deleteMessage(msgId, categoria) {
+      if (!confirm('Sei sicuro di voler cancellare questo messaggio?')) return;
+      
+      db.collection('eventMessages').doc(categoria).collection('messages').doc(msgId).delete()
+        .then(function() {
+          alert('Messaggio cancellato! 🗑️');
+          loadAttivitaAllenatore(categoria);
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
     }
 
     // ============ ADMIN ============
