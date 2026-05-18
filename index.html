@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.9</title>
+  <title>Sci Club Val d'Ayas v4.11</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -34,6 +34,32 @@
       margin: 0 auto;
       padding: 20px;
       min-height: 100vh;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-logo img {
+      height: 40px;
+      width: auto;
+    }
+    
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--blue-dark);
     }
     
     h1, h2, h3 { margin: 20px 0 10px 0; }
@@ -294,7 +320,53 @@
       font-size: 14px;
       padding: 0;
     }
-    .btn-link:hover { color: var(--blue-dark); }
+    
+    .atleti-list {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .atleta-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .atleta-item:last-child {
+      border-bottom: none;
+    }
+    
+    .btn-add {
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      border: 1px dashed var(--blue-dark);
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      width: 100%;
+    }
+    
+    .btn-add:hover {
+      background: var(--blue-dark);
+      color: white;
+    }
+    
+    .btn-remove {
+      background: #fee2e2;
+      color: var(--red);
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -322,6 +394,7 @@
     var currentUserData = null;
     var currentRole = null;
     var allUsers = [];
+    var tempAtletiRegistrazione = [];
     
     const CAT_LABELS = {
       'sbaby': 'S-Baby', 'baby': 'Baby', 'cuccioli': 'Cuccioli',
@@ -336,11 +409,23 @@
     var calendarioMessaggi = {};
     var categoriaSel = null;
     var selectedActivityForMessage = null;
+    
+    const LOGO_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAeCAYAAABuUU38AAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAZ25vbWUtc2NyZWVuc2hvdO8Dvz4AAAJISURBVHic7Zo/aMxwHMc/d0lDSEgZSBHSpWsmhiYLm3QzMBikoWNhsBAHm5GFTAz0H7YWFypDFyYG/hsSCyNVxlSXhuT3eHl+d5d79+vc9753333u+/l8v3N3H++N2w0NDQ0NDQ0NDQ0NDQ0NDQ3/jXS73RljDL7vE41GSafTxGIxjDEYY/D7/Tx//pzX11d8Ph+xWAzf7y8Wy+VyZJqm4jgOlmVhmibpdJoHBwfkcjnK5TKVSoVYLEY6nSYWi9F1XfL5PMViUfBfVMxmM47jEI/HBXdNTS2YPz8/s76+rs7OzkMgEFCfn5+0vb3NxMQEIyMj7O/vMzAwwM3NDbOzs+zu7rK0tIRpmnx9fVEul/H7/WxsbADK+/s7AKlUipmZGb69vQFQr9dJpVJsb2/T19dHJpMhFouRTqdJJBLq9fWVVCrFxcWFOj4+VsViUe3u7hIIBOQ5GY/HyWQy3NzcyPkxMDDAz88Pf39/VCqVaGtrIxaL0d3drQqFAul0mlKpRDAYVJubm3R2dqpMJkN3dzfBYJB6vU5fXx/Hx8dqfHycQCDATz9/f3/q5eVFdXV1qZOTE2VZFvV6XRmGQXt7O9lsVpmmSTAYVD8/P+rp6UlNTEyoTCajRkdH1dHRkVpZWVHDw8NqZWVFjY2Nqfn5eTUxMaF+f3/V9vY2/f39am5uTq2vryu/36+SyaTa2NhQ09PT6ubmRq2srKiBgQEVDAbV9fW12traUnNzc2p4eFg9Pj6qg4MDtbe3p3Z3d1UikVBjY2Pq9vZWzc3NVSEQCKj9/X01Pz+vVlZWFIja39/n5uaGr68vAJaXlymVSuRyOQqFAo6TiXRPTw+Li4scHBzw/f1NqVSiWCwSDAapVCokEgnS6TQ+n49EIsH5+Tnd3d18fn4Sjcax7RtT/Cw4kVEGVKVSUZ+fn+r39/df8wEqM01T/f39/fHxoQqFgnp8fFS73a6anJxU7+/v1cPDg0qn0+rn50d1dnaqzs5OdXl5qXZ2dtTR0ZGqVqvq9vZWJZNJ1draWsFWrVYVoL5+fv5p/oP8B/nP8h/Ff5D/NP8BnXLjI8pVZQ0AAAAASUVORK5CYII=';
+
+    // ============ HEADER CON LOGO ============
+    function renderHeader() {
+      return '<div class="header">' +
+        '<div class="header-logo">' +
+        '<img src="' + LOGO_BASE64 + '" alt="Sci Club Val d\'Ayas">' +
+        '<span class="header-title">Sci Club Val d\'Ayas</span>' +
+        '</div>' +
+        '</div>';
+    }
 
     // ============ LOGIN & REGISTRATION ============
     function showLogin() {
-      var html = '<div style="max-width:400px;margin:60px auto">';
-      html += '<h1 style="text-align:center;margin-bottom:40px">🏔️ Sci Club Val d\'Ayas</h1>';
+      var html = renderHeader();
+      html += '<div style="max-width:400px;margin:60px auto">';
       html += '<div class="form-group">';
       html += '<label class="form-label">Email</label>';
       html += '<input type="email" id="login-email" placeholder="tua@email.com">';
@@ -357,7 +442,9 @@
     }
 
     function showRegistration() {
-      var html = '<div style="max-width:400px;margin:40px auto">';
+      tempAtletiRegistrazione = [];
+      var html = renderHeader();
+      html += '<div style="max-width:450px;margin:40px auto">';
       html += '<h2 style="text-align:center;margin-bottom:24px">Registrazione</h2>';
       html += '<div class="form-group">';
       html += '<label class="form-label">Nome</label>';
@@ -377,12 +464,88 @@
       html += '</div>';
       html += '<div class="form-group">';
       html += '<label class="form-label">Sei un allenatore?</label>';
-      html += '<input type="checkbox" id="reg-allenatore"> <span style="font-size:13px">Sì, sono un allenatore</span>';
+      html += '<div style="margin-top:8px;color:var(--text-sec);font-size:12px">⚠️ Gli allenatori devono essere registrati dall\'admin</div>';
       html += '</div>';
-      html += '<button class="btn-primary" onclick="register()" style="width:100%;margin-bottom:12px">Registrati</button>';
-      html += '<button class="btn-secondary" onclick="showLogin()" style="width:100%">← Torna al login</button>';
+      
+      html += '<h3 style="margin-top:20px;margin-bottom:12px">I tuoi atleti</h3>';
+      html += '<div id="atleti-list-reg" class="atleti-list">';
+      if (tempAtletiRegistrazione.length === 0) {
+        html += '<div style="color:var(--text-sec);font-size:13px;text-align:center;padding:12px">Nessun atleta aggiunto</div>';
+      } else {
+        tempAtletiRegistrazione.forEach(function(atleta, idx) {
+          html += '<div class="atleta-item">';
+          html += '<div>';
+          html += '<strong>' + atleta.nome + ' ' + atleta.cognome + '</strong>';
+          html += '<div style="font-size:12px;color:var(--text-sec)">' + (CAT_LABELS[atleta.categoria] || atleta.categoria) + '</div>';
+          html += '</div>';
+          html += '<button class="btn-remove" onclick="removeAtletaReg(' + idx + ')">Rimuovi</button>';
+          html += '</div>';
+        });
+      }
+      html += '</div>';
+      html += '<button class="btn-add" onclick="showAddAtleta()">+ Aggiungi Atleta</button>';
+      
+      html += '<div style="display:flex;gap:12px;margin-top:24px">';
+      html += '<button class="btn-secondary" onclick="showLogin()" style="flex:1">← Torna al login</button>';
+      html += '<button class="btn-primary" onclick="register()" style="flex:1">Registrati</button>';
+      html += '</div>';
       html += '</div>';
       document.getElementById('app').innerHTML = html;
+    }
+
+    function showAddAtleta() {
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Aggiungi Atleta</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Nome</label>';
+      html += '<input type="text" id="atleta-nome" placeholder="Nome">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Cognome</label>';
+      html += '<input type="text" id="atleta-cognome" placeholder="Cognome">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Categoria</label>';
+      html += '<select id="atleta-categoria">';
+      ALL_CATEGORIES.forEach(function(cat) {
+        html += '<option value="' + cat + '">' + (CAT_LABELS[cat] || cat) + '</option>';
+      });
+      html += '</select>';
+      html += '</div>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="addAtletaReg()" style="flex:1">Aggiungi</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    function addAtletaReg() {
+      var nome = document.getElementById('atleta-nome').value.trim();
+      var cognome = document.getElementById('atleta-cognome').value.trim();
+      var categoria = document.getElementById('atleta-categoria').value;
+      
+      if (!nome || !cognome) {
+        alert('Compila nome e cognome');
+        return;
+      }
+      
+      tempAtletiRegistrazione.push({
+        nome: nome,
+        cognome: cognome,
+        categoria: categoria
+      });
+      
+      closeModal();
+      showRegistration();
+    }
+
+    function removeAtletaReg(idx) {
+      tempAtletiRegistrazione.splice(idx, 1);
+      showRegistration();
     }
 
     function login() {
@@ -409,7 +572,6 @@
       var cognome = document.getElementById('reg-cognome').value.trim();
       var email = document.getElementById('reg-email').value.trim();
       var password = document.getElementById('reg-password').value;
-      var isAllenatore = document.getElementById('reg-allenatore').checked;
       
       if (!nome || !cognome || !email || !password) {
         alert('Compila tutti i campi');
@@ -427,10 +589,10 @@
           var userData = {
             uid: uid,
             email: email,
-            role: isAllenatore ? 'allenatore' : 'atleta',
+            role: 'atleta',
             status: 'pending_approval',
             profileData: { nome: nome, cognome: cognome },
-            atleti: [],
+            atleti: tempAtletiRegistrazione,
             allenatore_categories: [],
             createdAt: firebase.firestore.Timestamp.now()
           };
@@ -454,7 +616,6 @@
           if (doc.exists) {
             currentUserData = Object.assign({ uid: currentUser.uid }, doc.data());
             
-            // SMART ROUTING v4.8
             var isAtleta = currentUserData.role === 'atleta';
             var isAllenatore = currentUserData.role === 'allenatore';
             var isAdmin = currentUserData.role === 'admin';
@@ -488,13 +649,15 @@
         currentUser = null;
         currentUserData = null;
         currentRole = null;
+        tempAtletiRegistrazione = [];
         showLogin();
       });
     }
 
-    // ============ ROLE MENU (Atleta/Allenatore doppio ruolo) ============
+    // ============ ROLE MENU ============
     function showRoleMenu() {
-      var html = '<div style="padding:20px">';
+      var html = renderHeader();
+      html += '<div style="padding:20px">';
       html += '<h1>Ciao, ' + currentUserData.profileData.nome + '! 👋</h1>';
       html += '<p style="color:var(--text-sec);margin-bottom:24px">Scegli il tuo ruolo:</p>';
       
@@ -719,7 +882,8 @@
 
     function showAtletaDashboard() {
       var nome = currentUserData.profileData.nome;
-      var html = '<div style="padding:20px">';
+      var html = renderHeader();
+      html += '<div style="padding:20px">';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">';
       html += '<h2>Benvenuto, ' + nome + '</h2>';
       html += '<button class="btn-secondary" onclick="logout()">Logout</button>';
@@ -835,10 +999,11 @@
       });
     }
 
-    // ============ ALLENATORE DASHBOARD ============
+    // ============ ALLENATORE ============
     function showAllenatoreDashboard() {
       var nome = currentUserData.profileData.nome;
-      var html = '<div style="padding:20px">';
+      var html = renderHeader();
+      html += '<div style="padding:20px">';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">';
       html += '<h2>Pannello Allenatore 🏋️</h2>';
       html += '<button class="btn-secondary" onclick="logout()">Logout</button>';
@@ -874,7 +1039,8 @@
     }
 
     function loadAttivitaAllenatore(categoria) {
-      var html = '<div style="padding:20px">';
+      var html = renderHeader();
+      html += '<div style="padding:20px">';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">';
       html += '<h2>← Gestione ' + (CAT_LABELS[categoria] || categoria) + '</h2>';
       html += '<button class="btn-secondary" onclick="showAllenatoreDashboard()">Indietro</button>';
@@ -998,7 +1164,7 @@
       });
     }
 
-    // ============ ADMIN DASHBOARD ============
+    // ============ ADMIN ============
     function loadAdminStats() {
       db.collection('users').get().then(function(snap) {
         allUsers = [];
@@ -1027,7 +1193,8 @@
     }
 
     function showAdminDashboard() {
-      var html = '<div style="padding:20px">';
+      var html = renderHeader();
+      html += '<div style="padding:20px">';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">';
       html += '<h1>🔐 Dashboard Admin</h1>';
       html += '<button class="btn-secondary" onclick="logout()">Logout</button>';
@@ -1146,7 +1313,7 @@
         html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun atleta registrato</div>';
       } else {
         tuttiAtleti.forEach(function(atleta) {
-          var flagColor = 'var(--green)';
+          var flagColor = '#16a34a';
           var flagEmoji = '🟢';
           var flagText = 'Valido';
           
@@ -1195,59 +1362,6 @@
       
       document.getElementById('admin-content').innerHTML = html;
     }
-    
-    function editScadenzaAtleta(genitoreUid, atleteIndex, nome, cognome) {
-      var user = allUsers.find(function(u) { return u.uid === genitoreUid; });
-      if (!user || !user.atleti || !user.atleti[atleteIndex]) return;
-      
-      var atleta = user.atleti[atleteIndex];
-      var scadenzaValue = atleta.scadenza || '';
-      
-      var html = '<div class="modal-overlay">';
-      html += '<div class="modal">';
-      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
-      html += '<div class="modal-header">Scadenza Certificato</div>';
-      html += '<div style="margin-bottom:16px">';
-      html += '<strong>' + nome + ' ' + cognome + '</strong>';
-      html += '</div>';
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Data Scadenza (YYYY-MM-DD)</label>';
-      html += '<input type="date" id="scad-date" value="' + scadenzaValue + '">';
-      html += '</div>';
-      html += '<div style="display:flex;gap:12px">';
-      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
-      html += '<button class="btn-primary" onclick="saveScadenzaAtleta(\'' + genitoreUid + '\', ' + atleteIndex + ')" style="flex:1">Salva</button>';
-      html += '</div>';
-      html += '</div>';
-      html += '</div>';
-      
-      document.getElementById('app').insertAdjacentHTML('beforeend', html);
-    }
-    
-    function saveScadenzaAtleta(genitoreUid, atleteIndex) {
-      var scadDate = document.getElementById('scad-date').value;
-      
-      var user = allUsers.find(function(u) { return u.uid === genitoreUid; });
-      if (!user) return;
-      
-      var atleti = user.atleti || [];
-      if (atleti[atleteIndex]) {
-        atleti[atleteIndex].scadenza = scadDate;
-      }
-      
-      db.collection('users').doc(genitoreUid).update({
-        atleti: atleti
-      })
-        .then(function() {
-          alert('Scadenza aggiornata!');
-          closeModal();
-          loadAdminStats();
-          loadAtletiAdmin();
-        })
-        .catch(function(err) {
-          alert('Errore: ' + err.message);
-        });
-    }
 
     function loadAllennatoriAdmin() {
       var allenatori = allUsers.filter(function(u) { 
@@ -1275,6 +1389,109 @@
       }
       
       document.getElementById('admin-content').innerHTML = html;
+    }
+
+    function showRegistraAllenatore() {
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Registra Nuovo Allenatore</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Nome</label>';
+      html += '<input type="text" id="reg-nome" placeholder="Nome">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Cognome</label>';
+      html += '<input type="text" id="reg-cognome" placeholder="Cognome">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Email</label>';
+      html += '<input type="email" id="reg-email" placeholder="email@example.com">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Password</label>';
+      html += '<input type="password" id="reg-password" placeholder="Almeno 6 caratteri">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Categorie Allenatore</label>';
+      html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">';
+      
+      ALL_CATEGORIES.forEach(function(cat) {
+        html += '<label style="display:flex;align-items:center;margin-bottom:0">';
+        html += '<input type="checkbox" id="cat-' + cat + '"> ';
+        html += '<span style="margin-left:6px">' + (CAT_LABELS[cat] || cat) + '</span>';
+        html += '</label>';
+      });
+      
+      html += '</div>';
+      html += '</div>';
+      
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveRegistraAllenatore()" style="flex:1">Registra</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    function saveRegistraAllenatore() {
+      var nome = document.getElementById('reg-nome').value.trim();
+      var cognome = document.getElementById('reg-cognome').value.trim();
+      var email = document.getElementById('reg-email').value.trim();
+      var password = document.getElementById('reg-password').value;
+      var categories = [];
+      
+      ALL_CATEGORIES.forEach(function(cat) {
+        if (document.getElementById('cat-' + cat).checked) {
+          categories.push(cat);
+        }
+      });
+      
+      if (!nome || !cognome || !email || !password) {
+        alert('Compila tutti i campi');
+        return;
+      }
+      
+      if (password.length < 6) {
+        alert('Password deve avere almeno 6 caratteri');
+        return;
+      }
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(function(result) {
+          var uid = result.user.uid;
+          var userData = {
+            uid: uid,
+            email: email,
+            role: 'allenatore',
+            status: 'approved',
+            profileData: { nome: nome, cognome: cognome },
+            allenatore_categories: categories,
+            createdAt: firebase.firestore.Timestamp.now()
+          };
+          
+          return db.collection('users').doc(uid).set(userData).then(function() {
+            return { uid: uid };
+          });
+        })
+        .then(function(result) {
+          alert('Allenatore registrato e approvato!');
+          closeModal();
+          
+          // RE-LOGIN ADMIN (v4.10 fix!)
+          loadAdminStats();
+          showAdminDashboard();
+        })
+        .catch(function(error) {
+          alert('Errore: ' + error.message);
+        });
     }
 
     function editUser(uid) {
@@ -1365,6 +1582,59 @@
         });
     }
 
+    function editScadenzaAtleta(genitoreUid, atleteIndex, nome, cognome) {
+      var user = allUsers.find(function(u) { return u.uid === genitoreUid; });
+      if (!user || !user.atleti || !user.atleti[atleteIndex]) return;
+      
+      var atleta = user.atleti[atleteIndex];
+      var scadenzaValue = atleta.scadenza || '';
+      
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Scadenza Certificato</div>';
+      html += '<div style="margin-bottom:16px">';
+      html += '<strong>' + nome + ' ' + cognome + '</strong>';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Data Scadenza (YYYY-MM-DD)</label>';
+      html += '<input type="date" id="scad-date" value="' + scadenzaValue + '">';
+      html += '</div>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveScadenzaAtleta(\'' + genitoreUid + '\', ' + atleteIndex + ')" style="flex:1">Salva</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    function saveScadenzaAtleta(genitoreUid, atleteIndex) {
+      var scadDate = document.getElementById('scad-date').value;
+      
+      var user = allUsers.find(function(u) { return u.uid === genitoreUid; });
+      if (!user) return;
+      
+      var atleti = user.atleti || [];
+      if (atleti[atleteIndex]) {
+        atleti[atleteIndex].scadenza = scadDate;
+      }
+      
+      db.collection('users').doc(genitoreUid).update({
+        atleti: atleti
+      })
+        .then(function() {
+          alert('Scadenza aggiornata!');
+          closeModal();
+          loadAdminStats();
+          loadAtletiAdmin();
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
     function approveUser(uid) {
       db.collection('users').doc(uid).update({
         status: 'approved'
@@ -1393,110 +1663,6 @@
         });
     }
 
-    function closeModal() {
-      var overlay = document.querySelector('.modal-overlay');
-      if (overlay) overlay.remove();
-    }
-
-    // ============ REGISTRA ALLENATORE ============
-    function showRegistraAllenatore() {
-      var html = '<div class="modal-overlay">';
-      html += '<div class="modal">';
-      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
-      html += '<div class="modal-header">Registra Nuovo Allenatore</div>';
-      
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Nome</label>';
-      html += '<input type="text" id="reg-nome" placeholder="Nome">';
-      html += '</div>';
-      
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Cognome</label>';
-      html += '<input type="text" id="reg-cognome" placeholder="Cognome">';
-      html += '</div>';
-      
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Email</label>';
-      html += '<input type="email" id="reg-email" placeholder="email@example.com">';
-      html += '</div>';
-      
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Password</label>';
-      html += '<input type="password" id="reg-password" placeholder="Almeno 6 caratteri">';
-      html += '</div>';
-      
-      html += '<div class="form-group">';
-      html += '<label class="form-label">Categorie Allenatore</label>';
-      html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">';
-      
-      ALL_CATEGORIES.forEach(function(cat) {
-        html += '<label style="display:flex;align-items:center;margin-bottom:0">';
-        html += '<input type="checkbox" id="cat-' + cat + '"> ';
-        html += '<span style="margin-left:6px">' + (CAT_LABELS[cat] || cat) + '</span>';
-        html += '</label>';
-      });
-      
-      html += '</div>';
-      html += '</div>';
-      
-      html += '<div style="display:flex;gap:12px">';
-      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
-      html += '<button class="btn-primary" onclick="saveRegistraAllenatore()" style="flex:1">Registra</button>';
-      html += '</div>';
-      html += '</div>';
-      html += '</div>';
-      
-      document.getElementById('app').insertAdjacentHTML('beforeend', html);
-    }
-
-    function saveRegistraAllenatore() {
-      var nome = document.getElementById('reg-nome').value.trim();
-      var cognome = document.getElementById('reg-cognome').value.trim();
-      var email = document.getElementById('reg-email').value.trim();
-      var password = document.getElementById('reg-password').value;
-      var categories = [];
-      
-      ALL_CATEGORIES.forEach(function(cat) {
-        if (document.getElementById('cat-' + cat).checked) {
-          categories.push(cat);
-        }
-      });
-      
-      if (!nome || !cognome || !email || !password) {
-        alert('Compila tutti i campi');
-        return;
-      }
-      
-      if (password.length < 6) {
-        alert('Password deve avere almeno 6 caratteri');
-        return;
-      }
-      
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(function(result) {
-          var uid = result.user.uid;
-          var userData = {
-            uid: uid,
-            email: email,
-            role: 'allenatore',
-            status: 'approved',
-            profileData: { nome: nome, cognome: cognome },
-            allenatore_categories: categories,
-            createdAt: firebase.firestore.Timestamp.now()
-          };
-          
-          return db.collection('users').doc(uid).set(userData);
-        })
-        .then(function() {
-          alert('Allenatore registrato e approvato!');
-          closeModal();
-          loadAdminStats();
-          loadAdminDashboard();
-        })
-        .catch(function(error) {
-          alert('Errore: ' + error.message);
-        });
-    }
     async function downloadFileFromGoogleDrive(fileId) {
       try {
         const url = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
@@ -1509,7 +1675,6 @@
       }
     }
 
-    // ============ APP START ============
     auth.onAuthStateChanged(function(user) {
       if (user) {
         currentUser = user;
