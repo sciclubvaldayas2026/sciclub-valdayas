@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.16</title>
+  <title>Sci Club Val d'Ayas v4.16.1</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -888,7 +888,7 @@
         }
         
         // Render tutti i giorni nel gruppo
-        dateGroup.forEach(function(dateStr) {
+        dateGroup.forEach(function(dateStr, dayIdx) {
           var d = new Date(dateStr + 'T00:00:00');
           var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
           var dayName = giorniNomi[d.getDay()];
@@ -899,7 +899,11 @@
           
           var items = allDates[dateStr];
           
-          html += '<div style="margin-bottom:16px;margin-top:12px">';
+          // Meno margin se è parte di una trasferta
+          var marginTop = trasfertaHeader ? (dayIdx === 0 ? '8px' : '4px') : '12px';
+          var marginBottom = trasfertaHeader ? '8px' : '16px';
+          
+          html += '<div style="margin-bottom:' + marginBottom + ';margin-top:' + marginTop + '">';
           html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
           
           html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
@@ -1115,7 +1119,7 @@
       html += '<button class="btn-secondary" onclick="showAllenatoreDashboard()">Indietro</button>';
       html += '</div>';
       
-      html += '<h3 style="margin-top:20px">Attività di questa categoria:</h3>';
+      html += '<h3 style="margin-top:20px">Attività e messaggi:</h3>';
       html += '<div id="attivita-list" style="margin-bottom:20px;max-height:60vh;overflow-y:auto;border:0.5px solid var(--border);border-radius:12px;padding:12px">';
       html += '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento...</div>';
       html += '</div>';
@@ -1125,41 +1129,92 @@
       
       document.getElementById('app').innerHTML = html;
       
+      // CARICA SIA ATTIVITÀ CHE MESSAGGI (v4.16.1 fix)
       loadAttivitaPerCategoria(categoria, function() {
-        var attivita = calendarioAttivita[categoria] || {};
-        var allDates = Object.keys(attivita).sort();
-        
-        var html = '<div style="padding:12px">';
-        
-        if (allDates.length === 0) {
-          html += '<div style="text-align:center;color:var(--text-sec);padding:20px">Nessuna attività</div>';
-        } else {
-          allDates.forEach(function(dateStr) {
-            var d = new Date(dateStr + 'T00:00:00');
-            var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-            var dayName = giorniNomi[d.getDay()];
-            var dayNum = d.getDate();
-            var monthNum = d.getMonth() + 1;
-            var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
-            var monthName = mesiNomi[d.getMonth()];
-            
-            html += '<div style="margin-bottom:12px">';
-            html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
-            
-            attivita[dateStr].forEach(function(act, idx) {
-              html += '<div class="activity-item" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')" style="border-left:3px solid ' + act.color + '">';
+        loadMessaggiPerCategoria(categoria, function() {
+          renderAllenatoreLista(categoria);
+        });
+      });
+    }
+    
+    function renderAllenatoreLista(categoria) {
+      var attivita = calendarioAttivita[categoria] || {};
+      var messaggi = calendarioMessaggi[categoria] || {};
+      
+      var allDates = {};
+      Object.keys(attivita).forEach(function(dateStr) {
+        if (!allDates[dateStr]) allDates[dateStr] = { attivita: [], messaggi: [] };
+        allDates[dateStr].attivita = attivita[dateStr];
+      });
+      Object.keys(messaggi).forEach(function(dateStr) {
+        if (!allDates[dateStr]) allDates[dateStr] = { attivita: [], messaggi: [] };
+        allDates[dateStr].messaggi = messaggi[dateStr];
+      });
+      
+      var sortedDates = Object.keys(allDates).sort();
+      
+      var html = '<div style="padding:12px">';
+      
+      if (sortedDates.length === 0) {
+        html += '<div style="text-align:center;color:var(--text-sec);padding:20px">Nessuna attività</div>';
+      } else {
+        sortedDates.forEach(function(dateStr) {
+          var d = new Date(dateStr + 'T00:00:00');
+          var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+          var dayName = giorniNomi[d.getDay()];
+          var dayNum = d.getDate();
+          var monthNum = d.getMonth() + 1;
+          var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+          var monthName = mesiNomi[d.getMonth()];
+          
+          var items = allDates[dateStr];
+          
+          html += '<div style="margin-bottom:16px;margin-top:12px">';
+          html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
+          
+          html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
+          
+          var itemCount = 0;
+          
+          if (items.attivita && items.attivita.length > 0) {
+            items.attivita.forEach(function(act, idx) {
+              if (itemCount > 0) {
+                html += '<div style="height:1px;background:var(--border)"></div>';
+              }
+              html += '<div class="activity-item" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')" style="border-left:3px solid ' + act.color + ';cursor:pointer">';
               html += '<div style="font-weight:500">' + act.title + '</div>';
               html += '<div style="font-size:11px;color:var(--text-sec);margin-top:4px">Clicca per aggiungere messaggio</div>';
               html += '</div>';
+              itemCount++;
             });
-            
-            html += '</div>';
-          });
-        }
-        
-        html += '</div>';
-        document.getElementById('attivita-list').innerHTML = html;
-      });
+          }
+          
+          if (items.messaggi && items.messaggi.length > 0) {
+            items.messaggi.forEach(function(msg) {
+              if (itemCount > 0) {
+                html += '<div style="height:1px;background:var(--border)"></div>';
+              }
+              html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);font-size:13px">';
+              html += '<div style="font-weight:500;color:var(--blue-dark)">💬 ' + (msg.authorName || 'Allenatore') + '</div>';
+              html += '<div style="margin-top:4px;color:var(--text);line-height:1.4;font-size:12px">';
+              html += (msg.text || msg.messaggio || '');
+              html += '<div style="margin-top:8px;display:flex;gap:6px">';
+              html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
+              html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
+              html += '</div>';
+              html += '</div>';
+              html += '</div>';
+              itemCount++;
+            });
+          }
+          
+          html += '</div>';
+          html += '</div>';
+        });
+      }
+      
+      html += '</div>';
+      document.getElementById('attivita-list').innerHTML = html;
     }
 
     function openMessageForm(dateStr, activityTitle, categoria) {
