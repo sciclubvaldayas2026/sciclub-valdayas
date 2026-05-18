@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.17</title>
+  <title>Sci Club Val d'Ayas v4.18</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -907,9 +907,11 @@
           var marginBottom = trasfertaHeader ? '0px' : '16px';
           
           html += '<div style="margin-bottom:' + marginBottom + ';margin-top:' + marginTop + '">';
-          html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
           
           html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
+          
+          // DATA DENTRO IL BOX (v4.18)
+          html += '<div style="padding:10px 12px;background:var(--gray-50);border-bottom:0.5px solid var(--border);font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
           
           var itemCount = 0;
           
@@ -1156,63 +1158,84 @@
       
       var sortedDates = Object.keys(allDates).sort();
       
+      // RAGGRUPPAMENTO TRASFERTE (v4.18)
+      var dateGroups = groupEventsByTrasferta(sortedDates);
+      
       var html = '<div style="padding:12px">';
       
       if (sortedDates.length === 0) {
         html += '<div style="text-align:center;color:var(--text-sec);padding:20px">Nessuna attività</div>';
       } else {
-        sortedDates.forEach(function(dateStr) {
-          var d = new Date(dateStr + 'T00:00:00');
-          var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-          var dayName = giorniNomi[d.getDay()];
-          var dayNum = d.getDate();
-          var monthNum = d.getMonth() + 1;
-          var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
-          var monthName = mesiNomi[d.getMonth()];
+        dateGroups.forEach(function(dateGroup) {
+          var trasfertaHeader = getTrasfertaHeader(dateGroup);
           
-          var items = allDates[dateStr];
-          
-          html += '<div style="margin-bottom:16px;margin-top:12px">';
-          html += '<div style="font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize;margin-bottom:8px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
-          
-          html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
-          
-          var itemCount = 0;
-          
-          if (items.attivita && items.attivita.length > 0) {
-            items.attivita.forEach(function(act, idx) {
-              if (itemCount > 0) {
-                html += '<div style="height:1px;background:var(--border)"></div>';
-              }
-              html += '<div class="activity-item" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')" style="border-left:3px solid ' + act.color + ';cursor:pointer">';
-              html += '<div style="font-weight:500">' + act.title + '</div>';
-              html += '<div style="font-size:11px;color:var(--text-sec);margin-top:4px">Clicca per aggiungere messaggio</div>';
-              html += '</div>';
-              itemCount++;
-            });
+          // Se è una trasferta, mostra intestazione
+          if (trasfertaHeader) {
+            html += '<div style="margin-top:24px;margin-bottom:12px;padding:12px;background:linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);border-radius:8px;color:white;font-weight:600;font-size:14px">';
+            html += trasfertaHeader;
+            html += '</div>';
           }
           
-          if (items.messaggi && items.messaggi.length > 0) {
-            items.messaggi.forEach(function(msg) {
-              if (itemCount > 0) {
-                html += '<div style="height:1px;background:var(--border)"></div>';
-              }
-              html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);font-size:13px">';
-              html += '<div style="font-weight:500;color:var(--blue-dark)">💬 ' + (msg.authorName || 'Allenatore') + '</div>';
-              html += '<div style="margin-top:4px;color:var(--text);line-height:1.4;font-size:12px">';
-              html += (msg.text || msg.messaggio || '');
-              html += '<div style="margin-top:8px;display:flex;gap:6px">';
-              html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
-              html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
-              html += '</div>';
-              html += '</div>';
-              html += '</div>';
-              itemCount++;
-            });
-          }
-          
-          html += '</div>';
-          html += '</div>';
+          // Render tutti i giorni nel gruppo
+          dateGroup.forEach(function(dateStr, dayIdx) {
+            var d = new Date(dateStr + 'T00:00:00');
+            var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+            var dayName = giorniNomi[d.getDay()];
+            var dayNum = d.getDate();
+            var monthNum = d.getMonth() + 1;
+            var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+            var monthName = mesiNomi[d.getMonth()];
+            
+            var items = allDates[dateStr];
+            
+            // Meno margin se è parte di una trasferta
+            var marginTop = trasfertaHeader ? (dayIdx === 0 ? '8px' : '0px') : '12px';
+            var marginBottom = trasfertaHeader ? '0px' : '16px';
+            
+            html += '<div style="margin-bottom:' + marginBottom + ';margin-top:' + marginTop + '">';
+            
+            html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden">';
+            
+            // DATA DENTRO IL BOX (v4.18)
+            html += '<div style="padding:10px 12px;background:var(--gray-50);border-bottom:0.5px solid var(--border);font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
+            
+            var itemCount = 0;
+            
+            if (items.attivita && items.attivita.length > 0) {
+              items.attivita.forEach(function(act, idx) {
+                if (itemCount > 0) {
+                  html += '<div style="height:1px;background:var(--border)"></div>';
+                }
+                html += '<div class="activity-item" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')" style="border-left:3px solid ' + act.color + ';cursor:pointer">';
+                html += '<div style="font-weight:500">' + act.title + '</div>';
+                html += '<div style="font-size:11px;color:var(--text-sec);margin-top:4px">Clicca per aggiungere messaggio</div>';
+                html += '</div>';
+                itemCount++;
+              });
+            }
+            
+            if (items.messaggi && items.messaggi.length > 0) {
+              items.messaggi.forEach(function(msg) {
+                if (itemCount > 0) {
+                  html += '<div style="height:1px;background:var(--border)"></div>';
+                }
+                html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);font-size:13px">';
+                html += '<div style="font-weight:500;color:var(--blue-dark)">💬 ' + (msg.authorName || 'Allenatore') + '</div>';
+                html += '<div style="margin-top:4px;color:var(--text);line-height:1.4;font-size:12px">';
+                html += (msg.text || msg.messaggio || '');
+                html += '<div style="margin-top:8px;display:flex;gap:6px">';
+                html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
+                html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+                itemCount++;
+              });
+            }
+            
+            html += '</div>';
+            html += '</div>';
+          });
         });
       }
       
