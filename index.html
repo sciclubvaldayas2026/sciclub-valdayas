@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.23</title>
+  <title>Sci Club Val d'Ayas v4.24</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -539,13 +539,33 @@
         categoria: categoria
       });
       
+      // FIX v4.24: Solo aggiornare la lista, non ricaricare il form!
       closeModal();
-      showRegistration();
+      updateAtletiListaReg();  // Nuova funzione
+    }
+    
+    // FIX v4.24: Aggiorna solo la lista degli atleti (NON ricaricare form)
+    function updateAtletiListaReg() {
+      var html = '';
+      if (tempAtletiRegistrazione.length === 0) {
+        html += '<div style="color:var(--text-sec);font-size:13px;text-align:center;padding:12px">Nessun atleta aggiunto</div>';
+      } else {
+        tempAtletiRegistrazione.forEach(function(atleta, idx) {
+          html += '<div class="atleta-item">';
+          html += '<div>';
+          html += '<strong>' + atleta.nome + ' ' + atleta.cognome + '</strong>';
+          html += '<div style="font-size:12px;color:var(--text-sec)">' + (CAT_LABELS[atleta.categoria] || atleta.categoria) + '</div>';
+          html += '</div>';
+          html += '<button class="btn-remove" onclick="removeAtletaReg(' + idx + ')">Rimuovi</button>';
+          html += '</div>';
+        });
+      }
+      document.getElementById('atleti-list-reg').innerHTML = html;
     }
 
     function removeAtletaReg(idx) {
       tempAtletiRegistrazione.splice(idx, 1);
-      showRegistration();
+      updateAtletiListaReg();  // FIX v4.24: Solo aggiornare lista
     }
 
     function login() {
