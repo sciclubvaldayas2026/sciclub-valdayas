@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.24</title>
+  <title>Sci Club Val d'Ayas v4.25</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -635,6 +635,20 @@
         .then(function(doc) {
           if (doc.exists) {
             currentUserData = Object.assign({ uid: currentUser.uid }, doc.data());
+            
+            // FIX v4.25: Check se account è in approvazione
+            if (currentUserData.status === 'pending_approval') {
+              alert('Il tuo account è in attesa di approvazione dall\'admin. Ti contatterà presto!');
+              logout();
+              return;
+            }
+            
+            // FIX v4.25: Check se status è approvato
+            if (currentUserData.status !== 'approved') {
+              alert('Il tuo account è stato rifiutato.');
+              logout();
+              return;
+            }
             
             var isAtleta = currentUserData.role === 'atleta';
             var isAllenatore = currentUserData.role === 'allenatore';
