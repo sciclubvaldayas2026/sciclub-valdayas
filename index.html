@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.27</title>
+  <title>Sci Club Val d'Ayas v4.28</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -1512,11 +1512,14 @@
       var html = '<h2>👥 Elenco Utenti (' + allUsers.length + ')</h2>';
       
       allUsers.forEach(function(user) {
+        // FIX v4.28: Null checks per profileData
+        var nome = (user.profileData && user.profileData.nome) ? user.profileData.nome : '[Nome non disponibile]';
+        var cognome = (user.profileData && user.profileData.cognome) ? user.profileData.cognome : '';
         var badgeStatus = user.status === 'approved' ? 'badge-approved' : 'badge-pending';
         
         html += '<div class="user-item">';
         html += '<div class="user-info">';
-        html += '<div class="user-name">' + user.profileData.nome + ' ' + user.profileData.cognome + '</div>';
+        html += '<div class="user-name">' + nome + ' ' + cognome + '</div>';
         html += '<div class="user-meta">';
         html += user.email + ' • ';
         html += '<strong>' + user.role + '</strong> ';
@@ -1619,11 +1622,14 @@
         html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun allenatore approvato</div>';
       } else {
         allenatori.forEach(function(user) {
+          // FIX v4.28: Null checks per profileData
+          var nome = (user.profileData && user.profileData.nome) ? user.profileData.nome : '[Nome non disponibile]';
+          var cognome = (user.profileData && user.profileData.cognome) ? user.profileData.cognome : '';
           var catList = user.allenatore_categories && user.allenatore_categories.length > 0 ? user.allenatore_categories.map(function(c) { return CAT_LABELS[c] || c; }).join(', ') : 'Nessuna';
           
           html += '<div class="user-item">';
           html += '<div class="user-info">';
-          html += '<div class="user-name">' + user.profileData.nome + ' ' + user.profileData.cognome + '</div>';
+          html += '<div class="user-name">' + nome + ' ' + cognome + '</div>';
           html += '<div class="user-meta">' + user.email + ' • Categorie: ' + catList + '</div>';
           html += '</div>';
           html += '<div class="user-actions">';
