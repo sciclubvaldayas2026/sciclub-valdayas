@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.26</title>
+  <title>Sci Club Val d'Ayas v4.27</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -1429,6 +1429,11 @@
         document.getElementById('users-count').innerText = allUsers.length;
         document.getElementById('atleti-count').innerText = tuttiAtleti;
         document.getElementById('allenatori-count').innerText = allenatori;
+        
+        // FIX v4.27: Carica approvazioni DOPO che i dati sono pronti
+        loadApprovazioni();
+      }).catch(function(err) {
+        console.error('❌ Errore caricamento stats:', err);
       });
     }
 
@@ -1475,7 +1480,7 @@
       
       document.getElementById('app').innerHTML = html;
       loadAdminStats();
-      loadApprovazioni();
+      // FIX v4.27: loadApprovazioni() viene chiamato automaticamente da loadAdminStats() quando finisce
     }
 
     function loadApprovazioni() {
