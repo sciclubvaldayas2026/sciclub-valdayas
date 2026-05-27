@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.28</title>
+  <title>Sci Club Val d'Ayas v4.29</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -1752,7 +1752,12 @@
       var html = '<div class="modal-overlay">';
       html += '<div class="modal">';
       html += '<button class="modal-close" onclick="closeModal()">✕</button>';
-      html += '<div class="modal-header">Modifica ' + user.profileData.nome + '</div>';
+      html += '<div class="modal-header">Modifica ' + (user.profileData ? user.profileData.nome : 'Utente') + '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Email</label>';
+      html += '<div style="padding:8px;background:var(--bg-secondary);border-radius:8px;color:var(--text-sec)">' + user.email + '</div>';
+      html += '</div>';
       
       html += '<div class="form-group">';
       html += '<label class="form-label">Ruolo</label>';
@@ -1789,6 +1794,10 @@
         html += '</div>';
       }
       
+      html += '<div style="display:flex;gap:12px;margin-bottom:16px">';
+      html += '<button class="btn-secondary" onclick="sendPasswordResetEmail(\'' + user.email + '\')" style="flex:1;background:#FF9800;color:white">🔑 Invia Reset Password</button>';
+      html += '</div>';
+      
       html += '<div style="display:flex;gap:12px">';
       html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
       html += '<button class="btn-primary" onclick="saveUserEdit(\'' + uid + '\')" style="flex:1">Salva</button>';
@@ -1797,6 +1806,18 @@
       html += '</div>';
       
       document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    // FIX v4.29: Invia email di reset password all'utente
+    function sendPasswordResetEmail(email) {
+      auth.sendPasswordResetEmail(email)
+        .then(function() {
+          alert('✅ Email di reset password inviata a: ' + email + '\n\nL\'utente potrà cliccare il link nell\'email per scegliere una nuova password.');
+          closeModal();
+        })
+        .catch(function(error) {
+          alert('❌ Errore nell\'invio: ' + error.message);
+        });
     }
 
     function saveUserEdit(uid) {
