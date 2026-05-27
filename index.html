@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sci Club Val d'Ayas v4.25</title>
+  <title>Sci Club Val d'Ayas v4.26</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
   <style>
@@ -617,14 +617,18 @@
             createdAt: firebase.firestore.Timestamp.now()
           };
           
+          console.log('📝 Salvataggio in Firestore:', userData);
           return db.collection('users').doc(uid).set(userData);
         })
         .then(function() {
+          console.log('✅ Registrazione completata!');
           alert('Registrazione completata! L\'admin deve approvare il tuo account.');
+          tempAtletiRegistrazione = [];
           showLogin();
         })
         .catch(function(error) {
-          alert('Errore registrazione: ' + error.message);
+          console.error('❌ ERRORE Registrazione:', error);
+          alert('Errore registrazione: ' + error.message + '\n\nDettagli: ' + error.code);
         });
     }
 
