@@ -1712,7 +1712,7 @@
 
     function loadAllennatoriAdmin() {
       var allenatori = allUsers.filter(function(u) { 
-        return (u.role === 'allenatore' || u.allenatore_categories) && u.status === 'approved'; 
+        return u.role === 'allenatore' && u.status === 'approved'; 
       });
       
       var html = '<h2>🏋️ Allenatori (' + allenatori.length + ')</h2>';
