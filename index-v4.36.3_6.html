@@ -1,0 +1,2441 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sci Club Val d'Ayas v4.36</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-compat.js"></script>
+  <style>
+    :root {
+      --bg: #f8f8f8;
+      --bg-card: #ffffff;
+      --text: #1a1a1a;
+      --text-sec: #666666;
+      --border: #e0e0e0;
+      --blue-dark: #003d82;
+      --blue-mid: #0066cc;
+      --blue-light: #e8f1ff;
+      --gray-50: #f5f5f5;
+      --red: #dc2626;
+      --green: #16a34a;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    
+    #app {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-logo img {
+      height: 40px;
+      width: auto;
+    }
+    
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--blue-dark);
+    }
+    
+    h1, h2, h3 { margin: 20px 0 10px 0; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; color: var(--text); }
+    h3 { font-size: 14px; color: var(--text-sec); font-weight: 500; }
+    
+    .btn-primary {
+      background: var(--blue-dark);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #002a5c; }
+    
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: var(--gray-50); }
+    
+    .btn-danger {
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .btn-success {
+      background: var(--green);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    input[type="text"], input[type="email"], input[type="password"], textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--border);
+      border-top-color: var(--blue-dark);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .chip {
+      background: var(--bg-card);
+      color: var(--text-sec);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip:hover { background: var(--gray-50); }
+    
+    .role-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .role-btn {
+      padding: 16px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    .role-btn:hover { border-color: var(--blue-mid); }
+    
+    .admin-menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .admin-card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .admin-card:hover { border-color: var(--blue-mid); background: var(--blue-light); }
+    .admin-card-title { font-weight: 600; margin-bottom: 4px; }
+    .admin-card-count { font-size: 24px; font-weight: 700; color: var(--blue-dark); }
+    
+    .user-item {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .user-info {
+      flex: 1;
+    }
+    .user-name { font-weight: 600; }
+    .user-meta { font-size: 12px; color: var(--text-sec); margin-top: 4px; }
+    
+    .user-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-pending { background: #fef08a; color: #92400e; }
+    .badge-approved { background: #bbf7d0; color: #065f46; }
+    
+    .card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    
+    .activity-item {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .activity-item:hover { background: var(--blue-light); border-color: var(--blue-mid); }
+    
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--gray-50);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    
+    .divider {
+      text-align: center;
+      margin: 24px 0;
+      position: relative;
+    }
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider span {
+      background: var(--bg);
+      padding: 0 12px;
+      position: relative;
+      color: var(--text-sec);
+      font-size: 13px;
+    }
+    
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--blue-mid);
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 14px;
+      padding: 0;
+    }
+    
+    .atleti-list {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .atleta-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .atleta-item:last-child {
+      border-bottom: none;
+    }
+    
+    .btn-add {
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      border: 1px dashed var(--blue-dark);
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      width: 100%;
+    }
+    
+    .btn-add:hover {
+      background: var(--blue-dark);
+      color: white;
+    }
+    
+    .btn-remove {
+      background: #fee2e2;
+      color: var(--red);
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div style="text-align:center;padding:40px"><div class="spinner"></div></div>
+  </div>
+
+  <script>
+    // ============ FIREBASE INIT ============
+    const firebaseConfig = {
+      apiKey: "AIzaSyAb7GSGVmfDEgoRlv6-sx5JHZv3GNfsToU",
+      authDomain: "sciclub-valdayas.firebaseapp.com",
+      projectId: "sciclub-valdayas",
+      storageBucket: "sciclub-valdayas.firebasestorage.app",
+      messagingSenderId: "402983337756",
+      appId: "1:402983337756:web:bbe2e6a4b0b7a17431c4d9"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ============ GLOBALS ============
+    var currentUser = null;
+    var currentUserData = null;
+    var currentRole = null;
+    var allUsers = [];
+    var tempAtletiRegistrazione = [];
+    
+    const CAT_LABELS = {
+      'sbaby': 'S-Baby', 'baby': 'Baby', 'cuccioli': 'Cuccioli',
+      'ragazzi': 'Ragazzi', 'allievi': 'Allievi', 'giovani': 'Giovani',
+      'giovani_fisi': 'Giovani FISI', 'master': 'Master'
+    };
+    
+    // v4.33: Cambia s.baby a superbaby (match Excel)
+    const ALL_CATEGORIES = ['superbaby', 'baby', 'cuccioli', 'ragazzi', 'allievi', 'giovani', 'giovani_fisi', 'master'];
+
+    // v4.36.3: Map abbreviazioni file PROGRAMMA a nomi categorie standard
+    // Gestisce varianti: con/senza punto, maiuscolo, abbreviazioni
+    const CATEGORY_ALIASES = {
+      'S.BABY': 'superbaby', 'SBABY': 'superbaby', 'SBAB': 'superbaby', 'S-BABY': 'superbaby', 'S_BABY': 'superbaby', 'SUPER': 'superbaby',
+      'BABY': 'baby', 'BAB': 'baby',
+      'CUCCIOLI': 'cuccioli', 'CUCC': 'cuccioli',
+      'RAGAZZI': 'ragazzi', 'RAG': 'ragazzi',
+      'ALLIEVI': 'allievi', 'ALL': 'allievi',
+      'GIOVANI': 'giovani', 'GIO': 'giovani',
+      'FISI': 'giovani_fisi', 'GIOVANI_FISI': 'giovani_fisi', 'GIOVANI FISI': 'giovani_fisi',
+      'MASTER': 'master', 'MAST': 'master'
+    };
+
+    // v4.36.3: Normalize category name from PROGRAMMA file to standard category
+    function normalizeCategory(categoryFromFile) {
+      var upper = (categoryFromFile || '').toString().trim().toUpperCase();
+
+      // Check direct mapping
+      if (CATEGORY_ALIASES[upper]) {
+        return CATEGORY_ALIASES[upper];
+      }
+
+      // Check if it contains any known category name
+      for (var key in CATEGORY_ALIASES) {
+        if (upper.includes(key)) {
+          return CATEGORY_ALIASES[key];
+        }
+      }
+
+      // Fallback: return lowercase original
+      return upper.toLowerCase();
+    }
+
+    const PROGRAMMA_FILE_ID = '17112nlUQ8o2phkyAhs4S4S_QxzUxZwHJ';
+    // v4.36.1: FILE_ID del file CONTATTI_ATLETI_26-27_v2.xlsx (RIEMPITO - Alessandro 20/9/2026)
+    const CONTATTI_FILE_ID = '1yWVI1OEiihfauDN3eF8VhyCpkURmOnTd';
+    
+    var calendarioAttivita = {};
+    var calendarioMessaggi = {};
+    var categoriaSel = null;
+    var selectedActivityForMessage = null;
+
+    // ============ BREVO EMAIL CONFIG (v4.30) ============
+    var BREVO_API_KEY = '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';
+    var BREVO_SENDER = { name: 'Sci Club Val d\'Ayas', email: 'sciclubvaldayas2026@gmail.com' };
+    var ADMIN_EMAIL = 'sciclubvaldayas2026@gmail.com';
+
+    // Funzione generica invio email via Brevo
+    function sendBrevoEmail(toEmail, toName, subject, htmlContent) {
+      return fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': BREVO_API_KEY
+        },
+        body: JSON.stringify({
+          sender: BREVO_SENDER,
+          to: [{ email: toEmail, name: toName }],
+          subject: subject,
+          htmlContent: htmlContent
+        })
+      }).then(function(res) {
+        if (!res.ok) {
+          return res.json().then(function(err) {
+            console.error('❌ Brevo error:', err);
+          });
+        }
+        console.log('✅ Email inviata a ' + toEmail);
+      }).catch(function(err) {
+        console.error('❌ Errore invio email:', err);
+      });
+    }
+
+    // Notifica admin: nuovo genitore registrato (v4.30)
+    function notificaAdminNuovoGenitore(nome, cognome, email, atleti) {
+      var atletiList = atleti.map(function(a) {
+        return '<li><strong>' + a.nome + ' ' + a.cognome + '</strong> — ' + (CAT_LABELS[a.categoria] || a.categoria) + '</li>';
+      }).join('');
+      
+      var html = '<div style="font-family:sans-serif;max-width:500px;margin:0 auto">' +
+        '<h2 style="color:#003d82">🎿 Sci Club Val d\'Ayas</h2>' +
+        '<p>Un nuovo genitore si è registrato e attende approvazione:</p>' +
+        '<table style="border-collapse:collapse;width:100%">' +
+        '<tr><td style="padding:8px;font-weight:bold">Nome</td><td style="padding:8px">' + nome + ' ' + cognome + '</td></tr>' +
+        '<tr style="background:#f5f5f5"><td style="padding:8px;font-weight:bold">Email</td><td style="padding:8px">' + email + '</td></tr>' +
+        '</table>' +
+        '<p><strong>Atleti registrati:</strong></p><ul>' + (atletiList || '<li>Nessun atleta</li>') + '</ul>' +
+        '<p><a href="https://sciclubvaldayas2026.github.io/sciclub-valdayas/" style="background:#003d82;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;margin-top:8px">Vai all\'app per approvare →</a></p>' +
+        '<hr style="margin-top:24px"><p style="color:#666;font-size:12px">Sci Club Val d\'Ayas — notifica automatica</p>' +
+        '</div>';
+
+      sendBrevoEmail(ADMIN_EMAIL, 'Admin Sci Club', '🆕 Nuova registrazione genitore: ' + nome + ' ' + cognome, html);
+    }
+
+    // Notifica genitori: nuovo messaggio allenatore (v4.31)
+    function notificaGenitoriNuovoMessaggio(categoria, dataAttivita, nomeAllenatore, testoMessaggio) {
+      // Carica tutti i genitori con atleti in questa categoria
+      db.collection('users').where('role', '==', 'atleta').where('status', '==', 'approved').get()
+        .then(function(snapshot) {
+          var destinatari = [];
+          snapshot.forEach(function(doc) {
+            var u = doc.data();
+            if (u.atleti && u.atleti.some(function(a) { return a.categoria === categoria; })) {
+              destinatari.push({ email: u.email, nome: (u.profileData && u.profileData.nome) ? u.profileData.nome : 'Genitore' });
+            }
+          });
+
+          if (destinatari.length === 0) {
+            console.log('Nessun genitore da notificare per categoria ' + categoria);
+            return;
+          }
+
+          var catLabel = CAT_LABELS[categoria] || categoria;
+          var subject = '📢 Nuovo messaggio allenatore — ' + catLabel;
+          var html = '<div style="font-family:sans-serif;max-width:500px;margin:0 auto">' +
+            '<h2 style="color:#003d82">🎿 Sci Club Val d\'Ayas</h2>' +
+            '<p>L\'allenatore <strong>' + nomeAllenatore + '</strong> ha pubblicato un messaggio per la categoria <strong>' + catLabel + '</strong>:</p>' +
+            '<div style="background:#f0f4ff;border-left:4px solid #003d82;padding:16px;border-radius:0 8px 8px 0;margin:16px 0">' +
+            '<p style="margin:0 0 8px 0;color:#666;font-size:13px">📅 ' + dataAttivita + '</p>' +
+            '<p style="margin:0;font-size:15px">' + testoMessaggio + '</p>' +
+            '</div>' +
+            '<p><a href="https://sciclubvaldayas2026.github.io/sciclub-valdayas/" style="background:#003d82;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;margin-top:8px">Apri l\'app →</a></p>' +
+            '<hr style="margin-top:24px"><p style="color:#666;font-size:12px">Sci Club Val d\'Ayas — notifica automatica</p>' +
+            '</div>';
+
+          // Invia a tutti i genitori della categoria (sequenziale per non sovraccaricare)
+          destinatari.forEach(function(dest) {
+            sendBrevoEmail(dest.email, dest.nome, subject, html);
+          });
+
+          console.log('📧 Notifiche inviate a ' + destinatari.length + ' genitori per categoria ' + catLabel);
+        })
+        .catch(function(err) {
+          console.error('Errore caricamento genitori per notifica:', err);
+        });
+    }
+    
+    const LOGO_BASE64 = 'data:image/jpeg;base64,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';
+
+    // ============ HEADER CON LOGO ============
+    function renderHeader() {
+      return '<div class="header">' +
+        '<div class="header-logo">' +
+        '<img src="' + LOGO_BASE64 + '" alt="Sci Club Val d\'Ayas">' +
+        '<span class="header-title">Sci Club Val d\'Ayas</span>' +
+        '</div>' +
+        '</div>';
+    }
+
+    // ============ LOGIN & REGISTRATION ============
+    function showLogin() {
+      var html = renderHeader();
+      html += '<div style="max-width:400px;margin:60px auto">';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Email</label>';
+      html += '<input type="email" id="login-email" placeholder="tua@email.com">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Password</label>';
+      html += '<input type="password" id="login-password" placeholder="•••••••">';
+      html += '</div>';
+      html += '<button class="btn-primary" onclick="login()" style="width:100%">Login</button>';
+      html += '<div class="divider"><span>oppure</span></div>';
+      html += '<button class="btn-secondary" onclick="showRegistration()" style="width:100%">Registrati</button>';
+      html += '</div>';
+      document.getElementById('app').innerHTML = html;
+    }
+
+    function showRegistration() {
+      tempAtletiRegistrazione = [];
+      var html = renderHeader();
+      html += '<div style="max-width:450px;margin:40px auto">';
+      html += '<h2 style="text-align:center;margin-bottom:24px">Registrazione</h2>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Nome</label>';
+      html += '<input type="text" id="reg-nome" placeholder="Nome">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Cognome</label>';
+      html += '<input type="text" id="reg-cognome" placeholder="Cognome">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Email</label>';
+      html += '<input type="email" id="reg-email" placeholder="tua@email.com">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Password</label>';
+      html += '<input type="password" id="reg-password" placeholder="Almeno 6 caratteri">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Sei un allenatore?</label>';
+      html += '<div style="margin-top:8px;color:var(--text-sec);font-size:12px">⚠️ Gli allenatori devono essere registrati dall\'admin</div>';
+      html += '</div>';
+      
+      html += '<h3 style="margin-top:20px;margin-bottom:12px">I tuoi atleti</h3>';
+      html += '<div id="atleti-list-reg" class="atleti-list">';
+      if (tempAtletiRegistrazione.length === 0) {
+        html += '<div style="color:var(--text-sec);font-size:13px;text-align:center;padding:12px">Nessun atleta aggiunto</div>';
+      } else {
+        tempAtletiRegistrazione.forEach(function(atleta, idx) {
+          html += '<div class="atleta-item">';
+          html += '<div>';
+          html += '<strong>' + atleta.nome + ' ' + atleta.cognome + '</strong>';
+          html += '<div style="font-size:12px;color:var(--text-sec)">' + (CAT_LABELS[atleta.categoria] || atleta.categoria) + '</div>';
+          html += '</div>';
+          html += '<button class="btn-remove" onclick="removeAtletaReg(' + idx + ')">Rimuovi</button>';
+          html += '</div>';
+        });
+      }
+      html += '</div>';
+      html += '<button class="btn-add" onclick="showAddAtleta()">+ Aggiungi Atleta</button>';
+      
+      html += '<div style="display:flex;gap:12px;margin-top:24px">';
+      html += '<button class="btn-secondary" onclick="showLogin()" style="flex:1">← Torna al login</button>';
+      html += '<button class="btn-primary" onclick="register()" style="flex:1">Registrati</button>';
+      html += '</div>';
+      html += '</div>';
+      document.getElementById('app').innerHTML = html;
+    }
+
+    function showAddAtleta() {
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Aggiungi Atleta</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Nome</label>';
+      html += '<input type="text" id="atleta-nome" placeholder="Nome">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Cognome</label>';
+      html += '<input type="text" id="atleta-cognome" placeholder="Cognome">';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Categoria</label>';
+      html += '<select id="atleta-categoria">';
+      ALL_CATEGORIES.forEach(function(cat) {
+        html += '<option value="' + cat + '">' + (CAT_LABELS[cat] || cat) + '</option>';
+      });
+      html += '</select>';
+      html += '</div>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="addAtletaReg()" style="flex:1">Aggiungi</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    function addAtletaReg() {
+      var nome = document.getElementById('atleta-nome').value.trim();
+      var cognome = document.getElementById('atleta-cognome').value.trim();
+      var categoria = document.getElementById('atleta-categoria').value;
+      
+      if (!nome || !cognome) {
+        alert('Compila nome e cognome');
+        return;
+      }
+      
+      tempAtletiRegistrazione.push({
+        nome: nome,
+        cognome: cognome,
+        categoria: categoria
+      });
+      
+      // FIX v4.24: Solo aggiornare la lista, non ricaricare il form!
+      closeModal();
+      updateAtletiListaReg();  // Nuova funzione
+    }
+    
+    // FIX v4.24: Aggiorna solo la lista degli atleti (NON ricaricare form)
+    function updateAtletiListaReg() {
+      var html = '';
+      if (tempAtletiRegistrazione.length === 0) {
+        html += '<div style="color:var(--text-sec);font-size:13px;text-align:center;padding:12px">Nessun atleta aggiunto</div>';
+      } else {
+        tempAtletiRegistrazione.forEach(function(atleta, idx) {
+          html += '<div class="atleta-item">';
+          html += '<div>';
+          html += '<strong>' + atleta.nome + ' ' + atleta.cognome + '</strong>';
+          html += '<div style="font-size:12px;color:var(--text-sec)">' + (CAT_LABELS[atleta.categoria] || atleta.categoria) + '</div>';
+          html += '</div>';
+          html += '<button class="btn-remove" onclick="removeAtletaReg(' + idx + ')">Rimuovi</button>';
+          html += '</div>';
+        });
+      }
+      document.getElementById('atleti-list-reg').innerHTML = html;
+    }
+
+    function removeAtletaReg(idx) {
+      tempAtletiRegistrazione.splice(idx, 1);
+      updateAtletiListaReg();  // FIX v4.24: Solo aggiornare lista
+    }
+
+    function login() {
+      var email = document.getElementById('login-email').value.trim();
+      var password = document.getElementById('login-password').value;
+      
+      if (!email || !password) {
+        alert('Compila email e password');
+        return;
+      }
+      
+      auth.signInWithEmailAndPassword(email, password)
+        .then(function(result) {
+          currentUser = result.user;
+          loadUserData();
+        })
+        .catch(function(error) {
+          alert('Errore: ' + error.message);
+        });
+    }
+
+    function register() {
+      var nome = document.getElementById('reg-nome').value.trim();
+      var cognome = document.getElementById('reg-cognome').value.trim();
+      var email = document.getElementById('reg-email').value.trim();
+      var password = document.getElementById('reg-password').value;
+      
+      if (!nome || !cognome || !email || !password) {
+        alert('Compila tutti i campi');
+        return;
+      }
+      
+      if (password.length < 6) {
+        alert('Password deve avere almeno 6 caratteri');
+        return;
+      }
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(function(result) {
+          var uid = result.user.uid;
+          var userData = {
+            uid: uid,
+            email: email,
+            role: 'atleta',
+            status: 'pending_approval',
+            profileData: { nome: nome, cognome: cognome },
+            atleti: tempAtletiRegistrazione,
+            allenatore_categories: [],
+            createdAt: firebase.firestore.Timestamp.now()
+          };
+          
+          console.log('📝 Salvataggio in Firestore:', userData);
+          return db.collection('users').doc(uid).set(userData);
+        })
+        .then(function() {
+          console.log('✅ Registrazione completata!');
+          // v4.30: Notifica email all'admin
+          notificaAdminNuovoGenitore(nome, cognome, email, tempAtletiRegistrazione);
+          alert('Registrazione completata! L\'admin deve approvare il tuo account.');
+          tempAtletiRegistrazione = [];
+          showLogin();
+        })
+        .catch(function(error) {
+          console.error('❌ ERRORE Registrazione:', error);
+          alert('Errore registrazione: ' + error.message + '\n\nDettagli: ' + error.code);
+        });
+    }
+
+    function loadUserData() {
+      if (!currentUser) return;
+      
+      db.collection('users').doc(currentUser.uid).get()
+        .then(function(doc) {
+          if (doc.exists) {
+            currentUserData = Object.assign({ uid: currentUser.uid }, doc.data());
+            
+            // FIX v4.25: Check se account è in approvazione
+            if (currentUserData.status === 'pending_approval') {
+              alert('Il tuo account è in attesa di approvazione dall\'admin. Ti contatterà presto!');
+              logout();
+              return;
+            }
+            
+            // FIX v4.25: Check se status è approvato
+            if (currentUserData.status !== 'approved') {
+              alert('Il tuo account è stato rifiutato.');
+              logout();
+              return;
+            }
+            
+            var isAtleta = currentUserData.role === 'atleta';
+            var isAllenatore = currentUserData.role === 'allenatore';
+            var isAdmin = currentUserData.role === 'admin';
+            
+            if (isAdmin) {
+              loadAdminStats();
+              showAdminDashboard();
+            } else if (isAtleta && !isAllenatore) {
+              currentRole = 'atleta';
+              showAtletaDashboard();
+            } else if (isAllenatore && !isAtleta) {
+              currentRole = 'allenatore';
+              showAllenatoreDashboard();
+            } else if (isAtleta && isAllenatore) {
+              showRoleMenu();
+            } else {
+              alert('Profilo non valido');
+              logout();
+            }
+          } else {
+            alert('Profilo non trovato');
+          }
+        })
+        .catch(function(err) {
+          alert('Errore caricamento profilo: ' + err.message);
+        });
+    }
+
+    function logout() {
+      auth.signOut().then(function() {
+        currentUser = null;
+        currentUserData = null;
+        currentRole = null;
+        tempAtletiRegistrazione = [];
+        showLogin();
+      });
+    }
+
+    // ============ ROLE MENU ============
+    function showRoleMenu() {
+      var html = renderHeader();
+      html += '<div style="padding:20px">';
+      html += '<h1>Atleti 🏂</h1>';
+      html += '<p style="color:var(--text-sec);margin-bottom:24px">Scegli il tuo ruolo:</p>';
+      
+      html += '<div class="role-menu">';
+      html += '<button class="role-btn" onclick="selectRole(\'atleta\')" style="font-size:16px">📚 Atleta</button>';
+      html += '<button class="role-btn" onclick="selectRole(\'allenatore\')" style="font-size:16px">🏋️ Allenatore</button>';
+      html += '</div>';
+      
+      html += '<button class="btn-secondary" onclick="logout()" style="width:100%;margin-top:40px">Logout</button>';
+      html += '</div>';
+      
+      document.getElementById('app').innerHTML = html;
+    }
+
+    function selectRole(role) {
+      currentRole = role;
+      
+      if (role === 'atleta') {
+        showAtletaDashboard();
+      } else if (role === 'allenatore') {
+        showAllenatoreDashboard();
+      }
+    }
+
+    // ============ ATLETA DASHBOARD ============
+    function loadAttivitaPerCategoria(categoria, callback) {
+      // v4.36.3: Normalize categoria from any format (sbaby → superbaby)
+      var normalizedCategoria = normalizeCategory(categoria) || categoria;
+      var catKey = (normalizedCategoria || '').toString().toLowerCase();
+      console.log('📅 loadAttivitaPerCategoria called with categoria:', categoria, '-> normalized to:', catKey);
+
+      downloadFileFromGoogleDrive(PROGRAMMA_FILE_ID).then(function(arrayBuffer) {
+        var data = new Uint8Array(arrayBuffer);
+        var workbook = XLSX.read(data, { type: 'array' });
+        var sheet = workbook.Sheets[workbook.SheetNames[0]];
+        var allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+        // v4.36.3: Find month row (contains month names)
+        var monthRow = null;
+        var monthRowIdx = 0;
+        for (var i = 0; i < Math.min(5, allRows.length); i++) {
+          var row = allRows[i] || [];
+          var monthCount = 0;
+          for (var j = 0; j < row.length; j++) {
+            var cell = (row[j] || '').toString().trim().toUpperCase();
+            if (['GENNAIO', 'FEBBRAIO', 'MARZO', 'APRILE', 'MAGGIO', 'GIUGNO', 'LUGLIO', 'AGOSTO', 'SETTEMBRE', 'OTTOBRE', 'NOVEMBRE', 'DICEMBRE'].includes(cell)) {
+              monthCount++;
+            }
+          }
+          if (monthCount > 2) {
+            monthRow = row;
+            monthRowIdx = i;
+            break;
+          }
+        }
+
+        if (!monthRow) {
+          monthRow = allRows[0] || [];
+        }
+
+        // v4.36.3: Find category row by searching for known categories (BABY, CUCCIOLI, RAGAZZI, etc.)
+        var categoryRow = null;
+        var categoryRowIdx = -1;
+        for (var i = monthRowIdx + 1; i < Math.min(monthRowIdx + 10, allRows.length); i++) {
+          var row = allRows[i] || [];
+          var categoryCount = 0;
+          for (var j = 0; j < row.length; j++) {
+            var cell = (row[j] || '').toString().trim().toUpperCase();
+            if (['BABY', 'CUCCIOLI', 'RAGAZZI', 'ALLIEVI', 'GIOVANI', 'SUPERBABY', 'MASTER', 'FISI'].includes(cell) ||
+                cell.includes('BABY') || cell.includes('CUCCIOLI') || cell.includes('RAGAZZI')) {
+              categoryCount++;
+            }
+          }
+          if (categoryCount >= 3) {  // Found a row with multiple categories
+            categoryRow = row;
+            categoryRowIdx = i;
+            break;
+          }
+        }
+
+        if (!categoryRow) {
+          categoryRow = allRows[monthRowIdx + 2] || allRows[2] || [];
+          categoryRowIdx = monthRowIdx + 2;
+        }
+
+        console.log('📅 PROGRAMMA - monthRowIdx:', monthRowIdx, 'categoryRowIdx:', categoryRowIdx, 'categoryRow found:', categoryRow.length, 'cells');
+
+        var months = [];
+        var currentMonth = null;
+        for (var colIdx = 0; colIdx < monthRow.length; colIdx++) {
+          var monthCell = (monthRow[colIdx] || '').toString().trim().toUpperCase();
+          if (monthCell && ['GENNAIO', 'FEBBRAIO', 'MARZO', 'APRILE', 'MAGGIO', 'GIUGNO', 'LUGLIO', 'AGOSTO', 'SETTEMBRE', 'OTTOBRE', 'NOVEMBRE', 'DICEMBRE'].includes(monthCell)) {
+            if (currentMonth) {
+              currentMonth.endCol = colIdx - 1;
+              months.push(currentMonth);
+            }
+            currentMonth = { name: monthCell, startCol: colIdx, endCol: colIdx };
+          }
+        }
+        if (currentMonth) {
+          currentMonth.endCol = monthRow.length - 1;
+          months.push(currentMonth);
+        }
+
+        if (!calendarioAttivita[catKey]) {
+          calendarioAttivita[catKey] = {};
+        }
+
+        console.log('📅 Initializing calendarioAttivita[' + catKey + ']');
+
+        months.forEach(function(monthData) {
+          var monthName = monthData.name.toLowerCase();
+          var monthNum = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'].indexOf(monthName) + 1;
+          var year = 2026;
+
+          var monthCategories = [];
+          for (var colIdx = monthData.startCol; colIdx <= monthData.endCol; colIdx++) {
+            var catCell = (categoryRow[colIdx] || '').toString().trim();
+            if (catCell) {
+              // v4.36.3: Normalize category name (handles abbreviations like CICLOLI → cuccioli)
+              var normalizedCat = normalizeCategory(catCell);
+              if (ALL_CATEGORIES.includes(normalizedCat)) {
+                monthCategories.push({ col: colIdx, name: normalizedCat.toUpperCase() });
+                console.log('📅 Found category:', catCell, '→', normalizedCat.toUpperCase());
+              }
+            }
+          }
+
+          console.log('📅 Month:', monthData.name, 'Categories found:', monthCategories.length, monthCategories);
+
+          for (var rowIdx = 10; rowIdx <= 40 && rowIdx < allRows.length; rowIdx++) {
+            var row = allRows[rowIdx] || [];
+            var dayNumCell = (row[monthData.startCol] || '').toString().trim();
+            var dayNum = parseInt(dayNumCell);
+            if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) continue;
+
+            var dateStr = String(year) + '-' + String(monthNum).padStart(2, '0') + '-' + String(dayNum).padStart(2, '0');
+
+            monthCategories.forEach(function(catInfo) {
+              var activityCell = (row[catInfo.col] || '').toString().trim();
+
+              // v4.36.3 FIX: Normalizza categoria a MAIUSCOLO (allenatore invia minuscolo)
+              // Debug: log category matching
+              if (activityCell && activityCell.length > 0 && activityCell !== 'R') {
+                if (rowIdx === 10) {
+                  console.log('🔍 Checking activity:', activityCell, 'for category:', categoria, 'vs catInfo.name:', catInfo.name);
+                }
+              }
+
+              if (activityCell && activityCell.length > 0 && activityCell !== 'R' && catInfo.name === normalizedCategoria.toUpperCase()) {
+                var activityType = 'sci';
+                var color = '#FFC000';
+
+                var cellUpper = activityCell.toUpperCase();
+                if (cellUpper.includes('ATLETICA')) {
+                  activityType = 'atletica';
+                  color = '#00B050';
+                } else if (cellUpper.includes('ACROBATICA') || cellUpper.includes('CAMPUS')) {
+                  activityType = 'acrobatica';
+                  color = '#00B0F0';
+                } else if (cellUpper.includes('MULTISPORT')) {
+                  activityType = 'multisport';
+                  color = '#FF7F00';
+                }
+
+                if (!calendarioAttivita[catKey][dateStr]) {
+                  calendarioAttivita[catKey][dateStr] = [];
+                }
+
+                var alreadyExists = calendarioAttivita[catKey][dateStr].some(function(existing) {
+                  return existing.title === activityCell && existing.type === activityType;
+                });
+
+                if (!alreadyExists) {
+                  console.log('✅ Activity loaded:', activityCell, 'on', dateStr, 'for catKey:', catKey);
+                  calendarioAttivita[catKey][dateStr].push({
+                    date: dateStr,
+                    title: activityCell,
+                    type: activityType,
+                    color: color
+                  });
+                }
+              }
+            });
+          }
+        });
+
+        console.log('📅 Final calendarioAttivita for', catKey, ':', calendarioAttivita[catKey]);
+        console.log('📅 Total activities stored:', Object.keys(calendarioAttivita[catKey]).length, 'dates');
+        console.log('📅 ALL calendarioAttivita keys after load:', Object.keys(calendarioAttivita));
+        if (callback) {
+          console.log('📅 Calling callback for catKey:', catKey);
+          callback();
+        }
+      }).catch(function(err) {
+        console.error('Errore caricamento attività:', err);
+        if (callback) callback();
+      });
+    }
+
+    function loadMessaggiPerCategoria(categoria, callback) {
+      // v4.36.3: Normalize categoria from any format (sbaby → superbaby) for key usage
+      var normalizedCategoria = normalizeCategory(categoria) || categoria;
+      var catKey = (normalizedCategoria || '').toString().toLowerCase();
+      console.log('💬 loadMessaggiPerCategoria called with categoria:', categoria, '-> normalized to:', catKey);
+
+      // RESET della cache (v4.17 FIX)
+      if (!calendarioMessaggi[catKey]) {
+        calendarioMessaggi[catKey] = {};
+      } else {
+        calendarioMessaggi[catKey] = {};  // Svuota prima di ricaricare
+      }
+
+      db.collection('eventMessages').doc(categoria).collection('messages').get().then(function(snap) {
+        snap.docs.forEach(function(doc) {
+          var data = doc.data();
+          var dateStr = data.data || data.dateString || '';
+
+          if (!calendarioMessaggi[catKey][dateStr]) {
+            calendarioMessaggi[catKey][dateStr] = [];
+          }
+
+          calendarioMessaggi[catKey][dateStr].push(Object.assign({ id: doc.id }, data));
+        });
+
+        console.log('💬 Loaded messages for', catKey, ':', calendarioMessaggi[catKey]);
+        if (callback) callback();
+      }).catch(function(err) {
+        console.log('Nessun messaggio per categoria:', categoria);
+        if (callback) callback();
+      });
+    }
+
+    // ============ RAGGRUPPAMENTO EVENTI (v4.14) ============
+    function groupEventsByTrasferta(dates) {
+      if (dates.length === 0) return [];
+      
+      var groups = [];
+      var currentGroup = [dates[0]];
+      
+      for (var i = 1; i < dates.length; i++) {
+        var prevDate = new Date(dates[i - 1] + 'T00:00:00');
+        var currDate = new Date(dates[i] + 'T00:00:00');
+        var diffMs = currDate - prevDate;
+        var diffDays = diffMs / (1000 * 60 * 60 * 24);
+        
+        if (diffDays === 1) {
+          currentGroup.push(dates[i]);
+        } else {
+          groups.push(currentGroup);
+          currentGroup = [dates[i]];
+        }
+      }
+      groups.push(currentGroup);
+      
+      return groups;
+    }
+
+    function getTrasfertaHeader(dateGroup) {
+      if (dateGroup.length === 1) {
+        return null;
+      }
+      
+      var startDate = new Date(dateGroup[0] + 'T00:00:00');
+      var endDate = new Date(dateGroup[dateGroup.length - 1] + 'T00:00:00');
+      
+      var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+      var startDay = startDate.getDate();
+      var endDay = endDate.getDate();
+      var startMonth = mesiNomi[startDate.getMonth()];
+      var endMonth = mesiNomi[endDate.getMonth()];
+      
+      if (startMonth === endMonth) {
+        return '🚌 Trasferta ' + startDay + '-' + endDay + ' ' + startMonth;
+      } else {
+        return '🚌 Trasferta ' + startDay + ' ' + startMonth + ' - ' + endDay + ' ' + endMonth;
+      }
+    }
+
+    // v4.35: Funzione globale per parsare date DD/MM/YYYY da Firestore
+    function parseDateFromFirestore(dateStr) {
+      if (!dateStr || typeof dateStr !== 'string') return null;
+
+      // v4.36.3: Handle Excel date serial numbers (e.g., 45000)
+      var numValue = parseFloat(dateStr);
+      if (!isNaN(numValue) && numValue > 1000 && numValue < 100000) {
+        // Excel date serial number (days since 1899-12-30)
+        var excelEpoch = new Date(1899, 11, 30);
+        var millisPerDay = 24 * 60 * 60 * 1000;
+        return new Date(excelEpoch.getTime() + numValue * millisPerDay);
+      }
+
+      // Try DD/MM/YYYY format
+      var parts = dateStr.split('/');
+      if (parts.length === 3) {
+        var day = parseInt(parts[0], 10);
+        var month = parseInt(parts[1], 10) - 1;  // mesi sono 0-indexed
+        var year = parseInt(parts[2], 10);
+        if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+          return new Date(year, month, day);
+        }
+      }
+
+      // Try YYYY-MM-DD format (ISO)
+      if (dateStr.includes('-')) {
+        var isoDate = new Date(dateStr + 'T00:00:00');
+        if (!isNaN(isoDate.getTime())) {
+          return isoDate;
+        }
+      }
+
+      return new Date(dateStr);  // fallback: tenta parsing standard
+    }
+
+    // v4.36.3: Format Date object to DD/MM/YYYY string for display
+    function formatDateForDisplay(dateStr) {
+      var date = parseDateFromFirestore(dateStr);
+      if (!date || isNaN(date.getTime())) return null;
+
+      var day = String(date.getDate()).padStart(2, '0');
+      var month = String(date.getMonth() + 1).padStart(2, '0');
+      var year = date.getFullYear();
+      return day + '/' + month + '/' + year;
+    }
+
+    function renderListaAttivita(categoria) {
+      // v4.36.3 FIX: Normalize categoria from any format (sbaby → superbaby) for key lookup
+      var normalizedCategoria = normalizeCategory(categoria) || categoria;
+      var catKey = (normalizedCategoria || '').toString().toLowerCase();
+      console.log('🔍 renderListaAttivita called with categoria:', categoria, '-> normalized to:', catKey);
+      console.log('📊 calendarioAttivita keys:', Object.keys(calendarioAttivita));
+      console.log('📊 calendarioAttivita[' + catKey + ']:', calendarioAttivita[catKey]);
+
+      var attivita = calendarioAttivita[catKey] || {};
+      var messaggi = calendarioMessaggi[catKey] || {};
+
+      console.log('📊 attivita to render:', attivita);
+      console.log('📊 messaggi to render:', messaggi);
+
+      var allDates = {};
+      Object.keys(attivita).forEach(function(dateStr) {
+        if (!allDates[dateStr]) allDates[dateStr] = { attivita: [], messaggi: [] };
+        allDates[dateStr].attivita = attivita[dateStr];
+      });
+      Object.keys(messaggi).forEach(function(dateStr) {
+        if (!allDates[dateStr]) allDates[dateStr] = { attivita: [], messaggi: [] };
+        allDates[dateStr].messaggi = messaggi[dateStr];
+      });
+
+      var sortedDates = Object.keys(allDates).sort();
+      console.log('📊 sortedDates:', sortedDates, 'count:', sortedDates.length);
+
+      // v4.32: Trova primo evento >= oggi
+      var oggi = new Date();
+      oggi.setHours(0, 0, 0, 0);
+      var firstFutureDateIdx = -1;
+      for (var i = 0; i < sortedDates.length; i++) {
+        var eventDate = new Date(sortedDates[i] + 'T00:00:00');
+        if (eventDate >= oggi) {
+          firstFutureDateIdx = i;
+          break;
+        }
+      }
+
+      if (sortedDates.length === 0) {
+        console.log('⚠️ NO ACTIVITIES FOUND for categoria:', categoria);
+        return '<div style="padding:40px 20px;text-align:center;color:var(--text-sec)">Nessuna attività per questa categoria</div>';
+      }
+      
+      // RAGGRUPPAMENTO TRASFERTE (v4.14)
+      var dateGroups = groupEventsByTrasferta(sortedDates);
+      
+      var html = '<div style="padding:12px">';
+      
+      dateGroups.forEach(function(dateGroup) {
+        var trasfertaHeader = getTrasfertaHeader(dateGroup);
+        
+        // Se è una trasferta, mostra intestazione
+        if (trasfertaHeader) {
+          html += '<div style="margin-top:24px;margin-bottom:12px;padding:12px;background:linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);border-radius:8px;color:white;font-weight:600;font-size:14px">';
+          html += trasfertaHeader;
+          html += '</div>';
+        }
+        
+        // Render tutti i giorni nel gruppo
+        dateGroup.forEach(function(dateStr, dayIdx) {
+          var d = new Date(dateStr + 'T00:00:00');
+          var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+          var dayName = giorniNomi[d.getDay()];
+          var dayNum = d.getDate();
+          var monthNum = d.getMonth() + 1;
+          var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+          var monthName = mesiNomi[d.getMonth()];
+          
+          var items = allDates[dateStr];
+          
+          // Meno margin se è parte di una trasferta
+          var marginTop = trasfertaHeader ? (dayIdx === 0 ? '8px' : '0px') : '12px';
+          var marginBottom = trasfertaHeader ? '0px' : '16px';
+          
+          html += '<div style="margin-bottom:' + marginBottom + ';margin-top:' + marginTop + '">';
+          
+          // ATTIVITÀ (CONDENSA DATA + NOME NELLA STESSA RIGA - v4.20)
+          if (items.attivita && items.attivita.length > 0) {
+            items.attivita.forEach(function(act, idx) {
+              html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:0px">';
+              
+              // DATA + NOME ATTIVITÀ STESSA RIGA
+              html += '<div style="padding:10px 12px;border-left:3px solid ' + act.color + ';display:flex;justify-content:space-between;align-items:center">';
+              html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + ' - ' + act.title + '</div>';
+              html += '</div>';
+              
+              // TIPO ATTIVITÀ SOTTO
+              html += '<div style="padding:0 12px 10px 12px;border-left:3px solid ' + act.color + ';margin-left:-3px">';
+              html += '<div style="font-size:11px;color:var(--text-sec)">' + (act.type === 'sci' ? '⛷️ Sci' : act.type === 'atletica' ? '🏃 Atletica' : act.type === 'acrobatica' ? '🤸 Acrobatica' : '🏋️ Multisport') + '</div>';
+              html += '</div>';
+              
+              html += '</div>';
+            });
+          }
+          
+          // MESSAGGI
+          if (items.messaggi && items.messaggi.length > 0) {
+            items.messaggi.forEach(function(msg) {
+              html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:0px">';
+              
+              // DATA + AUTORE STESSA RIGA
+              html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);display:flex;justify-content:space-between;align-items:center">';
+              html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + ' - 💬 ' + (msg.authorName || 'Allenatore') + '</div>';
+              html += '</div>';
+              
+              // TESTO MESSAGGIO
+              html += '<div style="padding:0 12px 10px 12px;color:var(--text);line-height:1.4;font-size:12px">';
+              html += (msg.text || msg.messaggio || '');
+              
+              if (msg.id && (currentRole === 'allenatore' || currentUserData.role === 'allenatore')) {
+                html += '<div style="margin-top:8px;display:flex;gap:6px">';
+                html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
+                html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
+                html += '</div>';
+              }
+              html += '</div>';
+              
+              html += '</div>';
+            });
+          }
+          
+          html += '</div>';
+        });
+      });
+      
+      html += '</div>';
+      return html;
+    }
+
+    function showAtletaDashboard() {
+      var nome = currentUserData.profileData.nome;
+      var html = renderHeader();
+      html += '<div style="padding:12px 20px 8px 20px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+      html += '<div style="font-size:16px;font-weight:600">Ciao, ' + nome + '</div>';
+      html += '<button class="btn-secondary" onclick="logout()" style="padding:8px 12px;font-size:12px">Logout</button>';
+      html += '</div>';
+      
+      html += '<div style="margin-bottom:4px">';
+      
+      for (var i = 0; i < currentUserData.atleti.length; i++) {
+        var a = currentUserData.atleti[i];
+        
+        var flagColor = '#16a34a';
+        
+        var flagEmoji = '🟢';
+        var flagText = 'Valido';
+        
+        if (a.scadenza) {
+          var scadDate = parseDateFromFirestore(a.scadenza);  // v4.34: usa parser
+          var oggi = new Date();
+          oggi.setHours(0, 0, 0, 0);
+          scadDate.setHours(0, 0, 0, 0);
+          var diffMs = scadDate - oggi;
+          var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+          
+          if (diffDays < 0) {
+            flagColor = '#dc2626';
+            flagEmoji = '🔴';
+            flagText = 'Scaduto';
+          } else if (diffDays <= 30) {
+            flagColor = '#FFC000';
+            flagEmoji = '🟡';
+            flagText = 'Scade in ' + diffDays + 'gg';
+          } else {
+            flagColor = '#16a34a';
+            flagEmoji = '🟢';
+            flagText = 'Valido';
+          }
+        }
+        
+        html += '<div style="padding:6px 0;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px">';
+        html += '<div>';
+        html += '<strong>' + a.nome + ' ' + a.cognome + '</strong>';
+        html += ' ' + flagEmoji;
+        html += '<div style="font-size:11px;color:' + flagColor + ';margin-top:2px;font-weight:600">' + flagText + '</div>';
+        html += '</div>';
+        html += '<div style="color:var(--text-sec);font-size:11px">' + a.categoria + '</div>';
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      
+      var categorieListe = [];
+      for (var i = 0; i < currentUserData.atleti.length; i++) {
+        if (categorieListe.indexOf(currentUserData.atleti[i].categoria) === -1) {
+          categorieListe.push(currentUserData.atleti[i].categoria);
+        }
+      }
+      
+      if (categorieListe.length > 1) {
+        html += '<div style="margin-bottom:6px">';
+        html += '<div style="display:flex;gap:6px;flex-wrap:wrap" id="categoria-chips">';
+        for (var c = 0; c < categorieListe.length; c++) {
+          var cat = categorieListe[c];
+          html += '<button class="chip" style="padding:6px 12px;font-size:12px;' + (c === 0 ? 'background:var(--blue-dark);color:white' : '') + '" onclick="selectCategoria(\'' + cat + '\', this)">' + (CAT_LABELS[cat] || cat) + '</button>';
+        }
+        html += '</div>';
+        html += '</div>';
+      }
+      
+      html += '<div id="calendario-container" style="margin-top:8px;margin-bottom:12px;height:calc(100vh - 280px);overflow-y:auto;border:0.5px solid var(--border);border-radius:12px;padding:12px">';
+      html += '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento...</div>';
+      html += '</div>';
+      
+      html += '<div style="display:flex;gap:12px;padding:0 0 8px 0">';
+      if (currentUserData.role === 'both' || (currentUserData.role === 'atleta' && currentUserData.allenatore_categories)) {
+        html += '<button class="btn-secondary" onclick="showRoleMenu()" style="flex:1;font-size:12px;padding:8px">← Cambia ruolo</button>';
+      }
+      html += '<button class="btn-secondary" onclick="logout()" style="flex:1;font-size:12px;padding:8px">Logout</button>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').innerHTML = html;
+      
+      var primaCategoria = categorieListe[0];
+      loadAttivitaPerCategoria(primaCategoria, function() {
+        loadMessaggiPerCategoria(primaCategoria, function() {
+          var container = document.getElementById('calendario-container');
+          if (container) {
+            container.innerHTML = renderListaAttivita(primaCategoria);
+            // v4.32: Auto-scroll al primo allenamento da oggi
+            setTimeout(function() {
+              scrollToPrimoAllenamento(container);
+            }, 100);
+          }
+        });
+      });
+    }
+
+    function selectCategoria(cat, btnElement) {
+      categoriaSel = cat;
+      
+      var chips = document.querySelectorAll('.chip');
+      chips.forEach(function(c) {
+        c.style.background = 'var(--bg-card)';
+        c.style.color = 'var(--text-sec)';
+      });
+      if (btnElement) {
+        btnElement.style.background = 'var(--blue-dark)';
+        btnElement.style.color = 'white';
+      }
+      
+      var container = document.getElementById('calendario-container');
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento attività...</div>';
+      
+      loadAttivitaPerCategoria(cat, function() {
+        loadMessaggiPerCategoria(cat, function() {
+          container.innerHTML = renderListaAttivita(cat);
+          // v4.32: Auto-scroll al primo allenamento da oggi
+          setTimeout(function() {
+            scrollToPrimoAllenamento(container);
+          }, 100);
+        });
+      });
+    }
+
+    // ============ ALLENATORE ============
+    function showAllenatoreDashboard() {
+      var nome = currentUserData.profileData.nome;
+      var html = renderHeader();
+      html += '<div style="padding:20px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">';
+      html += '<h2>Pannello Allenatore 🏋️</h2>';
+      html += '<button class="btn-secondary" onclick="logout()">Logout</button>';
+      html += '</div>';
+      
+      html += '<p style="color:var(--text-sec);margin-bottom:24px">Ciao ' + nome + '!</p>';
+      
+      var categorieListe = currentUserData.allenatore_categories || [];
+      
+      if (categorieListe.length === 0) {
+        html += '<div style="padding:20px;background:var(--blue-light);border-radius:8px;color:var(--text)">';
+        html += 'Non sei assegnato a nessuna categoria. Contatta l\'admin.';
+        html += '</div>';
+      } else {
+        html += '<h3 style="margin-top:20px">Scegli categoria:</h3>';
+        html += '<div style="display:flex;flex-direction:column;gap:8px" id="categoria-allenatore">';
+        
+        for (var c = 0; c < categorieListe.length; c++) {
+          var cat = categorieListe[c];
+          html += '<button class="card" onclick="loadAttivitaAllenatore(\'' + cat + '\')" style="text-align:left;padding:16px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s">';
+          html += '<div style="font-weight:600">' + (CAT_LABELS[cat] || cat) + '</div>';
+          html += '<div style="font-size:12px;color:var(--text-sec);margin-top:4px">Gestisci messaggi e attività</div>';
+          html += '</button>';
+        }
+        
+        html += '</div>';
+      }
+      
+      html += '<button class="btn-secondary" onclick="logout()" style="width:100%;margin-top:40px">Logout</button>';
+      html += '</div>';
+      
+      document.getElementById('app').innerHTML = html;
+    }
+
+    function loadAttivitaAllenatore(categoria) {
+      var html = renderHeader();
+      html += '<div style="padding:20px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">';
+      html += '<h2>← Gestione ' + (CAT_LABELS[categoria] || categoria) + '</h2>';
+      html += '<button class="btn-secondary" onclick="showAllenatoreDashboard()">Indietro</button>';
+      html += '</div>';
+      
+      html += '<h3 style="margin-top:20px">Attività e messaggi:</h3>';
+      html += '<div id="attivita-list" style="margin-bottom:20px;max-height:60vh;overflow-y:auto;border:0.5px solid var(--border);border-radius:12px;padding:12px">';
+      html += '<div style="text-align:center;padding:40px;color:var(--text-sec)"><div class="spinner" style="display:inline-block"></div> Caricamento...</div>';
+      html += '</div>';
+      
+      html += '<button class="btn-secondary" onclick="logout()" style="width:100%">Logout</button>';
+      html += '</div>';
+      
+      document.getElementById('app').innerHTML = html;
+      
+      // CARICA SIA ATTIVITÀ CHE MESSAGGI (v4.16.1 fix)
+      loadAttivitaPerCategoria(categoria, function() {
+        loadMessaggiPerCategoria(categoria, function() {
+          renderAllenatoreLista(categoria);
+        });
+      });
+    }
+    
+    function renderAllenatoreLista(categoria) {
+      // v4.36.3 FIX: Normalize categoria from any format (sbaby → superbaby) for key lookup
+      var normalizedCategoria = normalizeCategory(categoria) || categoria;
+      var catKey = (normalizedCategoria || '').toString().toLowerCase();
+      console.log('🏋️ renderAllenatoreLista called with categoria:', categoria, '-> normalized to:', catKey);
+      console.log('📊 calendarioAttivita keys:', Object.keys(calendarioAttivita));
+      var attivita = calendarioAttivita[catKey] || {};
+      var messaggi = calendarioMessaggi[catKey] || {};
+      console.log('📊 Found attivita:', attivita);
+      
+      var allDates = {};
+      Object.keys(attivita).forEach(function(dateStr) {
+        if (!allDates[dateStr]) allDates[dateStr] = { attivita: [], messaggi: [] };
+        allDates[dateStr].attivita = attivita[dateStr];
+      });
+      Object.keys(messaggi).forEach(function(dateStr) {
+        if (!allDates[dateStr]) allDates[dateStr] = { attivita: [], messaggi: [] };
+        allDates[dateStr].messaggi = messaggi[dateStr];
+      });
+      
+      var sortedDates = Object.keys(allDates).sort();
+      
+      // RAGGRUPPAMENTO TRASFERTE (v4.18)
+      var dateGroups = groupEventsByTrasferta(sortedDates);
+      
+      var html = '<div style="padding:12px">';
+      
+      // v4.35: SEZIONE ATLETI DELLA CATEGORIA
+      html += '<div style="margin-bottom:24px;padding:12px;background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border)">';
+      html += '<h4 style="margin-top:0;margin-bottom:12px">Atleti di ' + (CAT_LABELS[categoria] || categoria) + ':</h4>';
+      html += '<div id="atleti-categoria" style="max-height:20vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px">';
+      html += '<div style="text-align:center;padding:10px;color:var(--text-sec);font-size:12px"><div class="spinner" style="display:inline-block"></div> Caricamento atleti...</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      // CALENDARIO ATTIVITÀ
+      if (sortedDates.length === 0) {
+        html += '<div style="text-align:center;color:var(--text-sec);padding:20px">Nessuna attività</div>';
+      } else {
+        dateGroups.forEach(function(dateGroup) {
+          var trasfertaHeader = getTrasfertaHeader(dateGroup);
+          
+          // Se è una trasferta, mostra intestazione
+          if (trasfertaHeader) {
+            html += '<div style="margin-top:24px;margin-bottom:12px;padding:12px;background:linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);border-radius:8px;color:white;font-weight:600;font-size:14px">';
+            html += trasfertaHeader;
+            html += '</div>';
+          }
+          
+          // Render tutti i giorni nel gruppo
+          dateGroup.forEach(function(dateStr, dayIdx) {
+            var d = new Date(dateStr + 'T00:00:00');
+            var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+            var dayName = giorniNomi[d.getDay()];
+            var dayNum = d.getDate();
+            var monthNum = d.getMonth() + 1;
+            var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+            var monthName = mesiNomi[d.getMonth()];
+            
+            var items = allDates[dateStr];
+            
+            // Meno margin se è parte di una trasferta
+            var marginTop = trasfertaHeader ? (dayIdx === 0 ? '8px' : '0px') : '12px';
+            var marginBottom = trasfertaHeader ? '0px' : '16px';
+            
+            html += '<div style="margin-bottom:' + marginBottom + ';margin-top:' + marginTop + '">';
+            
+            // ATTIVITÀ (CONDENSA DATA + NOME NELLA STESSA RIGA - v4.20)
+            if (items.attivita && items.attivita.length > 0) {
+              items.attivita.forEach(function(act, idx) {
+                html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:0px">';
+                
+                // DATA + NOME ATTIVITÀ STESSA RIGA (CLICKABILE)
+                html += '<div class="activity-item" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')" style="border-left:3px solid ' + act.color + ';cursor:pointer;padding:10px 12px;display:flex;justify-content:space-between;align-items:center">';
+                html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + ' - ' + act.title + '</div>';
+                html += '<div style="font-size:11px;color:var(--text-sec)">Clicca per aggiungere messaggio</div>';
+                html += '</div>';
+                
+                html += '</div>';
+              });
+            }
+            
+            // MESSAGGI
+            if (items.messaggi && items.messaggi.length > 0) {
+              items.messaggi.forEach(function(msg) {
+                html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:0px">';
+                
+                // DATA + AUTORE STESSA RIGA
+                html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);display:flex;justify-content:space-between;align-items:center">';
+                html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + ' - 💬 ' + (msg.authorName || 'Allenatore') + '</div>';
+                html += '</div>';
+                
+                // TESTO MESSAGGIO
+                html += '<div style="padding:0 12px 10px 12px;color:var(--text);line-height:1.4;font-size:12px">';
+                html += (msg.text || msg.messaggio || '');
+                html += '<div style="margin-top:8px;display:flex;gap:6px">';
+                html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
+                html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
+                html += '</div>';
+                html += '</div>';
+                
+                html += '</div>';
+              });
+            }
+          });
+        });
+      }
+      
+      html += '</div>';
+      document.getElementById('attivita-list').innerHTML = html;
+      
+      // v4.35: CARICA ELENCO ATLETI DELLA CATEGORIA
+      loadAtletiDiCategoria(categoria);
+    }
+    
+    function loadAtletiDiCategoria(categoria) {
+      // v4.36.2: Leggi atleti dal file Excel CONTATTI_ATLETI_26-27_v2.xlsx - UNIFORMA A MAIUSCOLO
+      downloadFileFromGoogleDrive(CONTATTI_FILE_ID).then(function(arrayBuffer) {
+        var data = new Uint8Array(arrayBuffer);
+        var workbook = XLSX.read(data, { type: 'array' });
+
+        // v4.36.2 FIX: Normalizza categoria a MAIUSCOLO (es: baby → BABY, giovani_fisi → GIOVANI FISI)
+        var catNormalizzata = categoria.toUpperCase().replace(/_/g, ' ');  // Sostituisci _ con spazio
+        var sheetName = null;
+
+        // v4.36.3: Try multiple sheet name variations for better matching
+        var sheetVariations = [
+          catNormalizzata,
+          catNormalizzata.replace(/ /g, '-'),  // GIOVANI FISI → GIOVANI-FISI
+          catNormalizzata.replace(/ /g, '_'),  // GIOVANI FISI → GIOVANI_FISI
+          catNormalizzata.replace(/ /g, '.'),  // GIOVANI FISI → GIOVANI.FISI
+          catNormalizzata.replace(/ /g, ''),   // GIOVANI FISI → GIOVANIFISI
+          // Handle compound words like SUPERBABY → SUPER BABY
+          catNormalizzata === 'SUPERBABY' ? 'SUPER BABY' : null,
+          catNormalizzata === 'SUPERBABY' ? 'SUPER-BABY' : null,
+          catNormalizzata === 'SUPERBABY' ? 'S-BABY' : null,
+          catNormalizzata === 'SUPERBABY' ? 'S.BABY' : null,
+          catNormalizzata === 'GIOVANI FISI' || catNormalizzata === 'GIOVANI_FISI' ? 'GIOVANI FISI' : null
+        ].filter(function(v) { return v !== null; });
+
+        // Cerca il foglio che corrisponde alla categoria (tutto MAIUSCOLO)
+        for (var i = 0; i < workbook.SheetNames.length; i++) {
+          var sheetNameUpper = workbook.SheetNames[i].toUpperCase();
+
+          // Check direct match or if variations match
+          for (var v = 0; v < sheetVariations.length; v++) {
+            if (sheetNameUpper === sheetVariations[v] || sheetNameUpper.includes(sheetVariations[v])) {
+              sheetName = workbook.SheetNames[i];
+              break;
+            }
+          }
+
+          if (sheetName) break;
+        }
+
+        if (!sheetName) {
+          // Se non trova il foglio esatto, mostra "Nessun atleta trovato"
+          var container = document.getElementById('atleti-categoria');
+          if (container) {
+            container.innerHTML = '<div style="padding:8px;color:var(--text-sec);font-size:12px">Foglio categoria non trovato nel file</div>';
+          }
+          return;
+        }
+        
+        var sheet = workbook.Sheets[sheetName];
+        var allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        
+        var atletiList = [];
+
+        // v4.36.3 FIX: Skip header rows properly
+        // Parsing file: COGNOME (col 0), NOME (col 2), SCADENZA (col 6)
+        for (var rowIdx = 1; rowIdx < allRows.length; rowIdx++) {
+          var row = allRows[rowIdx] || [];
+          var cognome = (row[0] || '').toString().trim();
+          var nome = (row[2] || '').toString().trim();
+          var scadenza = (row[6] || '').toString().trim();
+
+          // v4.36.3: Skip header rows (if cognome is "COGNOME" or empty)
+          if (cognome && cognome.toUpperCase() !== 'COGNOME' && nome && nome.toUpperCase() !== 'NOME') {
+            atletiList.push({
+              cognome: cognome,
+              nome: nome,
+              scadenza: scadenza,
+              categoria: categoria
+            });
+          }
+        }
+        
+        // Mostra elenco atleti
+        var atletiHtml = '';
+        if (atletiList.length === 0) {
+          atletiHtml = '<div style="padding:8px;color:var(--text-sec);font-size:12px">Nessun atleta trovato</div>';
+        } else {
+          atletiList.forEach(function(atleta) {
+            var scadColor = '#16a34a';
+            var scadEmoji = '🟢';
+            
+            if (atleta.scadenza) {
+              var scadDate = parseDateFromFirestore(atleta.scadenza);
+              if (scadDate) {
+                var oggi = new Date();
+                oggi.setHours(0, 0, 0, 0);
+                scadDate.setHours(0, 0, 0, 0);
+                var diffMs = scadDate - oggi;
+                var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 0) {
+                  scadColor = '#dc2626';
+                  scadEmoji = '🔴';
+                } else if (diffDays <= 30) {
+                  scadColor = '#FFC000';
+                  scadEmoji = '🟡';
+                }
+              }
+            }
+            
+            atletiHtml += '<div style="padding:8px;background:var(--bg-slight);border-radius:4px;border-left:3px solid ' + scadColor + ';margin-bottom:4px">';
+            atletiHtml += '<div style="font-weight:500;font-size:13px">' + atleta.cognome + ' ' + atleta.nome + ' ' + scadEmoji + '</div>';
+
+            // v4.36.3: Format scadenza date properly
+            var scadenzaDisplay = 'No date';
+            if (atleta.scadenza) {
+              var displayDate = formatDateForDisplay(atleta.scadenza);
+              scadenzaDisplay = displayDate || atleta.scadenza;  // fallback: mostra valore grezzo se parsing fallisce
+            }
+
+            atletiHtml += '<div style="font-size:11px;color:var(--text-sec)">' + scadenzaDisplay + '</div>';
+            atletiHtml += '</div>';
+          });
+        }
+        
+        var container = document.getElementById('atleti-categoria');
+        if (container) {
+          container.innerHTML = atletiHtml;
+        }
+      }).catch(function(err) {
+        console.error('Errore caricamento file contatti:', err);
+        var container = document.getElementById('atleti-categoria');
+        if (container) {
+          container.innerHTML = '<div style="padding:8px;color:#dc2626;font-size:12px">Errore caricamento file</div>';
+        }
+      });
+    }
+
+    function openMessageForm(dateStr, activityTitle, categoria) {
+      selectedActivityForMessage = { dateStr: dateStr, activityTitle: activityTitle, categoria: categoria };
+      
+      var d = new Date(dateStr + 'T00:00:00');
+      var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+      var dayName = giorniNomi[d.getDay()];
+      var dayNum = d.getDate();
+      var monthNum = d.getMonth() + 1;
+      var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+      var monthName = mesiNomi[d.getMonth()];
+      var dateDisplay = dayName + ', ' + dayNum + ' ' + monthName;
+      
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Aggiungi Messaggio</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Data</label>';
+      html += '<div style="padding:10px;background:var(--gray-50);border-radius:8px;color:var(--text)">' + dateDisplay + '</div>';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Attività</label>';
+      html += '<div style="padding:10px;background:var(--gray-50);border-radius:8px;color:var(--text)">' + activityTitle + '</div>';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Messaggio per i ragazzi</label>';
+      html += '<textarea id="message-text" placeholder="Scrivi il tuo messaggio..."></textarea>';
+      html += '</div>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveMessage()" style="flex:1">Salva</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    function closeModal() {
+      var overlay = document.querySelector('.modal-overlay');
+      if (overlay) overlay.remove();
+      selectedActivityForMessage = null;
+    }
+
+    function saveMessage() {
+      if (!selectedActivityForMessage) return;
+      
+      var messageText = document.getElementById('message-text').value.trim();
+      if (!messageText) {
+        alert('Scrivi un messaggio');
+        return;
+      }
+      
+      var categoria = selectedActivityForMessage.categoria;
+      var dateStr = selectedActivityForMessage.dateStr;
+      
+      db.collection('eventMessages').doc(categoria).collection('messages').add({
+        data: dateStr,
+        category: categoria,
+        authorName: currentUserData.profileData.nome,
+        text: messageText,
+        createdAt: firebase.firestore.Timestamp.now()
+      }).then(function(docRef) {
+        // v4.31: Notifica email ai genitori della categoria
+        notificaGenitoriNuovoMessaggio(categoria, dateStr, currentUserData.profileData.nome, messageText);
+        alert('Messaggio salvato! ✅');
+        closeModal();
+        loadAttivitaAllenatore(categoria);
+      }).catch(function(err) {
+        alert('Errore salvataggio: ' + err.message);
+      });
+    }
+
+    // ============ EDIT/DELETE MESSAGGI (v4.16) ============
+    function editMessage(msgId, categoria, currentText) {
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Modifica Messaggio</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Testo</label>';
+      html += '<textarea id="edit-msg-text" placeholder="Modifica il messaggio...">' + currentText + '</textarea>';
+      html += '</div>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveEditMessage(\'' + msgId + '\', \'' + categoria + '\')" style="flex:1">Salva</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    function saveEditMessage(msgId, categoria) {
+      var newText = document.getElementById('edit-msg-text').value.trim();
+      
+      if (!newText) {
+        alert('Scrivi un messaggio');
+        return;
+      }
+      
+      db.collection('eventMessages').doc(categoria).collection('messages').doc(msgId).update({
+        text: newText,
+        updatedAt: firebase.firestore.Timestamp.now()
+      })
+        .then(function() {
+          alert('Messaggio aggiornato! ✅');
+          closeModal();
+          loadAttivitaAllenatore(categoria);
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
+    function deleteMessage(msgId, categoria) {
+      if (!confirm('Sei sicuro di voler cancellare questo messaggio?')) return;
+      
+      db.collection('eventMessages').doc(categoria).collection('messages').doc(msgId).delete()
+        .then(function() {
+          alert('Messaggio cancellato! 🗑️');
+          loadAttivitaAllenatore(categoria);
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
+    // ============ ADMIN ============
+    function loadAdminStats() {
+      db.collection('users').get().then(function(snap) {
+        allUsers = [];
+        var pending = 0;
+        var atleti = 0;
+        var allenatori = 0;
+        var tuttiAtleti = 0;
+        
+        snap.docs.forEach(function(doc) {
+          var data = Object.assign({ uid: doc.id }, doc.data());
+          allUsers.push(data);
+          
+          if (data.status === 'pending_approval') pending++;
+          if (data.role === 'atleta') atleti++;
+          if (data.role === 'allenatore') allenatori++;
+          if (data.atleti && Array.isArray(data.atleti)) {
+            tuttiAtleti += data.atleti.length;
+          }
+        });
+        
+        document.getElementById('pending-count').innerText = pending;
+        document.getElementById('users-count').innerText = allUsers.length;
+        document.getElementById('atleti-count').innerText = tuttiAtleti;
+        document.getElementById('allenatori-count').innerText = allenatori;
+        
+        // FIX v4.27: Carica approvazioni DOPO che i dati sono pronti
+        loadApprovazioni();
+      }).catch(function(err) {
+        console.error('❌ Errore caricamento stats:', err);
+      });
+    }
+
+    function showAdminDashboard() {
+      var html = renderHeader();
+      html += '<div style="padding:20px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">';
+      html += '<h1>🔐 Dashboard Admin</h1>';
+      html += '<button class="btn-secondary" onclick="logout()">Logout</button>';
+      html += '</div>';
+      
+      html += '<div style="margin-bottom:20px">';
+      html += '<button class="btn-primary" onclick="showRegistraAllenatore()" style="width:100%;margin-bottom:12px">+ Registra Allenatore</button>';
+      html += '</div>';
+      
+      html += '<div class="admin-menu">';
+      html += '<div class="admin-card" onclick="loadApprovazioni()">';
+      html += '<div class="admin-card-title">⏳ Approvazioni</div>';
+      html += '<div id="pending-count" class="admin-card-count">0</div>';
+      html += '<div style="font-size:12px;color:var(--text-sec)">In sospeso</div>';
+      html += '</div>';
+      
+      html += '<div class="admin-card" onclick="loadUtenti()">';
+      html += '<div class="admin-card-title">👥 Utenti</div>';
+      html += '<div id="users-count" class="admin-card-count">0</div>';
+      html += '<div style="font-size:12px;color:var(--text-sec)">Totali</div>';
+      html += '</div>';
+      
+      html += '<div class="admin-card" onclick="loadAtletiAdmin()">';
+      html += '<div class="admin-card-title">🏃 Atleti</div>';
+      html += '<div id="atleti-count" class="admin-card-count">0</div>';
+      html += '<div style="font-size:12px;color:var(--text-sec)">Registrati</div>';
+      html += '</div>';
+      
+      html += '<div class="admin-card" onclick="loadAllennatoriAdmin()">';
+      html += '<div class="admin-card-title">🏋️ Allenatori</div>';
+      html += '<div id="allenatori-count" class="admin-card-count">0</div>';
+      html += '<div style="font-size:12px;color:var(--text-sec)">Assegnati</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      html += '<div id="admin-content" style="margin-top:24px"></div>';
+      html += '</div>';
+      
+      document.getElementById('app').innerHTML = html;
+      loadAdminStats();
+      // FIX v4.27: loadApprovazioni() viene chiamato automaticamente da loadAdminStats() quando finisce
+    }
+
+    function loadApprovazioni() {
+      var pending = allUsers.filter(function(u) { return u.status === 'pending_approval'; });
+      
+      var html = '<h2>⏳ In Attesa di Approvazione (' + pending.length + ')</h2>';
+      
+      if (pending.length === 0) {
+        html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessuna approvazione in sospeso</div>';
+      } else {
+        pending.forEach(function(user) {
+          html += '<div class="user-item">';
+          html += '<div class="user-info">';
+          html += '<div class="user-name">' + user.profileData.nome + ' ' + user.profileData.cognome + '</div>';
+          html += '<div class="user-meta">' + user.email + ' • ' + user.role + '</div>';
+          html += '</div>';
+          html += '<div class="user-actions">';
+          html += '<button class="btn-success" onclick="approveUser(\'' + user.uid + '\')">Approva</button>';
+          html += '<button class="btn-danger" onclick="rejectUser(\'' + user.uid + '\')">Rifiuta</button>';
+          html += '</div>';
+          html += '</div>';
+        });
+      }
+      
+      document.getElementById('admin-content').innerHTML = html;
+    }
+
+    function loadUtenti() {
+      var html = '<h2>👥 Elenco Utenti (' + allUsers.length + ')</h2>';
+      
+      allUsers.forEach(function(user) {
+        // FIX v4.28: Null checks per profileData
+        var nome = (user.profileData && user.profileData.nome) ? user.profileData.nome : '[Nome non disponibile]';
+        var cognome = (user.profileData && user.profileData.cognome) ? user.profileData.cognome : '';
+        var badgeStatus = user.status === 'approved' ? 'badge-approved' : 'badge-pending';
+        
+        html += '<div class="user-item">';
+        html += '<div class="user-info">';
+        html += '<div class="user-name">' + nome + ' ' + cognome + '</div>';
+        html += '<div class="user-meta">';
+        html += user.email + ' • ';
+        html += '<strong>' + user.role + '</strong> ';
+        html += '<span class="badge ' + badgeStatus + '">' + user.status + '</span>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="user-actions">';
+        html += '<button class="btn-primary" onclick="editUser(\'' + user.uid + '\')">Modifica</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+      
+      document.getElementById('admin-content').innerHTML = html;
+    }
+
+    function loadAtletiAdmin() {
+      var tuttiAtleti = [];
+      
+      allUsers.forEach(function(user) {
+        if (user.atleti && Array.isArray(user.atleti)) {
+          user.atleti.forEach(function(atleta) {
+            tuttiAtleti.push({
+              nome: atleta.nome,
+              cognome: atleta.cognome,
+              categoria: atleta.categoria,
+              scadenza: atleta.scadenza || null,
+              genitore: user.profileData.nome + ' ' + user.profileData.cognome,
+              genitoreEmail: user.email,
+              genitoreUid: user.uid,
+              atleteIndex: user.atleti.indexOf(atleta)
+            });
+          });
+        }
+      });
+      
+      var html = '<h2>🏃 Atleti (' + tuttiAtleti.length + ')</h2>';
+      
+      if (tuttiAtleti.length === 0) {
+        html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun atleta registrato</div>';
+      } else {
+        tuttiAtleti.forEach(function(atleta) {
+          var flagColor = '#16a34a';
+          var flagEmoji = '🟢';
+          var flagText = 'Valido';
+          
+          if (atleta.scadenza) {
+            var scadDate = parseDateFromFirestore(atleta.scadenza);  // v4.34: usa parser
+            var oggi = new Date();
+            oggi.setHours(0, 0, 0, 0);
+            scadDate.setHours(0, 0, 0, 0);
+            var diffMs = scadDate - oggi;
+            var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+              flagColor = '#dc2626';
+              flagEmoji = '🔴';
+              flagText = 'Scaduto';
+            } else if (diffDays <= 30) {
+              flagColor = '#FFC000';
+              flagEmoji = '🟡';
+              flagText = 'Scade in ' + diffDays + 'gg';
+            } else {
+              flagColor = '#16a34a';
+              flagEmoji = '🟢';
+              flagText = 'Valido';
+            }
+          }
+          
+          html += '<div class="user-item">';
+          html += '<div class="user-info">';
+          html += '<div class="user-name">';
+          html += atleta.nome + ' ' + atleta.cognome;
+          html += ' <span style="font-size:14px;margin-left:8px">' + flagEmoji + '</span>';
+          html += '</div>';
+          html += '<div class="user-meta">';
+          html += 'Categoria: <strong>' + (CAT_LABELS[atleta.categoria] || atleta.categoria) + '</strong> • ';
+          html += 'Genitore: ' + atleta.genitore + ' • ';
+          html += '<span style="color:' + flagColor + ';font-weight:600">' + flagText + '</span>';
+          if (atleta.scadenza) {
+            html += ' (' + atleta.scadenza + ')';
+          }
+          html += '</div>';
+          html += '</div>';
+          html += '<div class="user-actions">';
+          html += '<button class="btn-primary" onclick="editScadenzaAtleta(\'' + atleta.genitoreUid + '\', ' + atleta.atleteIndex + ', \'' + atleta.nome + '\', \'' + atleta.cognome + '\')">Scadenza</button>';
+          html += '</div>';
+          html += '</div>';
+        });
+      }
+      
+      document.getElementById('admin-content').innerHTML = html;
+    }
+
+    function loadAllennatoriAdmin() {
+      var allenatori = allUsers.filter(function(u) { 
+        return u.role === 'allenatore' && u.status === 'approved'; 
+      });
+      
+      var html = '<h2>🏋️ Allenatori (' + allenatori.length + ')</h2>';
+      
+      if (allenatori.length === 0) {
+        html += '<div style="padding:20px;text-align:center;color:var(--text-sec)">Nessun allenatore approvato</div>';
+      } else {
+        allenatori.forEach(function(user) {
+          // FIX v4.28: Null checks per profileData
+          var nome = (user.profileData && user.profileData.nome) ? user.profileData.nome : '[Nome non disponibile]';
+          var cognome = (user.profileData && user.profileData.cognome) ? user.profileData.cognome : '';
+          var catList = user.allenatore_categories && user.allenatore_categories.length > 0 ? user.allenatore_categories.map(function(c) { return CAT_LABELS[c] || c; }).join(', ') : 'Nessuna';
+          
+          html += '<div class="user-item">';
+          html += '<div class="user-info">';
+          html += '<div class="user-name">' + nome + ' ' + cognome + '</div>';
+          html += '<div class="user-meta">' + user.email + ' • Categorie: ' + catList + '</div>';
+          html += '</div>';
+          html += '<div class="user-actions">';
+          html += '<button class="btn-primary" onclick="editUser(\'' + user.uid + '\')">Modifica</button>';
+          html += '</div>';
+          html += '</div>';
+        });
+      }
+      
+      document.getElementById('admin-content').innerHTML = html;
+    }
+
+    function showRegistraAllenatore() {
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Registra Nuovo Allenatore</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Nome</label>';
+      html += '<input type="text" id="reg-nome" placeholder="Nome">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Cognome</label>';
+      html += '<input type="text" id="reg-cognome" placeholder="Cognome">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Email</label>';
+      html += '<input type="email" id="reg-email" placeholder="email@example.com">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Password</label>';
+      html += '<input type="password" id="reg-password" placeholder="Almeno 6 caratteri">';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Categorie Allenatore</label>';
+      html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">';
+      
+      ALL_CATEGORIES.forEach(function(cat) {
+        html += '<label style="display:flex;align-items:center;margin-bottom:0">';
+        html += '<input type="checkbox" id="cat-' + cat + '"> ';
+        html += '<span style="margin-left:6px">' + (CAT_LABELS[cat] || cat) + '</span>';
+        html += '</label>';
+      });
+      
+      html += '</div>';
+      html += '</div>';
+      
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveRegistraAllenatore()" style="flex:1">Registra</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    function saveRegistraAllenatore() {
+      var nome = document.getElementById('reg-nome').value.trim();
+      var cognome = document.getElementById('reg-cognome').value.trim();
+      var email = document.getElementById('reg-email').value.trim();
+      var password = document.getElementById('reg-password').value;
+      var categories = [];
+      
+      ALL_CATEGORIES.forEach(function(cat) {
+        if (document.getElementById('cat-' + cat).checked) {
+          categories.push(cat);
+        }
+      });
+      
+      if (!nome || !cognome || !email || !password) {
+        alert('Compila tutti i campi');
+        return;
+      }
+      
+      if (password.length < 6) {
+        alert('Password deve avere almeno 6 caratteri');
+        return;
+      }
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(function(result) {
+          var uid = result.user.uid;
+          var userData = {
+            uid: uid,
+            email: email,
+            role: 'allenatore',
+            status: 'approved',
+            profileData: { nome: nome, cognome: cognome },
+            allenatore_categories: categories,
+            createdAt: firebase.firestore.Timestamp.now()
+          };
+          
+          return db.collection('users').doc(uid).set(userData).then(function() {
+            return { uid: uid };
+          });
+        })
+        .then(function(result) {
+          alert('Allenatore registrato e approvato!');
+          closeModal();
+          
+          // RE-LOGIN ADMIN (v4.10 fix!)
+          loadAdminStats();
+          showAdminDashboard();
+        })
+        .catch(function(error) {
+          alert('Errore: ' + error.message);
+        });
+    }
+
+    function editUser(uid) {
+      var user = allUsers.find(function(u) { return u.uid === uid; });
+      if (!user) return;
+      
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Modifica ' + (user.profileData ? user.profileData.nome : 'Utente') + '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Email</label>';
+      html += '<div style="padding:8px;background:var(--bg-secondary);border-radius:8px;color:var(--text-sec)">' + user.email + '</div>';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Ruolo</label>';
+      html += '<select id="edit-role">';
+      html += '<option value="atleta" ' + (user.role === 'atleta' ? 'selected' : '') + '>Atleta</option>';
+      html += '<option value="allenatore" ' + (user.role === 'allenatore' ? 'selected' : '') + '>Allenatore</option>';
+      html += '<option value="admin" ' + (user.role === 'admin' ? 'selected' : '') + '>Admin</option>';
+      html += '</select>';
+      html += '</div>';
+      
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Status</label>';
+      html += '<select id="edit-status">';
+      html += '<option value="pending_approval" ' + (user.status === 'pending_approval' ? 'selected' : '') + '>In attesa</option>';
+      html += '<option value="approved" ' + (user.status === 'approved' ? 'selected' : '') + '>Approvato</option>';
+      html += '</select>';
+      html += '</div>';
+      
+      if (user.role === 'allenatore') {
+        html += '<div class="form-group">';
+        html += '<label class="form-label">Categorie Allenatore</label>';
+        html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">';
+        
+        var selectedCats = user.allenatore_categories || [];
+        ALL_CATEGORIES.forEach(function(cat) {
+          var isChecked = selectedCats.indexOf(cat) >= 0;
+          html += '<label style="display:flex;align-items:center;margin-bottom:0">';
+          html += '<input type="checkbox" id="cat-' + cat + '" ' + (isChecked ? 'checked' : '') + '> ';
+          html += '<span style="margin-left:6px">' + (CAT_LABELS[cat] || cat) + '</span>';
+          html += '</label>';
+        });
+        
+        html += '</div>';
+        html += '</div>';
+      }
+      
+      html += '<div style="display:flex;gap:12px;margin-bottom:16px">';
+      html += '<button class="btn-secondary" onclick="sendPasswordResetEmail(\'' + user.email + '\')" style="flex:1;background:#FF9800;color:white">🔑 Invia Reset Password</button>';
+      html += '</div>';
+      
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveUserEdit(\'' + uid + '\')" style="flex:1">Salva</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    // FIX v4.29: Invia email di reset password all'utente
+    function sendPasswordResetEmail(email) {
+      auth.sendPasswordResetEmail(email)
+        .then(function() {
+          alert('✅ Email di reset password inviata a: ' + email + '\n\nL\'utente potrà cliccare il link nell\'email per scegliere una nuova password.');
+          closeModal();
+        })
+        .catch(function(error) {
+          alert('❌ Errore nell\'invio: ' + error.message);
+        });
+    }
+
+    function saveUserEdit(uid) {
+      var role = document.getElementById('edit-role').value;
+      var status = document.getElementById('edit-status').value;
+      var categories = [];
+      
+      if (role === 'allenatore') {
+        ALL_CATEGORIES.forEach(function(cat) {
+          if (document.getElementById('cat-' + cat).checked) {
+            categories.push(cat);
+          }
+        });
+      }
+      
+      var updateData = {
+        role: role,
+        status: status
+      };
+      
+      if (role === 'allenatore') {
+        updateData.allenatore_categories = categories;
+      }
+      
+      db.collection('users').doc(uid).update(updateData)
+        .then(function() {
+          alert('Utente aggiornato!');
+          closeModal();
+          loadAdminStats();
+          loadUtenti();
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
+    function editScadenzaAtleta(genitoreUid, atleteIndex, nome, cognome) {
+      var user = allUsers.find(function(u) { return u.uid === genitoreUid; });
+      if (!user || !user.atleti || !user.atleti[atleteIndex]) return;
+      
+      var atleta = user.atleti[atleteIndex];
+      var scadenzaValue = atleta.scadenza || '';
+      
+      var html = '<div class="modal-overlay">';
+      html += '<div class="modal">';
+      html += '<button class="modal-close" onclick="closeModal()">✕</button>';
+      html += '<div class="modal-header">Scadenza Certificato</div>';
+      html += '<div style="margin-bottom:16px">';
+      html += '<strong>' + nome + ' ' + cognome + '</strong>';
+      html += '</div>';
+      html += '<div class="form-group">';
+      html += '<label class="form-label">Data Scadenza (YYYY-MM-DD)</label>';
+      html += '<input type="date" id="scad-date" value="' + scadenzaValue + '">';
+      html += '</div>';
+      html += '<div style="display:flex;gap:12px">';
+      html += '<button class="btn-secondary" onclick="closeModal()" style="flex:1">Annulla</button>';
+      html += '<button class="btn-primary" onclick="saveScadenzaAtleta(\'' + genitoreUid + '\', ' + atleteIndex + ')" style="flex:1">Salva</button>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      document.getElementById('app').insertAdjacentHTML('beforeend', html);
+    }
+
+    function saveScadenzaAtleta(genitoreUid, atleteIndex) {
+      var scadDate = document.getElementById('scad-date').value;
+      
+      var user = allUsers.find(function(u) { return u.uid === genitoreUid; });
+      if (!user) return;
+      
+      var atleti = user.atleti || [];
+      if (atleti[atleteIndex]) {
+        atleti[atleteIndex].scadenza = scadDate;
+      }
+      
+      db.collection('users').doc(genitoreUid).update({
+        atleti: atleti
+      })
+        .then(function() {
+          alert('Scadenza aggiornata!');
+          closeModal();
+          loadAdminStats();
+          loadAtletiAdmin();
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
+    function approveUser(uid) {
+      db.collection('users').doc(uid).update({
+        status: 'approved'
+      })
+        .then(function() {
+          alert('Utente approvato!');
+          loadAdminStats();
+          loadApprovazioni();
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
+    function rejectUser(uid) {
+      if (!confirm('Sei sicuro di voler rifiutare questo utente?')) return;
+      
+      db.collection('users').doc(uid).delete()
+        .then(function() {
+          alert('Utente rifiutato e cancellato!');
+          loadAdminStats();
+          loadApprovazioni();
+        })
+        .catch(function(err) {
+          alert('Errore: ' + err.message);
+        });
+    }
+
+    // v4.32: Scroll al primo allenamento da oggi
+    function scrollToPrimoAllenamento(container) {
+      var oggi = new Date();
+      oggi.setHours(0, 0, 0, 0);
+      
+      var allEventDivs = container.querySelectorAll('[style*="margin-bottom"]');
+      
+      allEventDivs.forEach(function(div) {
+        var text = div.textContent;
+        // Estrai la data dal testo (es: "lunedì, 20 set")
+        var dateMatch = text.match(/(\d{1,2})\s+(gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic)/i);
+        
+        if (dateMatch) {
+          var dayNum = parseInt(dateMatch[1]);
+          var monthStr = dateMatch[2].toLowerCase();
+          var mesiMap = { 'gen': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'mag': 4, 'giu': 5, 'lug': 6, 'ago': 7, 'set': 8, 'ott': 9, 'nov': 10, 'dic': 11 };
+          var monthNum = mesiMap[monthStr];
+          
+          if (monthNum !== undefined) {
+            var eventDate = new Date(2026, monthNum, dayNum);
+            eventDate.setHours(0, 0, 0, 0);
+            
+            // Se è il primo evento >= oggi, marca e scroll
+            if (eventDate >= oggi && !container._scrolledToFuture) {
+              container._scrolledToFuture = true;
+              div.style.background = 'linear-gradient(to right, rgba(59, 130, 246, 0.1), transparent)';
+              div.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+        }
+      });
+    }
+
+    async function downloadFileFromGoogleDrive(fileId) {
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Download failed');
+        return await response.arrayBuffer();
+      } catch (err) {
+        console.error('Error downloading from Google Drive:', err);
+        return null;
+      }
+    }
+
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        currentUser = user;
+        loadUserData();
+      } else {
+        showLogin();
+      }
+    });
+  </script>
+</body>
+</html>
