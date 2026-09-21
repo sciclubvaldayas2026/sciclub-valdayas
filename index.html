@@ -1478,6 +1478,9 @@
     function renderAllenatoreLista(categoria) {
       // v4.36.3 FIX: Use lowercase for consistent key lookup
       var catKey = (categoria || '').toString().toLowerCase();
+      console.log('🏋️ renderAllenatoreLista ENTRY - categoria:', categoria, '-> catKey:', catKey);
+      console.log('📊 All calendarioAttivita keys:', Object.keys(calendarioAttivita));
+      console.log('📊 Data for catKey "' + catKey + '":', calendarioAttivita[catKey]);
       console.log('🏋️ renderAllenatoreLista called with categoria:', categoria, '-> normalized to:', catKey);
       console.log('📊 calendarioAttivita keys:', Object.keys(calendarioAttivita));
       var attivita = calendarioAttivita[catKey] || {};
