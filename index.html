@@ -788,8 +788,8 @@
               return;
             }
             
-            var isAtleta = currentUserData.role === 'atleta';
-            var isAllenatore = currentUserData.role === 'allenatore';
+            var isAtleta = currentUserData.role === 'atleta' || currentUserData.role === 'both';
+            var isAllenatore = currentUserData.role === 'allenatore' || currentUserData.role === 'both';
             var isAdmin = currentUserData.role === 'admin';
             
             if (isAdmin) {
