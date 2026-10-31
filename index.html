@@ -936,14 +936,15 @@
             var dateCell = row[0];
             if (!dateCell) continue;
 
-            // Converti da formato Excel datetime a DD/MM/YYYY
-            var dateStr = excelDateToDD_MM_YYYY(dateCell);
-            if (!dateStr) {
+            // Converti da formato Excel datetime a ISO YYYY-MM-DD (per calendarioAttivita key) e DD/MM/YYYY (per visualizzazione)
+            var dateStrISO = excelDateToISO_YYYY_MM_DD(dateCell);
+            var dateStrDisplay = excelDateToDD_MM_YYYY(dateCell);
+            if (!dateStrISO || !dateStrDisplay) {
               console.warn(`⚠️  Riga ${rowIdx + 1}: Data non valida "${dateCell}"`);
               continue;
             }
 
-            console.log(`\n📅 Riga ${rowIdx + 1}: Data = ${dateStr}`);
+            console.log(`\n📅 Riga ${rowIdx + 1}: Data = ${dateStrDisplay} (ISO: ${dateStrISO})`);
 
             // Per ogni categoria (colonne B+)
             for (var colIdx in categoryMap) {
@@ -970,19 +971,19 @@
                   color = '#8B5CF6'; // Viola
                 }
 
-                // Aggiungi all'attività
-                if (!calendarioAttivita[catKey][dateStr]) {
-                  calendarioAttivita[catKey][dateStr] = [];
+                // Aggiungi all'attività (usa dateStrISO come chiave)
+                if (!calendarioAttivita[catKey][dateStrISO]) {
+                  calendarioAttivita[catKey][dateStrISO] = [];
                 }
 
                 // Verifica duplicati
-                var alreadyExists = calendarioAttivita[catKey][dateStr].some(function(existing) {
+                var alreadyExists = calendarioAttivita[catKey][dateStrISO].some(function(existing) {
                   return existing.title === activityCell && existing.type === activityType;
                 });
 
                 if (!alreadyExists) {
-                  calendarioAttivita[catKey][dateStr].push({
-                    date: dateStr,
+                  calendarioAttivita[catKey][dateStrISO].push({
+                    date: dateStrDisplay,
                     title: activityCell,
                     type: activityType,
                     color: color
@@ -1045,6 +1046,43 @@
       var year = jsDate.getFullYear();
 
       return `${day}/${month}/${year}`;
+    }
+
+    // v4.36.4: Converte data Excel a formato ISO YYYY-MM-DD (per parsing corretto di JavaScript)
+    function excelDateToISO_YYYY_MM_DD(excelDate) {
+      if (!excelDate) return null;
+
+      var jsDate;
+
+      // Se è un numero (formato Excel)
+      if (typeof excelDate === 'number') {
+        const excelEpoch = new Date(1899, 11, 31);
+        const MS_PER_DAY = 86400 * 1000;
+        jsDate = new Date(excelEpoch.getTime() + excelDate * MS_PER_DAY);
+      }
+      // Se è una stringa con data (formato ISO o datetime)
+      else if (typeof excelDate === 'string') {
+        jsDate = new Date(excelDate);
+        if (isNaN(jsDate.getTime())) {
+          console.warn(`⚠️  Non riesco a parsare: "${excelDate}"`);
+          return null;
+        }
+      }
+      else {
+        return null;
+      }
+
+      // Verifica validità
+      if (isNaN(jsDate.getTime())) {
+        return null;
+      }
+
+      // Formato ISO YYYY-MM-DD
+      var year = jsDate.getFullYear();
+      var month = String(jsDate.getMonth() + 1).padStart(2, '0');
+      var day = String(jsDate.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
     }
 
     function loadMessaggiPerCategoria(categoria, callback) {
