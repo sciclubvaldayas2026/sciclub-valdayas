@@ -439,12 +439,15 @@
     }
 
     const PROGRAMMA_FILE_ID = '17112nlUQ8o2phkyAhs4S4S_QxzUxZwHJ';
+    // v4.36.4: FILE_ID del nuovo PROGRAMMA_INVERNALE_26-27-pars.xlsx (format semplificato: date x categorie)
+    const PROGRAMMA_CALENDARIO_FILE_ID = '1uUsCYUODh7VPLw1zCbcenqtvxbwsvCZt';
     // v4.36.1: FILE_ID del file CONTATTI_ATLETI_26-27_v2.xlsx (RIEMPITO - Alessandro 20/9/2026)
     const CONTATTI_FILE_ID = '1yWVI1OEiihfauDN3eF8VhyCpkURmOnTd';
     
     var calendarioAttivita = {};
     var calendarioMessaggi = {};
     var categoriaSel = null;
+    var calendarExcelSimplifiedLoaded = false; // v4.36.4: Flag per tracciare se il calendario semplificato è stato caricato
     var selectedActivityForMessage = null;
 
     // ============ BREVO EMAIL CONFIG (v4.30) ============
@@ -855,179 +858,193 @@
     }
 
     // ============ ATLETA DASHBOARD ============
+    // v4.36.4: Simplified loading - loads from new Excel format with dates x categories
     function loadAttivitaPerCategoria(categoria, callback) {
-      // v4.36.3: Normalize categoria from any format (sbaby → superbaby)
+      // Normalize categoria from any format (sbaby → superbaby)
       var normalizedCategoria = normalizeCategory(categoria) || categoria;
       var catKey = (normalizedCategoria || '').toString().toLowerCase();
       console.log('📅 loadAttivitaPerCategoria called with categoria:', categoria, '-> normalized to:', catKey);
 
-      downloadFileFromGoogleDrive(PROGRAMMA_FILE_ID).then(function(arrayBuffer) {
-        var data = new Uint8Array(arrayBuffer);
-        var workbook = XLSX.read(data, { type: 'array' });
-        var sheet = workbook.Sheets[workbook.SheetNames[0]];
-        var allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      // v4.36.4: Check if we've already loaded from the simplified Excel file
+      if (!calendarExcelSimplifiedLoaded) {
+        console.log('📅 Loading calendar from simplified Excel for the first time...');
+        loadCalendarAttivitaFromExcelSimplified(function() {
+          calendarExcelSimplifiedLoaded = true;
+          console.log('📅 Simplified calendar loaded. Data ready for', catKey);
+          if (callback) callback();
+        });
+      } else {
+        console.log('📅 Calendar already loaded. Using cached data for', catKey);
+        if (callback) callback();
+      }
+    }
 
-        // v4.36.3: Find month row (contains month names)
-        var monthRow = null;
-        var monthRowIdx = 0;
-        for (var i = 0; i < Math.min(5, allRows.length); i++) {
-          var row = allRows[i] || [];
-          var monthCount = 0;
-          for (var j = 0; j < row.length; j++) {
-            var cell = (row[j] || '').toString().trim().toUpperCase();
-            if (['GENNAIO', 'FEBBRAIO', 'MARZO', 'APRILE', 'MAGGIO', 'GIUGNO', 'LUGLIO', 'AGOSTO', 'SETTEMBRE', 'OTTOBRE', 'NOVEMBRE', 'DICEMBRE'].includes(cell)) {
-              monthCount++;
+    // ============ NUOVO PARSING - CALENDARIO SEMPLIFICATO (v4.36.4) ============
+    // Carica attività da Excel con struttura semplificata: righe=date, colonne=categorie
+    function loadCalendarAttivitaFromExcelSimplified(callback) {
+      console.log('📅 NUOVO PARSING: Caricamento calendario da Excel semplificato...');
+
+      downloadFileFromGoogleDrive(PROGRAMMA_CALENDARIO_FILE_ID).then(function(arrayBuffer) {
+        try {
+          var data = new Uint8Array(arrayBuffer);
+          var workbook = XLSX.read(data, { type: 'array' });
+          var ws = workbook.Sheets[workbook.SheetNames[0]];
+
+          console.log('✅ File caricato:', workbook.SheetNames[0]);
+
+          // Leggi tutte le righe
+          var allRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+          if (allRows.length < 2) {
+            console.error('❌ File vuoto o invalido');
+            if (callback) callback();
+            return;
+          }
+
+          // Riga 1 (indice 0): Intestazioni (DATA, S.BABY, BABY, CUCCIOLI, ecc.)
+          var headers = allRows[0];
+
+          console.log('📊 Intestazioni trovate:', headers);
+
+          // Mappa categoria (colonna) → categoria normalizzata
+          var categoryMap = {}; // { colIndex: 'category_key' }
+          for (var colIdx = 1; colIdx < headers.length; colIdx++) {
+            var catHeader = (headers[colIdx] || '').toString().trim();
+            if (catHeader && catHeader !== '-') {
+              var normalizedCat = normalizeCategory(catHeader);
+              categoryMap[colIdx] = normalizedCat;
+              console.log(`  📌 Colonna ${colIdx}: "${catHeader}" → "${normalizedCat}"`);
             }
           }
-          if (monthCount > 2) {
-            monthRow = row;
-            monthRowIdx = i;
-            break;
-          }
-        }
 
-        if (!monthRow) {
-          monthRow = allRows[0] || [];
-        }
-
-        // v4.36.3: Find category row by searching for known categories (BABY, CUCCIOLI, RAGAZZI, etc.)
-        var categoryRow = null;
-        var categoryRowIdx = -1;
-        for (var i = monthRowIdx + 1; i < Math.min(monthRowIdx + 10, allRows.length); i++) {
-          var row = allRows[i] || [];
-          var categoryCount = 0;
-          for (var j = 0; j < row.length; j++) {
-            var cell = (row[j] || '').toString().trim().toUpperCase();
-            if (['BABY', 'CUCCIOLI', 'RAGAZZI', 'ALLIEVI', 'GIOVANI', 'SUPERBABY', 'MASTER', 'FISI'].includes(cell) ||
-                cell.includes('BABY') || cell.includes('CUCCIOLI') || cell.includes('RAGAZZI')) {
-              categoryCount++;
-            }
-          }
-          if (categoryCount >= 3) {  // Found a row with multiple categories
-            categoryRow = row;
-            categoryRowIdx = i;
-            break;
-          }
-        }
-
-        if (!categoryRow) {
-          categoryRow = allRows[monthRowIdx + 2] || allRows[2] || [];
-          categoryRowIdx = monthRowIdx + 2;
-        }
-
-        console.log('📅 PROGRAMMA - monthRowIdx:', monthRowIdx, 'categoryRowIdx:', categoryRowIdx, 'categoryRow found:', categoryRow.length, 'cells');
-
-        var months = [];
-        var currentMonth = null;
-        for (var colIdx = 0; colIdx < monthRow.length; colIdx++) {
-          var monthCell = (monthRow[colIdx] || '').toString().trim().toUpperCase();
-          if (monthCell && ['GENNAIO', 'FEBBRAIO', 'MARZO', 'APRILE', 'MAGGIO', 'GIUGNO', 'LUGLIO', 'AGOSTO', 'SETTEMBRE', 'OTTOBRE', 'NOVEMBRE', 'DICEMBRE'].includes(monthCell)) {
-            if (currentMonth) {
-              currentMonth.endCol = colIdx - 1;
-              months.push(currentMonth);
-            }
-            currentMonth = { name: monthCell, startCol: colIdx, endCol: colIdx };
-          }
-        }
-        if (currentMonth) {
-          currentMonth.endCol = monthRow.length - 1;
-          months.push(currentMonth);
-        }
-
-        if (!calendarioAttivita[catKey]) {
-          calendarioAttivita[catKey] = {};
-        }
-
-        console.log('📅 Initializing calendarioAttivita[' + catKey + ']');
-
-        months.forEach(function(monthData) {
-          var monthName = monthData.name.toLowerCase();
-          var monthNum = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'].indexOf(monthName) + 1;
-          var year = 2026;
-
-          var monthCategories = [];
-          for (var colIdx = monthData.startCol; colIdx <= monthData.endCol; colIdx++) {
-            var catCell = (categoryRow[colIdx] || '').toString().trim();
-            if (catCell) {
-              // v4.36.3: Normalize category name (handles abbreviations like CICLOLI → cuccioli)
-              var normalizedCat = normalizeCategory(catCell);
-              if (ALL_CATEGORIES.includes(normalizedCat)) {
-                monthCategories.push({ col: colIdx, name: normalizedCat.toUpperCase() });
-                console.log('📅 Found category:', catCell, '→', normalizedCat.toUpperCase());
+          // Inizializza calendarioAttivita per ogni categoria trovata
+          for (var catKey in categoryMap) {
+            if (categoryMap.hasOwnProperty(catKey)) {
+              var cat = categoryMap[catKey];
+              if (!calendarioAttivita[cat]) {
+                calendarioAttivita[cat] = {};
               }
             }
           }
 
-          console.log('📅 Month:', monthData.name, 'Categories found:', monthCategories.length, monthCategories);
-
-          for (var rowIdx = 10; rowIdx <= 40 && rowIdx < allRows.length; rowIdx++) {
+          // Righe 2+ (indice 1+): Dati
+          var activitiesCount = 0;
+          for (var rowIdx = 1; rowIdx < allRows.length; rowIdx++) {
             var row = allRows[rowIdx] || [];
-            var dayNumCell = (row[monthData.startCol] || '').toString().trim();
-            var dayNum = parseInt(dayNumCell);
-            if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) continue;
 
-            var dateStr = String(year) + '-' + String(monthNum).padStart(2, '0') + '-' + String(dayNum).padStart(2, '0');
+            // Colonna A (indice 0): Data
+            var dateCell = row[0];
+            if (!dateCell) continue;
 
-            monthCategories.forEach(function(catInfo) {
-              var activityCell = (row[catInfo.col] || '').toString().trim();
+            // Converti da formato Excel datetime a DD/MM/YYYY
+            var dateStr = excelDateToDD_MM_YYYY(dateCell);
+            if (!dateStr) {
+              console.warn(`⚠️  Riga ${rowIdx + 1}: Data non valida "${dateCell}"`);
+              continue;
+            }
 
-              // v4.36.3 FIX: Normalizza categoria a MAIUSCOLO (allenatore invia minuscolo)
-              // Debug: log category matching
-              if (activityCell && activityCell.length > 0 && activityCell !== 'R') {
-                if (rowIdx === 10) {
-                  console.log('🔍 Checking activity:', activityCell, 'for category:', categoria, 'vs catInfo.name:', catInfo.name);
-                }
-              }
+            console.log(`\n📅 Riga ${rowIdx + 1}: Data = ${dateStr}`);
 
-              if (activityCell && activityCell.length > 0 && activityCell !== 'R' && catInfo.name === normalizedCategoria.toUpperCase()) {
+            // Per ogni categoria (colonne B+)
+            for (var colIdx in categoryMap) {
+              if (!categoryMap.hasOwnProperty(colIdx)) continue;
+
+              var catKey = categoryMap[colIdx];
+              var activityCell = (row[parseInt(colIdx)] || '').toString().trim();
+
+              if (activityCell && activityCell !== '-' && activityCell.length > 0) {
+                // Determina il tipo di attività e il colore
                 var activityType = 'sci';
-                var color = '#FFC000';
+                var color = '#FFC000'; // Giallo default
 
                 var cellUpper = activityCell.toUpperCase();
-                if (cellUpper.includes('ATLETICA')) {
-                  activityType = 'atletica';
-                  color = '#00B050';
-                } else if (cellUpper.includes('ACROBATICA') || cellUpper.includes('CAMPUS')) {
-                  activityType = 'acrobatica';
-                  color = '#00B0F0';
-                } else if (cellUpper.includes('MULTISPORT')) {
-                  activityType = 'multisport';
-                  color = '#FF7F00';
+                if (cellUpper.includes('MATTINA')) {
+                  color = '#0066CC'; // Blu
+                } else if (cellUpper.includes('POMERIGGIO')) {
+                  color = '#FF9900'; // Arancione
+                } else if (cellUpper.includes('GIORNATA')) {
+                  color = '#16A34A'; // Verde
+                } else if (cellUpper.includes('GARA') || cellUpper.includes('SPEED CAMP') || cellUpper.includes('TOP 50')) {
+                  color = '#DC2626'; // Rosso
+                } else if (cellUpper.includes('NATALE') || cellUpper.includes('AYAS PV')) {
+                  color = '#8B5CF6'; // Viola
                 }
 
+                // Aggiungi all'attività
                 if (!calendarioAttivita[catKey][dateStr]) {
                   calendarioAttivita[catKey][dateStr] = [];
                 }
 
+                // Verifica duplicati
                 var alreadyExists = calendarioAttivita[catKey][dateStr].some(function(existing) {
                   return existing.title === activityCell && existing.type === activityType;
                 });
 
                 if (!alreadyExists) {
-                  console.log('✅ Activity loaded:', activityCell, 'on', dateStr, 'for catKey:', catKey);
                   calendarioAttivita[catKey][dateStr].push({
                     date: dateStr,
                     title: activityCell,
                     type: activityType,
                     color: color
                   });
+                  activitiesCount++;
+                  console.log(`  ✅ ${catKey}: ${activityCell} (${color})`);
                 }
               }
-            });
+            }
           }
-        });
 
-        console.log('📅 Final calendarioAttivita for', catKey, ':', calendarioAttivita[catKey]);
-        console.log('📅 Total activities stored:', Object.keys(calendarioAttivita[catKey]).length, 'dates');
-        console.log('📅 ALL calendarioAttivita keys after load:', Object.keys(calendarioAttivita));
-        if (callback) {
-          console.log('📅 Calling callback for catKey:', catKey);
-          callback();
+          console.log(`\n✅ PARSING COMPLETATO: ${activitiesCount} attività caricate`);
+          console.log('📅 calendarioAttivita:', calendarioAttivita);
+
+          if (callback) callback();
+
+        } catch (error) {
+          console.error('❌ Errore parsing:', error);
+          if (callback) callback();
         }
       }).catch(function(err) {
-        console.error('Errore caricamento attività:', err);
+        console.error('❌ Errore download file:', err);
         if (callback) callback();
       });
+    }
+
+    // Helper: Converti Excel date (numero o string) a DD/MM/YYYY
+    function excelDateToDD_MM_YYYY(excelDate) {
+      if (!excelDate) return null;
+
+      var jsDate;
+
+      // Se è un numero (formato Excel)
+      if (typeof excelDate === 'number') {
+        const excelEpoch = new Date(1899, 11, 31);
+        const MS_PER_DAY = 86400 * 1000;
+        jsDate = new Date(excelEpoch.getTime() + excelDate * MS_PER_DAY);
+      }
+      // Se è una stringa con data (formato ISO o datetime)
+      else if (typeof excelDate === 'string') {
+        // Prova a parsare come data ISO o datetime
+        jsDate = new Date(excelDate);
+        if (isNaN(jsDate.getTime())) {
+          console.warn(`⚠️  Non riesco a parsare: "${excelDate}"`);
+          return null;
+        }
+      }
+      else {
+        return null;
+      }
+
+      // Verifica validità
+      if (isNaN(jsDate.getTime())) {
+        return null;
+      }
+
+      // Formato DD/MM/YYYY
+      var day = String(jsDate.getDate()).padStart(2, '0');
+      var month = String(jsDate.getMonth() + 1).padStart(2, '0');
+      var year = jsDate.getFullYear();
+
+      return `${day}/${month}/${year}`;
     }
 
     function loadMessaggiPerCategoria(categoria, callback) {
@@ -1043,7 +1060,8 @@
         calendarioMessaggi[catKey] = {};  // Svuota prima di ricaricare
       }
 
-      db.collection('eventMessages').doc(categoria).collection('messages').get().then(function(snap) {
+      // v4.36.3 FIX: Use normalized categoria as Firestore doc key to ensure consistency
+      db.collection('eventMessages').doc(normalizedCategoria).collection('messages').get().then(function(snap) {
         snap.docs.forEach(function(doc) {
           var data = doc.data();
           var dateStr = data.data || data.dateString || '';
@@ -1786,17 +1804,21 @@
 
     function saveMessage() {
       if (!selectedActivityForMessage) return;
-      
+
       var messageText = document.getElementById('message-text').value.trim();
       if (!messageText) {
         alert('Scrivi un messaggio');
         return;
       }
-      
+
       var categoria = selectedActivityForMessage.categoria;
       var dateStr = selectedActivityForMessage.dateStr;
-      
-      db.collection('eventMessages').doc(categoria).collection('messages').add({
+
+      // v4.36.3 FIX: Use normalized categoria as Firestore doc key to ensure consistency with loadMessaggiPerCategoria
+      var normalizedCategoria = normalizeCategory(categoria) || categoria;
+      console.log('💾 saveMessage: categoria:', categoria, '-> normalized to:', normalizedCategoria);
+
+      db.collection('eventMessages').doc(normalizedCategoria).collection('messages').add({
         data: dateStr,
         category: categoria,
         authorName: currentUserData.profileData.nome,
@@ -1835,13 +1857,16 @@
 
     function saveEditMessage(msgId, categoria) {
       var newText = document.getElementById('edit-msg-text').value.trim();
-      
+
       if (!newText) {
         alert('Scrivi un messaggio');
         return;
       }
-      
-      db.collection('eventMessages').doc(categoria).collection('messages').doc(msgId).update({
+
+      // v4.36.3 FIX: Use normalized categoria as Firestore doc key
+      var normalizedCategoria = normalizeCategory(categoria) || categoria;
+
+      db.collection('eventMessages').doc(normalizedCategoria).collection('messages').doc(msgId).update({
         text: newText,
         updatedAt: firebase.firestore.Timestamp.now()
       })
@@ -1857,8 +1882,11 @@
 
     function deleteMessage(msgId, categoria) {
       if (!confirm('Sei sicuro di voler cancellare questo messaggio?')) return;
-      
-      db.collection('eventMessages').doc(categoria).collection('messages').doc(msgId).delete()
+
+      // v4.36.3 FIX: Use normalized categoria as Firestore doc key
+      var normalizedCategoria = normalizeCategory(categoria) || categoria;
+
+      db.collection('eventMessages').doc(normalizedCategoria).collection('messages').doc(msgId).delete()
         .then(function() {
           alert('Messaggio cancellato! 🗑️');
           loadAttivitaAllenatore(categoria);
