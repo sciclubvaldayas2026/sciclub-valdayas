@@ -954,21 +954,25 @@
               var activityCell = (row[parseInt(colIdx)] || '').toString().trim();
 
               if (activityCell && activityCell !== '-' && activityCell.length > 0) {
+                // 🔍 FILTER: Skip NATALE and CAPODANNO - no training scheduled on these dates
+                var cellUpper = activityCell.toUpperCase();
+                if (cellUpper.includes('NATALE') || cellUpper.includes('CAPODANNO')) {
+                  console.log(`  ⏭️  Skipping ${catKey}: ${activityCell} (no training on holiday)`);
+                  continue;
+                }
+
                 // Determina il tipo di attività e il colore
                 var activityType = 'sci';
                 var color = '#FFC000'; // Giallo default
 
-                var cellUpper = activityCell.toUpperCase();
                 if (cellUpper.includes('MATTINA')) {
-                  color = '#0066CC'; // Blu
+                  color = '#FFC000'; // Giallo per MATTINA
                 } else if (cellUpper.includes('POMERIGGIO')) {
-                  color = '#FF9900'; // Arancione
+                  color = '#0066CC'; // Blu per POMERIGGIO
                 } else if (cellUpper.includes('GIORNATA')) {
-                  color = '#16A34A'; // Verde
-                } else if (cellUpper.includes('GARA') || cellUpper.includes('SPEED CAMP') || cellUpper.includes('TOP 50')) {
-                  color = '#DC2626'; // Rosso
-                } else if (cellUpper.includes('NATALE') || cellUpper.includes('AYAS PV')) {
-                  color = '#8B5CF6'; // Viola
+                  color = '#16A34A'; // Verde per GIORNATA
+                } else if (cellUpper.includes('GARA') || cellUpper.includes('SPEED CAMP') || cellUpper.includes('TOP 50') || cellUpper.includes('AYAS PV')) {
+                  color = '#DC2626'; // Rosso per GARA/SPEED CAMP/TOP 50/AYAS PV
                 }
 
                 // Aggiungi all'attività (usa dateStrISO come chiave)
@@ -1255,86 +1259,74 @@
         return '<div style="padding:40px 20px;text-align:center;color:var(--text-sec)">Nessuna attività per questa categoria</div>';
       }
       
-      // RAGGRUPPAMENTO TRASFERTE (v4.14)
-      var dateGroups = groupEventsByTrasferta(sortedDates);
-      
+      // v4.36.5: Render activities directly without trasferta grouping, with prominent color bands
       var html = '<div style="padding:12px">';
-      
-      dateGroups.forEach(function(dateGroup) {
-        var trasfertaHeader = getTrasfertaHeader(dateGroup);
-        
-        // Se è una trasferta, mostra intestazione
-        if (trasfertaHeader) {
-          html += '<div style="margin-top:24px;margin-bottom:12px;padding:12px;background:linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);border-radius:8px;color:white;font-weight:600;font-size:14px">';
-          html += trasfertaHeader;
-          html += '</div>';
+
+      sortedDates.forEach(function(dateStr, dateIdx) {
+        var d = new Date(dateStr + 'T00:00:00');
+        var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+        var dayName = giorniNomi[d.getDay()];
+        var dayNum = d.getDate();
+        var monthNum = d.getMonth() + 1;
+        var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+        var monthName = mesiNomi[d.getMonth()];
+
+        var items = allDates[dateStr];
+
+        html += '<div style="margin-bottom:16px;margin-top:12px">';
+
+        // ATTIVITÀ (v4.36.5: With prominent color bands)
+        if (items.attivita && items.attivita.length > 0) {
+          items.attivita.forEach(function(act, idx) {
+            // Get color band width (40px for prominent display)
+            var colorBandWidth = '6px';
+
+            // Create prominent color band styling
+            var colorBandStyle = 'background:linear-gradient(90deg, ' + act.color + ' 0%, ' + act.color + ' 100%);width:' + colorBandWidth + ';min-height:100%;';
+
+            html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px;display:flex">';
+
+            // PROMINENT COLOR BAND (left side)
+            html += '<div style="' + colorBandStyle + '"></div>';
+
+            // CONTENT
+            html += '<div style="padding:12px;flex:1;display:flex;justify-content:space-between;align-items:center">';
+            html += '<div>';
+            html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize;margin-bottom:4px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
+            html += '<div style="font-size:12px;color:var(--text);font-weight:500">' + act.title + '</div>';
+            html += '</div>';
+            html += '</div>';
+
+            html += '</div>';
+          });
         }
-        
-        // Render tutti i giorni nel gruppo
-        dateGroup.forEach(function(dateStr, dayIdx) {
-          var d = new Date(dateStr + 'T00:00:00');
-          var giorniNomi = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-          var dayName = giorniNomi[d.getDay()];
-          var dayNum = d.getDate();
-          var monthNum = d.getMonth() + 1;
-          var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
-          var monthName = mesiNomi[d.getMonth()];
-          
-          var items = allDates[dateStr];
-          
-          // Meno margin se è parte di una trasferta
-          var marginTop = trasfertaHeader ? (dayIdx === 0 ? '8px' : '0px') : '12px';
-          var marginBottom = trasfertaHeader ? '0px' : '16px';
-          
-          html += '<div style="margin-bottom:' + marginBottom + ';margin-top:' + marginTop + '">';
-          
-          // ATTIVITÀ (CONDENSA DATA + NOME NELLA STESSA RIGA - v4.20)
-          if (items.attivita && items.attivita.length > 0) {
-            items.attivita.forEach(function(act, idx) {
-              html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:0px">';
-              
-              // DATA + NOME ATTIVITÀ STESSA RIGA
-              html += '<div style="padding:10px 12px;border-left:3px solid ' + act.color + ';display:flex;justify-content:space-between;align-items:center">';
-              html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + ' - ' + act.title + '</div>';
+
+        // MESSAGGI
+        if (items.messaggi && items.messaggi.length > 0) {
+          items.messaggi.forEach(function(msg) {
+            html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px;display:flex">';
+
+            // BLUE COLOR BAND (left side)
+            html += '<div style="background:var(--blue-mid);width:6px;min-height:100%"></div>';
+
+            // CONTENT
+            html += '<div style="padding:12px;flex:1">';
+            html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize;margin-bottom:4px">' + dayName + ', ' + dayNum + ' ' + monthName + ' - 💬 ' + (msg.authorName || 'Allenatore') + '</div>';
+            html += '<div style="color:var(--text);line-height:1.4;font-size:12px">' + (msg.text || msg.messaggio || '') + '</div>';
+
+            if (msg.id && (currentRole === 'allenatore' || currentUserData.role === 'allenatore')) {
+              html += '<div style="margin-top:8px;display:flex;gap:6px">';
+              html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
+              html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
               html += '</div>';
-              
-              // TIPO ATTIVITÀ SOTTO
-              html += '<div style="padding:0 12px 10px 12px;border-left:3px solid ' + act.color + ';margin-left:-3px">';
-              html += '<div style="font-size:11px;color:var(--text-sec)">' + (act.type === 'sci' ? '⛷️ Sci' : act.type === 'atletica' ? '🏃 Atletica' : act.type === 'acrobatica' ? '🤸 Acrobatica' : '🏋️ Multisport') + '</div>';
-              html += '</div>';
-              
-              html += '</div>';
-            });
-          }
-          
-          // MESSAGGI
-          if (items.messaggi && items.messaggi.length > 0) {
-            items.messaggi.forEach(function(msg) {
-              html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:0px">';
-              
-              // DATA + AUTORE STESSA RIGA
-              html += '<div style="padding:10px 12px;border-left:3px solid var(--blue-mid);display:flex;justify-content:space-between;align-items:center">';
-              html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize">' + dayName + ', ' + dayNum + ' ' + monthName + ' - 💬 ' + (msg.authorName || 'Allenatore') + '</div>';
-              html += '</div>';
-              
-              // TESTO MESSAGGIO
-              html += '<div style="padding:0 12px 10px 12px;color:var(--text);line-height:1.4;font-size:12px">';
-              html += (msg.text || msg.messaggio || '');
-              
-              if (msg.id && (currentRole === 'allenatore' || currentUserData.role === 'allenatore')) {
-                html += '<div style="margin-top:8px;display:flex;gap:6px">';
-                html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
-                html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
-                html += '</div>';
-              }
-              html += '</div>';
-              
-              html += '</div>';
-            });
-          }
-          
-          html += '</div>';
-        });
+            }
+            html += '</div>';
+
+            html += '</div>';
+          });
+        }
+
+        html += '</div>';
       });
       
       html += '</div>';
