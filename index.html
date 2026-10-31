@@ -936,6 +936,11 @@
             var dateCell = row[0];
             if (!dateCell) continue;
 
+            // DEBUG: Log il valore raw della cella per debugging
+            if (rowIdx <= 3) {
+              console.log(`🔍 DEBUG Riga ${rowIdx + 1}: Raw dateCell = ${dateCell} (type: ${typeof dateCell})`);
+            }
+
             // Converti da formato Excel datetime a ISO YYYY-MM-DD (per calendarioAttivita key) e DD/MM/YYYY (per visualizzazione)
             var dateStrISO = excelDateToISO_YYYY_MM_DD(dateCell);
             var dateStrDisplay = excelDateToDD_MM_YYYY(dateCell);
