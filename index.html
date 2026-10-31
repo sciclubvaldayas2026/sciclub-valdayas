@@ -972,7 +972,7 @@
 
                 // Determina il tipo di attività e il colore
                 var activityType = 'sci';
-                var color = '#FFC000'; // Giallo default
+                var color = '#DC2626'; // Rosso default per qualsiasi altra cosa
 
                 if (cellUpper.includes('MATTINA')) {
                   color = '#FFC000'; // Giallo per MATTINA
@@ -980,8 +980,8 @@
                   color = '#0066CC'; // Blu per POMERIGGIO
                 } else if (cellUpper.includes('GIORNATA')) {
                   color = '#16A34A'; // Verde per GIORNATA
-                } else if (cellUpper.includes('GARA') || cellUpper.includes('SPEED CAMP') || cellUpper.includes('TOP 50') || cellUpper.includes('AYAS PV')) {
-                  color = '#DC2626'; // Rosso per GARA/SPEED CAMP/TOP 50/AYAS PV
+                } else {
+                  color = '#DC2626'; // Rosso per qualsiasi altra cosa
                 }
 
                 // Aggiungi all'attività (usa dateStrISO come chiave)
@@ -1278,27 +1278,7 @@
       var html = '<div style="padding:12px">';
 
       dateGroups.forEach(function(dateGroup, groupIdx) {
-        // Determina il colore predominante del gruppo basato sulle attività
-        var groupColors = {};
-        dateGroup.forEach(function(dateStr) {
-          var items = allDates[dateStr];
-          if (items.attivita && items.attivita.length > 0) {
-            items.attivita.forEach(function(act) {
-              if (!groupColors[act.color]) groupColors[act.color] = 0;
-              groupColors[act.color]++;
-            });
-          }
-        });
-        var dominantColor = '#0066CC'; // default blue
-        var maxCount = 0;
-        for (var color in groupColors) {
-          if (groupColors[color] > maxCount) {
-            maxCount = groupColors[color];
-            dominantColor = color;
-          }
-        }
-
-        // Header colorato per il gruppo (prima del primo giorno)
+        // Header colorato per il gruppo (prima del primo giorno) - colore grigio fisso
         var firstDate = new Date(dateGroup[0] + 'T00:00:00');
         var lastDate = new Date(dateGroup[dateGroup.length - 1] + 'T00:00:00');
         var firstDay = firstDate.getDate();
@@ -1312,7 +1292,7 @@
           headerText += ' - ' + String(lastDay).padStart(2, '0') + '/' + String(lastMonth).padStart(2, '0');
         }
 
-        html += '<div style="background:' + dominantColor + ';color:white;padding:8px 12px;border-radius:6px;margin:' + (groupIdx > 0 ? '20px 0 12px 0' : '0 0 12px 0') + ';font-weight:600;font-size:12px">';
+        html += '<div style="background:#D3D3D3;color:#333;padding:8px 12px;border-radius:6px;margin:' + (groupIdx > 0 ? '20px 0 12px 0' : '0 0 12px 0') + ';font-weight:600;font-size:12px">';
         html += headerText;
         html += '</div>';
 
@@ -1616,27 +1596,7 @@
         html += '<div style="text-align:center;color:var(--text-sec);padding:20px">Nessuna attività</div>';
       } else {
         dateGroups.forEach(function(dateGroup, groupIdx) {
-          // Determina il colore predominante del gruppo basato sulle attività
-          var groupColors = {};
-          dateGroup.forEach(function(dateStr) {
-            var items = allDates[dateStr];
-            if (items.attivita && items.attivita.length > 0) {
-              items.attivita.forEach(function(act) {
-                if (!groupColors[act.color]) groupColors[act.color] = 0;
-                groupColors[act.color]++;
-              });
-            }
-          });
-          var dominantColor = '#0066CC'; // default blue
-          var maxCount = 0;
-          for (var color in groupColors) {
-            if (groupColors[color] > maxCount) {
-              maxCount = groupColors[color];
-              dominantColor = color;
-            }
-          }
-
-          // Header colorato per il gruppo (prima del primo giorno)
+          // Header colorato per il gruppo (prima del primo giorno) - colore grigio fisso
           var firstDate = new Date(dateGroup[0] + 'T00:00:00');
           var lastDate = new Date(dateGroup[dateGroup.length - 1] + 'T00:00:00');
           var firstDay = firstDate.getDate();
@@ -1649,7 +1609,7 @@
             headerText += ' - ' + String(lastDay).padStart(2, '0') + '/' + String(lastMonth).padStart(2, '0');
           }
 
-          html += '<div style="background:' + dominantColor + ';color:white;padding:8px 12px;border-radius:6px;margin:' + (groupIdx > 0 ? '20px 0 12px 0' : '0 0 12px 0') + ';font-weight:600;font-size:12px">';
+          html += '<div style="background:#D3D3D3;color:#333;padding:8px 12px;border-radius:6px;margin:' + (groupIdx > 0 ? '20px 0 12px 0' : '0 0 12px 0') + ';font-weight:600;font-size:12px">';
           html += headerText;
           html += '</div>';
 
