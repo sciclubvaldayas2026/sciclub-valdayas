@@ -936,11 +936,6 @@
             var dateCell = row[0];
             if (!dateCell) continue;
 
-            // DEBUG: Log il valore raw della cella per debugging
-            if (rowIdx <= 3) {
-              console.log(`🔍 DEBUG Riga ${rowIdx + 1}: Raw dateCell = ${dateCell} (type: ${typeof dateCell})`);
-            }
-
             // Converti da formato Excel datetime a ISO YYYY-MM-DD (per calendarioAttivita key) e DD/MM/YYYY (per visualizzazione)
             var dateStrISO = excelDateToISO_YYYY_MM_DD(dateCell);
             var dateStrDisplay = excelDateToDD_MM_YYYY(dateCell);
@@ -1036,10 +1031,11 @@
 
       // Se è un numero (formato Excel)
       if (typeof excelDate === 'number') {
-        // Usa UTC per evitare errori di timezone (off-by-one bug)
+        // Usa UTC per evitare errori di timezone
+        // Nota: sottraiamo 1 dal numero seriale perché XLSX lo fornisce con offset di 1
         const excelEpoch = new Date(Date.UTC(1899, 11, 31));
         const MS_PER_DAY = 86400 * 1000;
-        jsDate = new Date(excelEpoch.getTime() + excelDate * MS_PER_DAY);
+        jsDate = new Date(excelEpoch.getTime() + (excelDate - 1) * MS_PER_DAY);
       }
       // Se è una stringa con data (formato ISO o datetime)
       else if (typeof excelDate === 'string') {
@@ -1075,10 +1071,11 @@
 
       // Se è un numero (formato Excel)
       if (typeof excelDate === 'number') {
-        // Usa UTC per evitare errori di timezone (off-by-one bug)
+        // Usa UTC per evitare errori di timezone
+        // Nota: sottraiamo 1 dal numero seriale perché XLSX lo fornisce con offset di 1
         const excelEpoch = new Date(Date.UTC(1899, 11, 31));
         const MS_PER_DAY = 86400 * 1000;
-        jsDate = new Date(excelEpoch.getTime() + excelDate * MS_PER_DAY);
+        jsDate = new Date(excelEpoch.getTime() + (excelDate - 1) * MS_PER_DAY);
       }
       // Se è una stringa con data (formato ISO o datetime)
       else if (typeof excelDate === 'string') {
