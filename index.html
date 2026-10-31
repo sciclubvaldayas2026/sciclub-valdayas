@@ -1031,7 +1031,8 @@
 
       // Se è un numero (formato Excel)
       if (typeof excelDate === 'number') {
-        const excelEpoch = new Date(1899, 11, 31);
+        // Usa UTC per evitare errori di timezone (off-by-one bug)
+        const excelEpoch = new Date(Date.UTC(1899, 11, 31));
         const MS_PER_DAY = 86400 * 1000;
         jsDate = new Date(excelEpoch.getTime() + excelDate * MS_PER_DAY);
       }
@@ -1053,10 +1054,10 @@
         return null;
       }
 
-      // Formato DD/MM/YYYY
-      var day = String(jsDate.getDate()).padStart(2, '0');
-      var month = String(jsDate.getMonth() + 1).padStart(2, '0');
-      var year = jsDate.getFullYear();
+      // Formato DD/MM/YYYY (usa UTC per evitare timezone issues)
+      var day = String(jsDate.getUTCDate()).padStart(2, '0');
+      var month = String(jsDate.getUTCMonth() + 1).padStart(2, '0');
+      var year = jsDate.getUTCFullYear();
 
       return `${day}/${month}/${year}`;
     }
@@ -1069,7 +1070,8 @@
 
       // Se è un numero (formato Excel)
       if (typeof excelDate === 'number') {
-        const excelEpoch = new Date(1899, 11, 31);
+        // Usa UTC per evitare errori di timezone (off-by-one bug)
+        const excelEpoch = new Date(Date.UTC(1899, 11, 31));
         const MS_PER_DAY = 86400 * 1000;
         jsDate = new Date(excelEpoch.getTime() + excelDate * MS_PER_DAY);
       }
@@ -1090,10 +1092,10 @@
         return null;
       }
 
-      // Formato ISO YYYY-MM-DD
-      var year = jsDate.getFullYear();
-      var month = String(jsDate.getMonth() + 1).padStart(2, '0');
-      var day = String(jsDate.getDate()).padStart(2, '0');
+      // Formato ISO YYYY-MM-DD (usa UTC per evitare timezone issues)
+      var year = jsDate.getUTCFullYear();
+      var month = String(jsDate.getUTCMonth() + 1).padStart(2, '0');
+      var day = String(jsDate.getUTCDate()).padStart(2, '0');
 
       return `${year}-${month}-${day}`;
     }
@@ -1274,10 +1276,43 @@
       var html = '<div style="padding:12px">';
 
       dateGroups.forEach(function(dateGroup, groupIdx) {
-        // Separatore tra gruppi di date contigue (senza titolo trasferta)
-        if (groupIdx > 0) {
-          html += '<div style="margin:20px 0 12px 0;border-top:1px solid var(--border)"></div>';
+        // Determina il colore predominante del gruppo basato sulle attività
+        var groupColors = {};
+        dateGroup.forEach(function(dateStr) {
+          var items = allDates[dateStr];
+          if (items.attivita && items.attivita.length > 0) {
+            items.attivita.forEach(function(act) {
+              if (!groupColors[act.color]) groupColors[act.color] = 0;
+              groupColors[act.color]++;
+            });
+          }
+        });
+        var dominantColor = '#0066CC'; // default blue
+        var maxCount = 0;
+        for (var color in groupColors) {
+          if (groupColors[color] > maxCount) {
+            maxCount = groupColors[color];
+            dominantColor = color;
+          }
         }
+
+        // Header colorato per il gruppo (prima del primo giorno)
+        var firstDate = new Date(dateGroup[0] + 'T00:00:00');
+        var lastDate = new Date(dateGroup[dateGroup.length - 1] + 'T00:00:00');
+        var firstDay = firstDate.getDate();
+        var firstMonth = firstDate.getMonth() + 1;
+        var lastDay = lastDate.getDate();
+        var lastMonth = lastDate.getMonth() + 1;
+        var mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+
+        var headerText = String(firstDay).padStart(2, '0') + '/' + String(firstMonth).padStart(2, '0');
+        if (dateGroup.length > 1) {
+          headerText += ' - ' + String(lastDay).padStart(2, '0') + '/' + String(lastMonth).padStart(2, '0');
+        }
+
+        html += '<div style="background:' + dominantColor + ';color:white;padding:8px 12px;border-radius:6px;margin:' + (groupIdx > 0 ? '20px 0 12px 0' : '0 0 12px 0') + ';font-weight:600;font-size:12px">';
+        html += headerText;
+        html += '</div>';
 
         // Render tutti i giorni nel gruppo
         dateGroup.forEach(function(dateStr, dayIdx) {
@@ -1291,21 +1326,21 @@
 
           var items = allDates[dateStr];
 
-          html += '<div style="margin-bottom:12px;margin-top:' + (dayIdx === 0 ? '0px' : '8px') + '">';
+          html += '<div style="margin-bottom:4px;margin-top:0">';
 
-          // ATTIVITÀ (v4.36.6: With prominent color bands)
+          // ATTIVITÀ (v4.36.6: With prominent color bands - tighter spacing)
           if (items.attivita && items.attivita.length > 0) {
             items.attivita.forEach(function(act, idx) {
-              html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px;display:flex">';
+              html += '<div style="background:var(--bg-card);border-radius:6px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:3px;display:flex">';
 
               // PROMINENT COLOR BAND (left side)
               html += '<div style="background:' + act.color + ';width:6px;min-height:100%"></div>';
 
               // CONTENT
-              html += '<div style="padding:12px;flex:1;display:flex;justify-content:space-between;align-items:center">';
+              html += '<div style="padding:10px 12px;flex:1;display:flex;justify-content:space-between;align-items:center">';
               html += '<div>';
-              html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize;margin-bottom:4px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
-              html += '<div style="font-size:12px;color:var(--text);font-weight:500">' + act.title + '</div>';
+              html += '<div style="font-weight:600;font-size:12px;color:var(--text);text-transform:capitalize;margin-bottom:2px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
+              html += '<div style="font-size:11px;color:var(--text);font-weight:500">' + act.title + '</div>';
               html += '</div>';
               html += '</div>';
 
@@ -1316,18 +1351,18 @@
           // MESSAGGI
           if (items.messaggi && items.messaggi.length > 0) {
             items.messaggi.forEach(function(msg) {
-              html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px;display:flex">';
+              html += '<div style="background:var(--bg-card);border-radius:6px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:3px;display:flex">';
 
               // BLUE COLOR BAND (left side)
               html += '<div style="background:var(--blue-mid);width:6px;min-height:100%"></div>';
 
               // CONTENT
-              html += '<div style="padding:12px;flex:1">';
-              html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize;margin-bottom:4px">' + dayName + ', ' + dayNum + ' ' + monthName + ' - 💬 ' + (msg.authorName || 'Allenatore') + '</div>';
-              html += '<div style="color:var(--text);line-height:1.4;font-size:12px">' + (msg.text || msg.messaggio || '') + '</div>';
+              html += '<div style="padding:10px 12px;flex:1">';
+              html += '<div style="font-weight:600;font-size:12px;color:var(--text);text-transform:capitalize;margin-bottom:2px">' + dayName + ', ' + dayNum + ' ' + monthName + ' - 💬 ' + (msg.authorName || 'Allenatore') + '</div>';
+              html += '<div style="color:var(--text);line-height:1.4;font-size:11px">' + (msg.text || msg.messaggio || '') + '</div>';
 
               if (msg.id && (currentRole === 'allenatore' || currentUserData.role === 'allenatore')) {
-                html += '<div style="margin-top:8px;display:flex;gap:6px">';
+                html += '<div style="margin-top:6px;display:flex;gap:6px">';
                 html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
                 html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
                 html += '</div>';
@@ -1579,10 +1614,42 @@
         html += '<div style="text-align:center;color:var(--text-sec);padding:20px">Nessuna attività</div>';
       } else {
         dateGroups.forEach(function(dateGroup, groupIdx) {
-          // Separatore tra gruppi di date contigue (senza titolo trasferta)
-          if (groupIdx > 0) {
-            html += '<div style="margin:20px 0 12px 0;border-top:1px solid var(--border)"></div>';
+          // Determina il colore predominante del gruppo basato sulle attività
+          var groupColors = {};
+          dateGroup.forEach(function(dateStr) {
+            var items = allDates[dateStr];
+            if (items.attivita && items.attivita.length > 0) {
+              items.attivita.forEach(function(act) {
+                if (!groupColors[act.color]) groupColors[act.color] = 0;
+                groupColors[act.color]++;
+              });
+            }
+          });
+          var dominantColor = '#0066CC'; // default blue
+          var maxCount = 0;
+          for (var color in groupColors) {
+            if (groupColors[color] > maxCount) {
+              maxCount = groupColors[color];
+              dominantColor = color;
+            }
           }
+
+          // Header colorato per il gruppo (prima del primo giorno)
+          var firstDate = new Date(dateGroup[0] + 'T00:00:00');
+          var lastDate = new Date(dateGroup[dateGroup.length - 1] + 'T00:00:00');
+          var firstDay = firstDate.getDate();
+          var firstMonth = firstDate.getMonth() + 1;
+          var lastDay = lastDate.getDate();
+          var lastMonth = lastDate.getMonth() + 1;
+
+          var headerText = String(firstDay).padStart(2, '0') + '/' + String(firstMonth).padStart(2, '0');
+          if (dateGroup.length > 1) {
+            headerText += ' - ' + String(lastDay).padStart(2, '0') + '/' + String(lastMonth).padStart(2, '0');
+          }
+
+          html += '<div style="background:' + dominantColor + ';color:white;padding:8px 12px;border-radius:6px;margin:' + (groupIdx > 0 ? '20px 0 12px 0' : '0 0 12px 0') + ';font-weight:600;font-size:12px">';
+          html += headerText;
+          html += '</div>';
 
           // Render tutti i giorni nel gruppo
           dateGroup.forEach(function(dateStr, dayIdx) {
@@ -1596,23 +1663,23 @@
 
             var items = allDates[dateStr];
 
-            html += '<div style="margin-bottom:12px;margin-top:' + (dayIdx === 0 ? '0px' : '8px') + '">';
+            html += '<div style="margin-bottom:4px;margin-top:0">';
 
-            // ATTIVITÀ (v4.36.6: With prominent color bands)
+            // ATTIVITÀ (v4.36.6: With prominent color bands - tighter spacing)
             if (items.attivita && items.attivita.length > 0) {
               items.attivita.forEach(function(act, idx) {
-                html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px;display:flex;cursor:pointer" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')">';
+                html += '<div style="background:var(--bg-card);border-radius:6px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:3px;display:flex;cursor:pointer" onclick="openMessageForm(\'' + dateStr + '\', \'' + act.title.replace(/'/g, "\\'") + '\', \'' + categoria + '\')">';
 
                 // PROMINENT COLOR BAND (left side)
                 html += '<div style="background:' + act.color + ';width:6px;min-height:100%"></div>';
 
                 // CONTENT
-                html += '<div style="padding:12px;flex:1;display:flex;justify-content:space-between;align-items:center">';
+                html += '<div style="padding:10px 12px;flex:1;display:flex;justify-content:space-between;align-items:center">';
                 html += '<div>';
-                html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize;margin-bottom:4px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
-                html += '<div style="font-size:12px;color:var(--text);font-weight:500">' + act.title + '</div>';
+                html += '<div style="font-weight:600;font-size:12px;color:var(--text);text-transform:capitalize;margin-bottom:2px">' + dayName + ', ' + dayNum + ' ' + monthName + '</div>';
+                html += '<div style="font-size:11px;color:var(--text);font-weight:500">' + act.title + '</div>';
                 html += '</div>';
-                html += '<div style="font-size:11px;color:var(--text-sec)">Clicca per messaggio</div>';
+                html += '<div style="font-size:10px;color:var(--text-sec)">Clicca</div>';
                 html += '</div>';
 
                 html += '</div>';
@@ -1622,16 +1689,16 @@
             // MESSAGGI
             if (items.messaggi && items.messaggi.length > 0) {
               items.messaggi.forEach(function(msg) {
-                html += '<div style="background:var(--bg-card);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:8px;display:flex">';
+                html += '<div style="background:var(--bg-card);border-radius:6px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:3px;display:flex">';
 
                 // BLUE COLOR BAND (left side)
                 html += '<div style="background:var(--blue-mid);width:6px;min-height:100%"></div>';
 
                 // CONTENT
-                html += '<div style="padding:12px;flex:1">';
-                html += '<div style="font-weight:600;font-size:13px;color:var(--text);text-transform:capitalize;margin-bottom:4px">' + dayName + ', ' + dayNum + ' ' + monthName + ' - 💬 ' + (msg.authorName || 'Allenatore') + '</div>';
-                html += '<div style="color:var(--text);line-height:1.4;font-size:12px">' + (msg.text || msg.messaggio || '') + '</div>';
-                html += '<div style="margin-top:8px;display:flex;gap:6px">';
+                html += '<div style="padding:10px 12px;flex:1">';
+                html += '<div style="font-weight:600;font-size:12px;color:var(--text);text-transform:capitalize;margin-bottom:2px">' + dayName + ', ' + dayNum + ' ' + monthName + ' - 💬 ' + (msg.authorName || 'Allenatore') + '</div>';
+                html += '<div style="color:var(--text);line-height:1.4;font-size:11px">' + (msg.text || msg.messaggio || '') + '</div>';
+                html += '<div style="margin-top:6px;display:flex;gap:6px">';
                 html += '<button class="btn-remove" onclick="editMessage(\'' + msg.id + '\', \'' + categoria + '\', \'' + (msg.text || '').replace(/'/g, "\\'") + '\')">✏️ Modifica</button>';
                 html += '<button class="btn-remove" onclick="deleteMessage(\'' + msg.id + '\', \'' + categoria + '\')">🗑️ Cancella</button>';
                 html += '</div>';
